@@ -12,7 +12,7 @@ import {
 
 // Add a menu category
 export const createMenuCategory = async (req, res) => {
-  const { restaurant_id } = req.params; // Get restaurant_id from URL params
+  const restaurant_id = req.params.restaurant_id || req.params.id; // Get restaurant_id from URL params
   const { category_name } = req.body; // Get category name from request body
 
   try {

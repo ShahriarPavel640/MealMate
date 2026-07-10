@@ -16,9 +16,11 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import { ChefHat, TrendingUp, Users, Clock, Star, Shield } from "lucide-react";
+import { ChefHat, TrendingUp, Users, Clock, Star, Shield, MapPin } from "lucide-react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
+import LocationPickerModal from "../../Components/LocationPickerModal";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -31,7 +33,10 @@ const LoginPage = () => {
     password: "",
     phone: "",
     name: "",
+    latitude: null,
+    longitude: null,
   });
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,6 +46,10 @@ const LoginPage = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    if (formDataSignup.latitude === null || formDataSignup.longitude === null) {
+      toast.error("Please pick your restaurant's location on the map.");
+      return;
+    }
     await signup(formDataSignup);
   };
 
@@ -297,6 +306,24 @@ const LoginPage = () => {
                           }}
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label>Location Coordinate</Label>
+                        <div className="flex gap-2 items-center">
+                          <Button
+                            type="button"
+                            onClick={() => setLocationModalOpen(true)}
+                            className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 flex items-center gap-1.5"
+                          >
+                            <MapPin className="h-4 w-4 text-orange-500" />
+                            Pick Location
+                          </Button>
+                          <span className="text-sm text-gray-400">
+                            {formDataSignup.latitude !== null && formDataSignup.longitude !== null
+                              ? `Selected: (${formDataSignup.latitude.toFixed(4)}, ${formDataSignup.longitude.toFixed(4)})`
+                              : "No location picked"}
+                          </span>
+                        </div>
+                      </div>
                       <Button
                         type="submit"
                         className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
@@ -424,6 +451,22 @@ const LoginPage = () => {
           </div>
         </div>
       </footer>
+      <LocationPickerModal
+        isOpen={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+        onSelect={(coords) =>
+          setFormDataSignup((prev) => ({
+            ...prev,
+            latitude: coords.lat,
+            longitude: coords.lng,
+          }))
+        }
+        initialLocation={
+          formDataSignup.latitude
+            ? { lat: formDataSignup.latitude, lng: formDataSignup.longitude }
+            : { lat: 23.8103, lng: 90.4125 }
+        }
+      />
     </div>
   );
 };

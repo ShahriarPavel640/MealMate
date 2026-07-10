@@ -4,14 +4,14 @@ import SSLCommerzPayment from "sslcommerz-lts";
 import cors from "cors";
 import http from "http"; // Import http module
 import { initSocket, getIO } from "./socket.js"; // Import initSocket and getIO
-import customerAuthRoute from "./routes/customerRoute.js";
+import customerAuthRoute from "./customer/auth/authRoutes.js";
 import customerRestaurantRoutes from "./customer/restaurant/restaurantRoutes.js";
 import customerCartRoutes from "./customer/cart/cartRoutes.js";
 import router from "./rider/riderRoutes.js";
-import { router as restaurantRoute } from "./routes/restaurantRoute.js";
+import { router as restaurantRoute } from "./restaurants/profile/restaurantProfileRoutes.js";
 import menuRoutes from "./menu-management/menuRoutes.js"; // Import the menu routes
 import cookieParser from "cookie-parser";
-import riderAuthRoute from "./routes/riderAuthRoute.js";
+import riderAuthRoute from "./rider/auth/riderAuthRoutes.js";
 import customerOrderRoutes from "./customer/order/orderRoutes.js";
 import createCustomerPaymentRoutes from "./customer/payment/paymentRoutes.js";
 import reviewRoutes from "./review_rating/reviewRoutes.js";
@@ -81,11 +81,12 @@ app.use("/api/customer", customerCartRoutes);
 app.use("/api/customer/order", customerOrderRoutes);
 
 app.use("/api/chat", chatRoutes);
-app.use("/api/chat", chatRoutes);
 
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
-  console.log(`Backend HTTP server is running on port: ${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  server.listen(PORT, () => {
+    console.log(`Backend HTTP server is running on port: ${PORT}`);
+  });
+}
 
-export { io }; // Export the io instance
+export { app, server, io }; // Export the app, server, and io instance

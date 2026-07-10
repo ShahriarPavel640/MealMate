@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:15-3.4-alpine
+    container_name: food_panda_postgres_db
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: food_panda
+    volumes:
+      - food_panda_pgdata:/var/lib/postgresql/data
+      - ./food_panda.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./populate.sql:/docker-entrypoint-initdb.d/2-seed.sql
+
+volumes:
+  food_panda_pgdata:

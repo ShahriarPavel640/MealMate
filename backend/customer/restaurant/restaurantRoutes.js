@@ -12,7 +12,7 @@ import {
   getReviewsAll,
   getRestaurantsSearchByName,
 } from "./restaurantController.js";
-import { getIndividualMenuReview } from "../../controllers/restaurant.controller.js";
+import { getIndividualMenuReview } from "../../restaurants/profile/restaurantProfileController.js";
 
 const router = express.Router();
 const role = "customer";
