@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
 import { userAuthStore } from "../store/userAuthStore";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../Components/skeleton/Navbar";
+import LocationPickerModal from "../Components/LocationPickerModal";
+import toast from "react-hot-toast";
 
 function Signup() {
   const navigate = useNavigate();
@@ -14,6 +16,9 @@ function Signup() {
     password: "",
   });
 
+  const [location, setLocation] = useState({ lat: null, lng: null });
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+
   useEffect(() => {
     if (authUser) {
       navigate("/");
@@ -22,7 +27,11 @@ function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await signup(formData);
+    if (location.lat === null || location.lng === null) {
+      toast.error("Please pick your location on the map.");
+      return;
+    }
+    await signup({ ...formData, latitude: location.lat, longitude: location.lng });
   };
 
   return (
@@ -79,6 +88,26 @@ function Signup() {
                 }
               />
             </div>
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Location Coordinate
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLocationModalOpen(true)}
+                  className="flex items-center gap-1.5 px-4 py-2 border rounded-lg bg-gray-50 border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
+                >
+                  <MapPin className="h-4 w-4 text-primary-600" />
+                  Pick Location
+                </button>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {location.lat !== null && location.lng !== null
+                    ? `Selected: (${location.lat.toFixed(4)}, ${location.lng.toFixed(4)})`
+                    : "No location selected"}
+                </span>
+              </div>
+            </div>
             <button
               type="submit"
               disabled={isSigningUp}
@@ -105,6 +134,12 @@ function Signup() {
           </form>
         </div>
       </section>
+      <LocationPickerModal
+        isOpen={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+        onSelect={(coords) => setLocation(coords)}
+        initialLocation={location.lat ? location : { lat: 23.8103, lng: 90.4125 }}
+      />
     </>
   );
 }

@@ -280,7 +280,9 @@ export const getRestaurant = async (req, res) => {
 
 export const getRestaurantByLocation = async (req, res) => {
   try {
-    const { latitude, longitude } = req.body;
+    const latitude = req.query.latitude || req.body?.latitude;
+    const longitude = req.query.longitude || req.body?.longitude;
+    const radius = req.query.radius || req.body?.radius || 5000; // default 5km in meters
 
     const userLat = latitude;
     const userLon = longitude;
@@ -319,7 +321,11 @@ export const getRestaurantByLocation = async (req, res) => {
 };
 
 export const getReviewsAll = async (req, res) => {
-  const restaurantId = req.user.id;
+  const restaurantId = req.query.restaurant_id || req.user?.id;
+
+  if (!restaurantId) {
+    return res.status(400).json({ message: "restaurant_id query parameter is required" });
+  }
 
   try {
     const reviews = await pool.query(
@@ -329,12 +335,10 @@ export const getReviewsAll = async (req, res) => {
         r.rating, 
         r.comment, 
         r.created_at, 
-        u.name AS user_name,
-        mi.name AS menu_item_name
+        u.name AS user_name
       FROM reviews r
       JOIN users u ON r.user_id = u.user_id
       JOIN orders o ON o.order_id = r.order_id
-      LEFT JOIN menu_items mi ON mi.menu_item_id = r.menu_item_id
       WHERE r.restaurant_id = $1
       ORDER BY r.created_at DESC
       `,

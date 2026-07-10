@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -29,5 +30,9 @@
     "sslcommerz": "^1.7.0",
     "sslcommerz-lts": "^1.1.0",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.10"
   }
 }

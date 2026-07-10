@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
 import { useRiderAuthStore } from "../store/riderAuthStore";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../Components/skeleton/Navbar";
+import LocationPickerModal from "../../Components/LocationPickerModal";
+import toast from "react-hot-toast";
 
 function SignupPageRider() {
   const navigate = useNavigate();
@@ -15,7 +17,11 @@ function SignupPageRider() {
     phone_number: "",
     vehicle_type: "",
     current_location: "",
+    latitude: null,
+    longitude: null,
   });
+
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
 
   useEffect(() => {
     if (authrider) {
@@ -23,8 +29,21 @@ function SignupPageRider() {
     }
   }, [authrider, navigate]);
 
+  const handleLocationSelect = (coords) => {
+    setFormData({
+      ...formData,
+      latitude: coords.lat,
+      longitude: coords.lng,
+      current_location: `Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.latitude === null || formData.longitude === null) {
+      toast.error("Please pick your location on the map.");
+      return;
+    }
     await signup(formData);
   };
 
@@ -116,16 +135,24 @@ function SignupPageRider() {
               <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Current Location
               </label>
-              <input
-                type="text"
-                required
-                className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="Dhaka, Bangladesh"
-                value={formData.current_location}
-                onChange={(e) =>
-                  setFormData({ ...formData, current_location: e.target.value })
-                }
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  required
+                  readOnly
+                  className="flex-grow p-2.5 border rounded-lg bg-gray-100 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-not-allowed"
+                  placeholder="Click Pick Location..."
+                  value={formData.current_location}
+                />
+                <button
+                  type="button"
+                  onClick={() => setLocationModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 border rounded-lg bg-gray-50 border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
+                >
+                  <MapPin className="h-4 w-4 text-primary-600" />
+                  Pick
+                </button>
+              </div>
             </div>
             <button
               type="submit"
@@ -153,6 +180,12 @@ function SignupPageRider() {
           </form>
         </div>
       </section>
+      <LocationPickerModal
+        isOpen={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+        onSelect={handleLocationSelect}
+        initialLocation={formData.latitude ? { lat: formData.latitude, lng: formData.longitude } : { lat: 23.8103, lng: 90.4125 }}
+      />
     </>
   );
 }
