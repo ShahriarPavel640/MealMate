@@ -1,6 +1,6 @@
 import React from "react";
 import { MessageCircle } from "lucide-react";
-import { Button } from "../restaurant/components/ui/button";
+import { Button } from "@/features/restaurant/components/ui/button";
 
 const ChatButton = ({ onClick }) => {
   return (

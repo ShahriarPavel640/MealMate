@@ -5,11 +5,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "../restaurant/components/ui/dialog";
-import { axiosInstance } from "../../lib/axios";
-import { Button } from "../restaurant/components/ui/button";
-import { Input } from "../restaurant/components/ui/input";
-import socketService from "../../src/services/socketService";
+} from "@/features/restaurant/components/ui/dialog";
+import { axiosInstance } from "@/lib/axios";
+import { Button } from "@/features/restaurant/components/ui/button";
+import { Input } from "@/features/restaurant/components/ui/input";
+import socketService from "@/services/socketService";
 
 const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
   const [messages, setMessages] = useState([]);

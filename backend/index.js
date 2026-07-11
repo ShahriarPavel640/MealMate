@@ -7,15 +7,15 @@ import { initSocket, getIO } from "./socket.js"; // Import initSocket and getIO
 import customerAuthRoute from "./customer/auth/authRoutes.js";
 import customerRestaurantRoutes from "./customer/restaurant/restaurantRoutes.js";
 import customerCartRoutes from "./customer/cart/cartRoutes.js";
-import router from "./rider/riderRoutes.js";
+import router from "./rider/profile/riderRoutes.js";
 import { router as restaurantRoute } from "./restaurants/profile/restaurantProfileRoutes.js";
-import menuRoutes from "./menu-management/menuRoutes.js"; // Import the menu routes
+import menuRoutes from "./restaurants/menu/menuRoutes.js"; // Import the menu routes
 import cookieParser from "cookie-parser";
 import riderAuthRoute from "./rider/auth/riderAuthRoutes.js";
 import customerOrderRoutes from "./customer/order/orderRoutes.js";
 import createCustomerPaymentRoutes from "./customer/payment/paymentRoutes.js";
-import reviewRoutes from "./review_rating/reviewRoutes.js";
-import chatRoutes from "./chats/chatRoutes.js";
+import reviewRoutes from "./shared/reviews/reviewRoutes.js";
+import chatRoutes from "./shared/chats/chatRoutes.js";
 import restaurantOrder from "./restaurants/order/orderRoutes.js";
 import restaurnatStat from "./restaurants/stats/statsRoutes.js";
 
