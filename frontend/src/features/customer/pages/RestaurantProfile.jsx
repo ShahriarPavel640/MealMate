@@ -30,7 +30,7 @@ export default function Restaurant() {
 
   const [filters, setFilters] = useState({
     sortBy: "relevance",
-    priceRange: [0, 100],
+    priceRange: [0, 2000],
     selectedCategories: [],
   });
 
@@ -73,8 +73,8 @@ export default function Restaurant() {
         item.price >= filters.priceRange[0] &&
         item.price <= filters.priceRange[1];
       const matchesSearch =
-        (item.menu_name &&
-          item.menu_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.name &&
+          item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (item.description &&
           item.description.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesCategory && matchesPrice && matchesSearch;
