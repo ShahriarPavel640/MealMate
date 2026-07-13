@@ -1,0 +1,2 @@
+1) currently the delivery fee is hardcoded from the frontend. the delivery fee should be calculated dynamically. if there are multiple restaurants, delivery fee would be calculated according to the restaurant numbers. will will set default delivery fee for one restaurant = 30, if there are multiple orders in a cart delivery fee will be multiplied.
+2)

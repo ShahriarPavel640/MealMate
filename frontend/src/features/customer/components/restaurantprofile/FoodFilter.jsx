@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/features/restaurant/components/ui/button";
 import { Card, CardContent } from "@/features/restaurant/components/ui/card";
 import { Badge } from "@/features/restaurant/components/ui/badge";
@@ -34,12 +34,21 @@ const sortOptions = [
   { value: 'newest', label: 'Newest First', icon: Clock }
 ];
 
-export const FoodFilter = ({ menuCategories, onFilterChange }) => {
+export const FoodFilter = ({ menuCategories, onFilterChange, maxPrice = 2000 }) => {
   const [filters, setFilters] = useState({
     sortBy: 'relevance',
-    priceRange: [0, 100],
+    priceRange: [0, maxPrice],
     selectedCategories: []
   });
+
+  // Automatically adjust the price range if maxPrice changes (e.g., after loading from API)
+  useEffect(() => {
+    setFilters(prev => {
+      // If the upper bound of the current filter is the old max, update it to the new max.
+      // Or just safely ensure the upper bound isn't exceeding or stuck too low if it's untouched.
+      return { ...prev, priceRange: [prev.priceRange[0], maxPrice] };
+    });
+  }, [maxPrice]);
 
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
@@ -75,7 +84,7 @@ export const FoodFilter = ({ menuCategories, onFilterChange }) => {
   const clearAllFilters = () => {
     const clearedFilters = {
       sortBy: 'relevance',
-      priceRange: [0, 100],
+      priceRange: [0, maxPrice],
       selectedCategories: []
     };
     setFilters(clearedFilters);
@@ -84,7 +93,7 @@ export const FoodFilter = ({ menuCategories, onFilterChange }) => {
 
   const activeFiltersCount = filters.selectedCategories.length + 
     (filters.sortBy !== 'relevance' ? 1 : 0) + 
-    (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 100 ? 1 : 0);
+    (filters.priceRange[0] !== 0 || filters.priceRange[1] !== maxPrice ? 1 : 0);
 
   return (
     <Card className="w-full shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl">
@@ -187,15 +196,15 @@ export const FoodFilter = ({ menuCategories, onFilterChange }) => {
           {/* Price Range */}
           <div className="space-y-2">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Price Range: ${filters.priceRange[0]} - ${filters.priceRange[1]}
+              Price Range: Tk {filters.priceRange[0]} - Tk {filters.priceRange[1]}
             </Label>
             <div className="px-3 py-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
               <Slider
                 value={filters.priceRange}
                 onValueChange={handlePriceChange}
-                max={100}
+                max={maxPrice}
                 min={0}
-                step={5}
+                step={20}
                 className="w-full [&_[role=slider]]:bg-orange-500 [&_[role=slider]]:border-orange-500"
               />
             </div>

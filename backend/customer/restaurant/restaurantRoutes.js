@@ -11,6 +11,7 @@ import {
   getRestaurantByLocation,
   getReviewsAll,
   getRestaurantsSearchByName,
+  toggleFavoriteRestaurant,
 } from "./restaurantController.js";
 import { getIndividualMenuReview } from "../../restaurants/profile/restaurantProfileController.js";
 
@@ -22,6 +23,13 @@ router.get(
   authorization,
   authorizeRoles(role),
   getNearbyRestaurants
+);
+
+router.post(
+  "/restaurant/:id/favorite",
+  authorization,
+  authorizeRoles(role),
+  toggleFavoriteRestaurant
 );
 router.get("/getRestaurants", getRestaurants);
 router.get("/getCategories", getCategories);

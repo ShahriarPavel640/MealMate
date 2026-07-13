@@ -49,44 +49,46 @@ const RestaurantPage = () => {
   return (
     <>
       <Navbar />
-      <section className="min-h-screen bg-gray-50 py-10">
+      <section className="min-h-screen bg-[#0a0a0a] py-10">
         <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">
+          <h1 className="text-4xl font-extrabold text-center text-white mb-8 tracking-tight">
             All Restaurants
           </h1>
 
-          <div className="flex items-center text-gray-700 gap-2 mb-8 max-w-md mx-auto">
-            <input
-              type="text"
-              placeholder="Search restaurants..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleKeyPress}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
-            />
+          <div className="flex items-center gap-3 mb-10 max-w-lg mx-auto bg-[#1a1a1a] p-2 rounded-2xl border border-white/10 shadow-lg">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search restaurants..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="w-full pl-10 pr-4 py-3 bg-transparent text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-0"
+              />
+            </div>
             <button
               onClick={handleSearch}
-              className="px-4 py-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition flex items-center gap-1"
+              className="px-6 py-3 bg-[#e21b70] text-white rounded-xl hover:bg-[#c2145d] transition-all font-bold shadow-md hover:shadow-lg"
             >
-              <Search className="w-4 h-4" />
               Search
             </button>
           </div>
 
           {loading ? (
             <div className="flex justify-center items-center py-20">
-              <Loader2 className="h-6 w-6 animate-spin text-pink-500" />
-              <span className="ml-2 text-pink-500">Loading...</span>
+              <Loader2 className="h-8 w-8 animate-spin text-[#e21b70]" />
+              <span className="ml-3 text-[#e21b70] font-medium text-lg">Loading...</span>
             </div>
           ) : (
             <div ref={restaurantsRef}>
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {restaurants && restaurants.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-gray-500 text-lg">
+                  <div className="col-span-full text-center py-16 bg-[#111] rounded-3xl border border-white/5">
+                    <p className="text-gray-300 text-xl font-medium">
                       No restaurants found.
                     </p>
-                    <p className="text-gray-400 text-sm mt-2">
+                    <p className="text-gray-500 text-md mt-3">
                       Try adjusting your search criteria or check back later.
                     </p>
                   </div>
@@ -102,16 +104,16 @@ const RestaurantPage = () => {
 
               {/* Pagination Controls */}
               {restaurants && restaurants.length > 0 && totalPages > 1 && (
-                <div className="mt-12 flex justify-center items-center space-x-2">
+                <div className="mt-14 flex justify-center items-center space-x-3">
                   <button
                     onClick={() =>
                       handlePageChange(Math.max(1, currentPage - 1))
                     }
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
                       currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-50 shadow-sm border border-gray-200"
+                        ? "bg-[#111] text-gray-600 cursor-not-allowed border border-transparent"
+                        : "bg-[#1a1a1a] text-gray-300 hover:text-white hover:bg-[#222] border border-white/10"
                     }`}
                   >
                     Previous
@@ -121,10 +123,10 @@ const RestaurantPage = () => {
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
-                        className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+                        className={`w-11 h-11 rounded-xl font-bold transition-all ${
                           currentPage === page
-                            ? "bg-pink-500 text-white shadow-lg"
-                            : "bg-white text-gray-700 hover:bg-gray-50 shadow-sm border border-gray-200"
+                            ? "bg-[#e21b70] text-white shadow-lg shadow-pink-500/20"
+                            : "bg-[#1a1a1a] text-gray-400 hover:text-white hover:bg-[#222] border border-white/10"
                         }`}
                       >
                         {page}
@@ -136,10 +138,10 @@ const RestaurantPage = () => {
                       handlePageChange(Math.min(totalPages, currentPage + 1))
                     }
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
                       currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-50 shadow-sm border border-gray-200"
+                        ? "bg-[#111] text-gray-600 cursor-not-allowed border border-transparent"
+                        : "bg-[#1a1a1a] text-gray-300 hover:text-white hover:bg-[#222] border border-white/10"
                     }`}
                   >
                     Next
@@ -149,11 +151,11 @@ const RestaurantPage = () => {
 
               {/* Results summary */}
               {restaurants && restaurants.length > 0 && (
-                <div className="mt-6 text-center text-gray-600 text-sm">
-                  Showing {startIndex + 1} to{" "}
-                  {Math.min(startIndex + itemsPerPage, restaurants.length)} of{" "}
-                  {restaurants.length} restaurants
-                </div>
+                <p className="text-center text-gray-500 mt-6 font-medium">
+                  Showing <span className="text-white">{startIndex + 1}</span> to{" "}
+                  <span className="text-white">{Math.min(startIndex + itemsPerPage, restaurants.length)}</span> of{" "}
+                  <span className="text-white">{restaurants.length}</span> restaurants
+                </p>
               )}
             </div>
           )}

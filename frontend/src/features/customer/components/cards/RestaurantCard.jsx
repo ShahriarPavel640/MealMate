@@ -1,43 +1,58 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Star, Phone } from "lucide-react";
+import { Star, Heart } from "lucide-react";
+import { useRestaurantStore } from "../../store/useRestaurantStore";
 
 const RestaurantCard = ({ restaurant }) => {
-  const { restaurant_id, name, email, average_rating, phone, image_url } =
+  const { restaurant_id, name, email, average_rating, phone, image_url, is_favorite } =
     restaurant;
 
   const navigate = useNavigate();
-  // const handleCardClick = () => {
-  //   navigate(`/restaurant/${restaurant_id}`);
-  // };
+  const toggleFavorite = useRestaurantStore((state) => state.toggleFavorite);
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(restaurant_id);
+  };
 
   return (
     <Link to={`/restaurant/${restaurant_id}`} className="group">
-      <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:-translate-y-2">
-        <figure className="relative overflow-hidden">
+      <div className="bg-[#1a1a1a] rounded-3xl overflow-hidden border border-white/5 shadow-xl hover:shadow-2xl hover:shadow-[#e21b70]/20 transition-all duration-300 group-hover:-translate-y-2 flex flex-col h-full">
+        <figure className="relative h-56 overflow-hidden">
           <img
             src={image_url}
             alt={name}
-            className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           />
-          <div className="absolute top-4 right-4 bg-gray-500/60 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] to-transparent opacity-80" />
+          
+          <button 
+            onClick={handleFavoriteClick}
+            className="absolute top-4 left-4 bg-black/60 backdrop-blur-md rounded-full p-2 border border-white/10 shadow-lg hover:scale-110 transition-transform z-10"
+          >
+            <Heart className={`w-5 h-5 transition-colors ${is_favorite ? 'fill-pink-500 text-pink-500' : 'text-white'}`} />
+          </button>
+
+          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-1.5 border border-white/10 shadow-lg">
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="font-semibold text-sm">{average_rating}</span>
+            <span className="font-bold text-white text-sm">{average_rating}</span>
           </div>
         </figure>
-        <div className="card-body">
-          <h3 className="card-title text-xl">{name}</h3>
+        
+        <div className="p-6 flex flex-col flex-grow relative">
+          <h3 className="text-2xl font-bold text-white mb-4 line-clamp-1 group-hover:text-[#e21b70] transition-colors">{name}</h3>
 
-          <div className="text-base-content/70 text-sm space-y-1 mb-3">
-            <p className="truncate">
-              📧 <span className="font-medium">{email}</span>
+          <div className="text-gray-400 text-sm space-y-2 mb-6 flex-grow">
+            <p className="flex items-center gap-2">
+              <span className="text-xl">📧</span> <span className="font-medium truncate">{email}</span>
             </p>
-            <p>
-              📞 <span className="font-medium">{phone}</span>
+            <p className="flex items-center gap-2">
+              <span className="text-xl">📞</span> <span className="font-medium">{phone}</span>
             </p>
           </div>
 
-          <div className="badge badge-primary badge-lg self-start">
+          <div className="inline-block bg-[#e21b70]/10 text-[#e21b70] border border-[#e21b70]/20 font-bold px-6 py-2.5 rounded-full text-center transition-all group-hover:bg-[#e21b70] group-hover:text-white">
             View Menu
           </div>
         </div>

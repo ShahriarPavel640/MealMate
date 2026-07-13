@@ -20,7 +20,7 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const navigate = useNavigate();
 
-  const deliveryFeePerRestaurant = 2.99;
+  const deliveryFeePerRestaurant = 30;
 
   const ordersByRestaurant = useMemo(() => {
     return cartItems.reduce((acc, item) => {
@@ -97,23 +97,11 @@ const CheckoutPage = () => {
             paymentMethod,
           }
         );
-        if (data.status === "success") {
-          toast.success("Orderes placed successfully!");
-
-          clearCart();
-          setTimeout(() => {
-            navigate("/order-history");
-          }, 500); // Delay navigation by 500ms to allow toast to show
+        if (data.status === "success" && data.paymentUrl) {
+          window.location.href = data.paymentUrl;
+        } else {
+          toast.error("Failed to get payment URL.");
         }
-        window.location.href = data.paymentUrl;
-        if (data.status === "success") {
-        }
-        // toast.success("Orderes placed successfully!");
-
-        // clearCart();
-        // setTimeout(() => {
-        //   navigate("/order-history");
-        // }, 500); // Delay navigation by 500ms to allow toast to show
       } catch (error) {
         // toast({
         //   title: 'Failed to initiate payment.',
@@ -157,7 +145,7 @@ const CheckoutPage = () => {
                         {item.name} x {item.quantity}
                       </span>
                       <span className="font-medium text-gray-900">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        Tk {(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -165,17 +153,17 @@ const CheckoutPage = () => {
                 <hr className="my-4" />
                 <div className="flex justify-between text-sm text-gray-700">
                   <span>Subtotal</span>
-                  <span>${order.subtotal.toFixed(2)}</span>
+                  <span>Tk {order.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-700">
                   <span>Delivery Fee</span>
-                  <span>${order.deliveryFee.toFixed(2)}</span>
+                  <span>Tk {order.deliveryFee.toFixed(2)}</span>
                 </div>
                 <hr className="my-2" />
                 <div className="flex justify-between font-semibold text-gray-900">
                   <span>Total for {order.restaurant_name}</span>
                   <span>
-                    ${(order.subtotal + order.deliveryFee).toFixed(2)}
+                    Tk {(order.subtotal + order.deliveryFee).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -194,16 +182,16 @@ const CheckoutPage = () => {
             <div className="space-y-2 mb-6 text-gray-700">
               <div className="flex justify-between">
                 <span>Items Subtotal</span>
-                <span>${totalItemsSubtotal.toFixed(2)}</span>
+                <span>Tk {totalItemsSubtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Total Delivery Fee</span>
-                <span>${totalDeliveryFee.toFixed(2)}</span>
+                <span>Tk {totalDeliveryFee.toFixed(2)}</span>
               </div>
               <hr className="my-2" />
               <div className="flex justify-between font-bold text-lg text-gray-900">
                 <span>Grand Total</span>
-                <span>${grandTotal.toFixed(2)}</span>
+                <span>Tk {grandTotal.toFixed(2)}</span>
               </div>
             </div>
 

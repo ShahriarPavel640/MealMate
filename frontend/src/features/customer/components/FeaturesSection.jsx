@@ -28,13 +28,13 @@ const features = [
 ];
 
 const FeaturesSection = () => (
-  <div className="py-20 bg-base-100">
+  <div className="py-20 bg-[#0a0a0a] text-white">
     <div className="max-w-7xl mx-auto px-4">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-bold mb-4 text-gray-100">
+        <h2 className="text-4xl font-extrabold mb-4 text-white tracking-tight">
           Why choose FoodPanda?
         </h2>
-        <p className="text-xl text-gray-300">
+        <p className="text-xl text-gray-400 font-medium">
           Experience the best food delivery service
         </p>
       </div>
@@ -42,7 +42,7 @@ const FeaturesSection = () => (
         {features.slice(0, 9).map((feature, idx) => (
           <div
             key={idx}
-            className={`card bg-gray-400 border shadow-sm hover:shadow-md transition ${feature.cardBg}`}
+            className={`card bg-[#141414] border border-white/5 shadow-2xl hover:bg-[#1a1a1a] hover:border-white/10 transition-all duration-300`}
           >
             <div className="card-body text-center">
               <div
@@ -50,10 +50,10 @@ const FeaturesSection = () => (
               >
                 {feature.icon}
               </div>
-              <h3 className="card-title text-2xl justify-center mb-4 text-gray-800">
+              <h3 className="card-title text-2xl justify-center mb-4 text-white font-bold">
                 {feature.title}
               </h3>
-              <p className="text-lg text-gray-600">{feature.description}</p>
+              <p className="text-lg text-gray-400">{feature.description}</p>
             </div>
           </div>
         ))}

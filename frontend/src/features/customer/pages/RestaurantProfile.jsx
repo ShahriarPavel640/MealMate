@@ -27,6 +27,7 @@ export default function Restaurant() {
   const menuItemsRef = useRef(null);
   const [menuCategories, setMenuCategories] = useState([]);
   const [restaurant, setRestaurant] = useState();
+  const [maxPrice, setMaxPrice] = useState(2000);
 
   const [filters, setFilters] = useState({
     sortBy: "relevance",
@@ -57,6 +58,11 @@ export default function Restaurant() {
           };
         });
         setMenuCategories(uniqueCategories);
+        const calculatedMax = res.data.menuItems.length > 0
+          ? Math.max(...res.data.menuItems.map((item) => Number(item.price)))
+          : 2000;
+        setMaxPrice(calculatedMax);
+        setFilters(prev => ({ ...prev, priceRange: [0, calculatedMax] }));
         console.log("Restaurant data: ", res.data);
       })
       .catch((err) => {
@@ -207,6 +213,7 @@ export default function Restaurant() {
           <FoodFilter
             menuCategories={menuCategories}
             onFilterChange={setFilters}
+            maxPrice={maxPrice}
           />
         </div>
 

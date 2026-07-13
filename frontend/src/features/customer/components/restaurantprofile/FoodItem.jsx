@@ -11,10 +11,10 @@ export function FoodItem({ item, onAddToCart, cartItems }) {
   );
 
   return (
-    <Card className="overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 hover:shadow-2xl transition-all duration-500 border-0 shadow-lg group">
+    <Card className="overflow-hidden bg-white dark:bg-gray-900 hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800 shadow-sm hover:-translate-y-1 group rounded-3xl">
       <div className="md:flex">
         {/* Image */}
-        <div className="py-2 rounded-2xl px-2 md:w-48 h-40 md:h-36 relative overflow-hidden">
+        <div className="m-3 rounded-2xl md:w-48 h-40 md:h-36 relative overflow-hidden shadow-sm">
           <img
             src={item.menu_item_image_url}
             alt={item.name}
@@ -83,11 +83,11 @@ export function FoodItem({ item, onAddToCart, cartItems }) {
               {/* Price & Discount */}
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  ${item.price}
+                  Tk {item.price}
                 </span>
                 {item.discount && (
                   <span className="text-lg text-gray-400 line-through">
-                    ${(item.price / (1 - item.discount)).toFixed(2)}
+                    Tk {(item.price / (1 - item.discount)).toFixed(2)}
                   </span>
                 )}
               </div>
@@ -101,7 +101,7 @@ export function FoodItem({ item, onAddToCart, cartItems }) {
                   "px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg",
                   isInCart
                     ? "bg-green-500 hover:bg-green-600 text-white cursor-default transform scale-105"
-                    : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white hover:scale-105 hover:shadow-xl"
+                    : "bg-[#e21b70] hover:bg-[#c2145d] text-white hover:scale-105 hover:shadow-lg"
                 )}
                 disabled={isInCart}
               >

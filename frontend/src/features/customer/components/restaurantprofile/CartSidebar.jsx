@@ -19,13 +19,14 @@ export function CartSidebar({ cartItems, onUpdateQuantity, onRemoveItem }) {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const deliveryFee = 2.99;
+  const uniqueRestaurants = new Set(cartItems.map((item) => item.restaurant_id)).size;
+  const deliveryFee = uniqueRestaurants > 0 ? uniqueRestaurants * 30 : 0;
   const total = subtotal + deliveryFee;
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-primary z-50 bg-gray-800 hover:bg-gray-700 text-white">
+        <Button className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-2xl z-50 bg-[#e21b70] hover:bg-[#c2145d] text-white hover:scale-110 transition-transform duration-300">
           <div className="relative">
             <ShoppingBag className="h-6 w-6" />
             {totalItems > 0 && (
@@ -37,10 +38,10 @@ export function CartSidebar({ cartItems, onUpdateQuantity, onRemoveItem }) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="w-full sm:max-w-md bg-gray-900 text-white">
+      <SheetContent className="w-full sm:max-w-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-l border-gray-100 dark:border-gray-800 shadow-2xl">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-white">
-            <ShoppingBag className="h-5 w-5" />
+          <SheetTitle className="flex items-center gap-2 text-gray-900 dark:text-white font-bold text-2xl">
+            <ShoppingBag className="h-6 w-6 text-[#e21b70]" />
             Your Cart ({totalItems} items)
           </SheetTitle>
         </SheetHeader>
@@ -61,17 +62,17 @@ export function CartSidebar({ cartItems, onUpdateQuantity, onRemoveItem }) {
                 {cartItems.map((item) => (
                   <div
                     key={item.cart_item_id}
-                    className="flex gap-3 p-3 bg-gray-800 rounded-lg"
+                    className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm"
                   >
                     <img
                       src={item.menu_item_image_url}
                       alt={item.name}
-                      className="w-16 h-16 object-cover rounded-md"
+                      className="w-20 h-20 object-cover rounded-xl shadow-sm"
                     />
                     <div className="flex-1">
-                      <h4 className="font-medium text-sm mb-1">{item.name}</h4>
+                      <h4 className="font-bold text-md mb-1 line-clamp-1">{item.name}</h4>
                       <p className="text-pink-500 font-semibold">
-                        ${item.price}
+                        Tk {item.price}
                       </p>
 
                       <div className="flex items-center justify-between mt-2">
@@ -79,7 +80,7 @@ export function CartSidebar({ cartItems, onUpdateQuantity, onRemoveItem }) {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 w-8 p-0 bg-gray-700 text-white hover:bg-gray-600 border-gray-600"
+                            className="h-8 w-8 p-0 bg-white dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600 rounded-full"
                             onClick={() =>
                               onUpdateQuantity(
                                 item.menu_item_id,
@@ -95,7 +96,7 @@ export function CartSidebar({ cartItems, onUpdateQuantity, onRemoveItem }) {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 w-8 p-0 bg-gray-700 text-white hover:bg-gray-600 border-gray-600"
+                            className="h-8 w-8 p-0 bg-white dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600 rounded-full"
                             onClick={() =>
                               onUpdateQuantity(
                                 item.menu_item_id,
@@ -129,21 +130,21 @@ export function CartSidebar({ cartItems, onUpdateQuantity, onRemoveItem }) {
               <div className="space-y-2 mb-4 text-sm">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>Tk {subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Fee</span>
-                  <span>${deliveryFee.toFixed(2)}</span>
+                  <span>Tk {deliveryFee.toFixed(2)}</span>
                 </div>
                 <Separator className="bg-gray-700" />
                 <div className="flex justify-between font-semibold text-base">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>Tk {total.toFixed(2)}</span>
                 </div>
               </div>
 
               <Button
-                className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+                className="w-full bg-[#e21b70] hover:bg-[#c2145d] text-white rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-bold"
                 size="lg"
                 onClick={() => navigate("/checkout")}
               >
