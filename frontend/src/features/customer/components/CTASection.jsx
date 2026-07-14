@@ -2,57 +2,59 @@ import { Link } from "react-router-dom";
 import { FaFacebookF, FaTwitter, FaInstagram } from "react-icons/fa";
 
 const CTASection = () => (
-  <footer className="bg-gradient-to-r from-primary to-secondary text-white">
-    {/* CTA Top */}
-    <div className="py-16 text-center px-4 max-w-4xl mx-auto">
-      <h2 className="text-4xl font-bold mb-4">
-        Ready to order? Let's get started!
-      </h2>
-      <p className="text-xl text-white/90 mb-6">
-        Join thousands of satisfied customers who trust FoodPanda for their food
-        delivery needs.
-      </p>
-      <Link
-        to="/restaurants"
-        className="bg-yellow-400 text-black font-semibold py-3 px-8 rounded-full hover:bg-yellow-300 transition"
-      >
-        Browse Restaurants
-      </Link>
+  <footer className="flex flex-col">
+    {/* CTA Top - Premium Dark */}
+    <div className="bg-[#0f0f0f] py-24 text-center px-4 relative z-10">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-5xl font-extrabold mb-6 tracking-tight text-white drop-shadow-md">
+          Ready to order? Let's get started!
+        </h2>
+        <p className="text-xl text-gray-400 mb-10 font-medium max-w-2xl mx-auto">
+          Join thousands of satisfied customers who trust FoodPanda for their food
+          delivery needs.
+        </p>
+        <Link
+          to="/restaurants"
+          className="bg-[#e21b70] hover:bg-[#c2145d] text-white font-bold py-4 px-10 rounded-full transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 inline-block"
+        >
+          Browse Restaurants
+        </Link>
+      </div>
     </div>
 
-    {/* Footer Grid */}
-    <div className="border-t border-white/20 py-10 px-6 sm:px-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-sm bg-primary-900">
+    {/* Footer Grid - Red/Pink Gradient */}
+    <div className="bg-gradient-to-br from-[#e21b70] via-pink-500 to-orange-400 border-t border-white/20 py-12 px-6 sm:px-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 text-sm">
       {/* About */}
       <div>
-        <h4 className="font-bold mb-4">Company</h4>
-        <ul className="space-y-2">
+        <h4 className="font-bold text-lg mb-6 text-white drop-shadow-sm">Company</h4>
+        <ul className="space-y-3 text-white/90 font-medium">
           <li>
-            <Link to="/about" className="hover:underline">
+            <Link to="/about" className="hover:text-white hover:underline transition-colors">
               About Us
             </Link>
           </li>
           <li>
-            <Link to="/partner" className="hover:underline">
+            <Link to="/partner" className="hover:text-white hover:underline transition-colors">
               Partner
             </Link>
           </li>
           <li>
-            <Link to="/rider/login" className="hover:underline">
+            <Link to="/rider/login" className="hover:text-white hover:underline transition-colors">
               Rider
             </Link>
           </li>
           <li>
-            <Link to="/careers" className="hover:underline">
+            <Link to="/careers" className="hover:text-white hover:underline transition-colors">
               Careers
             </Link>
           </li>
           <li>
-            <Link to="/terms" className="hover:underline">
+            <Link to="/terms" className="hover:text-white hover:underline transition-colors">
               Terms & Conditions
             </Link>
           </li>
           <li>
-            <Link to="/privacy" className="hover:underline">
+            <Link to="/privacy" className="hover:text-white hover:underline transition-colors">
               Privacy Policy
             </Link>
           </li>
@@ -61,44 +63,35 @@ const CTASection = () => (
 
       {/* Help */}
       <div>
-        <h4 className="font-bold mb-4">Support</h4>
-        <ul className="space-y-2">
+        <h4 className="font-bold text-lg mb-6 text-white drop-shadow-sm">Support</h4>
+        <ul className="space-y-3 text-white/90 font-medium">
           <li>
-            <Link to="/faq" className="hover:underline">
+            <Link to="/faq" className="hover:text-white hover:underline transition-colors">
               FAQs
             </Link>
           </li>
           <li>
-            <Link to="/contact" className="hover:underline">
+            <Link to="/contact" className="hover:text-white hover:underline transition-colors">
               Contact Us
             </Link>
           </li>
           <li>
-            <Link to="/help" className="hover:underline">
+            <Link to="/help" className="hover:text-white hover:underline transition-colors">
               Help Center
             </Link>
           </li>
         </ul>
       </div>
 
-      {/* App Download */}
-      {/* <div>
-        <h4 className="font-bold mb-4">Get the App</h4>
-        <div className="flex flex-col gap-3">
-          <img src="/images/appstore.png" alt="App Store" className="w-32" />
-          <img src="/images/playstore.png" alt="Google Play" className="w-32" />
-        </div>
-      </div> */}
-
       {/* Social & Location */}
-      <div>
-        <h4 className="font-bold mb-4">Connect</h4>
-        <div className="flex gap-4 text-lg mb-4">
+      <div className="text-white/90 font-medium">
+        <h4 className="font-bold text-lg mb-6 text-white drop-shadow-sm">Connect</h4>
+        <div className="flex gap-5 text-xl mb-6">
           <a
             href="https://facebook.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-yellow-400"
+            className="hover:text-yellow-400 text-white transition-colors bg-white/10 p-3 rounded-full hover:bg-white/20 border border-white/20"
           >
             <FaFacebookF />
           </a>
@@ -106,7 +99,7 @@ const CTASection = () => (
             href="https://twitter.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-yellow-400"
+            className="hover:text-yellow-400 text-white transition-colors bg-white/10 p-3 rounded-full hover:bg-white/20 border border-white/20"
           >
             <FaTwitter />
           </a>
@@ -114,13 +107,13 @@ const CTASection = () => (
             href="https://instagram.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-yellow-400"
+            className="hover:text-yellow-400 text-white transition-colors bg-white/10 p-3 rounded-full hover:bg-white/20 border border-white/20"
           >
             <FaInstagram />
           </a>
         </div>
-        <p>Serving in: Dhaka, Chattogram, Sylhet & more</p>
-        <p className="text-xs mt-2">© 2025 FoodPanda Bangladesh</p>
+        <p className="mb-2 font-medium text-white">Serving in: Dhaka, Chattogram, Sylhet & more</p>
+        <p className="text-xs text-white/70 mt-4">© 2026 FoodPanda Bangladesh. All rights reserved.</p>
       </div>
     </div>
   </footer>

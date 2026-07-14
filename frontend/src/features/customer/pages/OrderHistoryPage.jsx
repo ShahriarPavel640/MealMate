@@ -76,7 +76,7 @@ const OrderHistoryPage = () => {
                     </span>
                   </p>
                 </div>
-                <p className="text-lg font-bold text-gray-900">${order.total_amount}</p>
+                <p className="text-lg font-bold text-gray-900">Tk {order.total_amount}</p>
               </div>
 
               {order.status === 'delivered' && (
@@ -125,7 +125,7 @@ const OrderHistoryPage = () => {
                   {order.items &&
                     order.items.map((item, itemIndex) => (
                       <li key={itemIndex} className="text-gray-600">
-                        {item.menu_item_name} (x{item.quantity}) - ${item.price}
+                        {item.menu_item_name} (x{item.quantity}) - Tk {item.price}
                       </li>
                     ))}
                 </ul>

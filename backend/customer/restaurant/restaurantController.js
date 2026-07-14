@@ -12,9 +12,9 @@ export const getNearbyRestaurants = async (req, res) => {
     );
 
     if (userLocationResult.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Primary location not found for user." });
+      // If user has no location, fallback to returning all restaurants
+      const fallbackResult = await pool.query("SELECT * FROM restaurants LIMIT 60");
+      return res.status(200).json(fallbackResult.rows);
     }
     const userLat = userLocationResult.rows[0].latitude;
     const userLon = userLocationResult.rows[0].longitude;
@@ -22,20 +22,30 @@ export const getNearbyRestaurants = async (req, res) => {
     const query = `
       SELECT 
         r.restaurant_id, r.name, r.phone, r.email, r.average_rating, r.image_url,
-        get_distance_km(rl.longitude, rl.latitude, $1, $2) AS distance
+        get_distance_km(rl.longitude, rl.latitude, $1, $2) AS distance,
+        CASE WHEN fr.id IS NOT NULL THEN true ELSE false END as is_favorite,
+        (
+          EXISTS (
+            SELECT 1 FROM restaurant_hours rh 
+            WHERE rh.restaurant_id = r.restaurant_id 
+              AND rh.day_of_week::text = to_char(CURRENT_TIMESTAMP, 'Dy')
+              AND CURRENT_TIME BETWEEN rh.open_time AND rh.close_time
+          )
+        ) AS is_open
       FROM restaurants r
-      JOIN user_locations rl ON r.restaurant_id = rl.restaurant_id
+      JOIN user_locations rl ON r.location_id = rl.location_id
+      LEFT JOIN favorite_restaurants fr ON r.restaurant_id = fr.restaurant_id AND fr.user_id = $4
       WHERE get_distance_km(rl.longitude, rl.latitude, $1, $2) <= $3
-      ORDER BY distance
+      ORDER BY is_favorite DESC, distance ASC
       LIMIT 60
     `;
 
-    let result = await pool.query(query, [userLon, userLat, radius]);
+    let result = await pool.query(query, [userLon, userLat, radius, id]);
 
-    // If no restaurants found in 5km, try 10km
+    // If no restaurants found in 5km, try 50000km (essentially anywhere)
     if (result.rows.length === 0) {
-      const radius2 = 10; // 10km
-      result = await pool.query(query, [userLon, userLat, radius2]);
+      const radius2 = 50000; // 50000km
+      result = await pool.query(query, [userLon, userLat, radius2, id]);
     }
     res.status(200).json(result.rows);
   } catch (err) {
@@ -44,9 +54,46 @@ export const getNearbyRestaurants = async (req, res) => {
   }
 };
 
+export const toggleFavoriteRestaurant = async (req, res) => {
+  const userId = req.user.id;
+  const restaurantId = req.params.id;
+
+  try {
+    const check = await pool.query(
+      "SELECT id FROM favorite_restaurants WHERE user_id = $1 AND restaurant_id = $2",
+      [userId, restaurantId]
+    );
+
+    if (check.rows.length > 0) {
+      await pool.query("DELETE FROM favorite_restaurants WHERE id = $1", [check.rows[0].id]);
+      return res.status(200).json({ is_favorite: false });
+    } else {
+      await pool.query(
+        "INSERT INTO favorite_restaurants (user_id, restaurant_id) VALUES ($1, $2)",
+        [userId, restaurantId]
+      );
+      return res.status(200).json({ is_favorite: true });
+    }
+  } catch (err) {
+    console.error("Error toggling favorite:", err.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const getRestaurants = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM restaurants LIMIT 30");
+    const result = await pool.query(`
+      SELECT r.*,
+        (
+          EXISTS (
+            SELECT 1 FROM restaurant_hours rh 
+            WHERE rh.restaurant_id = r.restaurant_id 
+              AND rh.day_of_week::text = to_char(CURRENT_TIMESTAMP, 'Dy')
+              AND CURRENT_TIME BETWEEN rh.open_time AND rh.close_time
+          )
+        ) AS is_open
+      FROM restaurants r LIMIT 30
+    `);
     res.status(200).json(result.rows);
   } catch (err) {
     console.error("Error in get restaurant:", err.message);
@@ -59,7 +106,16 @@ export const getRestaurantsSearchByName = async (req, res) => {
   //console.log(rest_name);
   try {
     const result = await pool.query(
-      `SELECT * FROM restaurants WHERE name ILIKE $1 LIMIT 30`,
+      `SELECT r.*,
+        (
+          EXISTS (
+            SELECT 1 FROM restaurant_hours rh 
+            WHERE rh.restaurant_id = r.restaurant_id 
+              AND rh.day_of_week::text = to_char(CURRENT_TIMESTAMP, 'Dy')
+              AND CURRENT_TIME BETWEEN rh.open_time AND rh.close_time
+          )
+        ) AS is_open
+       FROM restaurants r WHERE name ILIKE $1 LIMIT 30`,
       [`%${rest_name.trim()}%`]
     );
     res.status(200).json(result.rows);
@@ -136,7 +192,15 @@ export const getRestaurant = async (req, res) => {
       r.descriptions,
       l.street,
       l.city,
-      l.postal_code
+      l.postal_code,
+      (
+        EXISTS (
+          SELECT 1 FROM restaurant_hours rh 
+          WHERE rh.restaurant_id = r.restaurant_id 
+            AND rh.day_of_week::text = to_char(CURRENT_TIMESTAMP, 'Dy')
+            AND CURRENT_TIME BETWEEN rh.open_time AND rh.close_time
+        )
+      ) AS is_open
     FROM restaurants r
     LEFT JOIN user_locations l ON r.restaurant_id = l.restaurant_id
     WHERE r.restaurant_id = $1
@@ -172,7 +236,6 @@ export const getRestaurant = async (req, res) => {
         name: r.restaurant_name,
         descriptions: r.descriptions,
         restaurant_id: r.restaurant_id,
-        // cuisine_type and description are not in your schema, so omit them
         phone: r.phone,
         email: r.email,
         rating: r.average_rating,
@@ -180,6 +243,7 @@ export const getRestaurant = async (req, res) => {
         deliveryTime: 0,
         deliveryFee: 0,
         image: r.image_url,
+        is_open: r.is_open,
         address,
         // delivery_settings is not in your schema, so omit or set as empty/default
         delivery_settings: {

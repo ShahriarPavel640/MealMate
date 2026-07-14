@@ -58,7 +58,7 @@ describe('Restaurant API E2E', () => {
 
   it('should verify the restaurant status', async () => {
     const res = await request(app)
-      .get('/api/restaurant/is-varify')
+      .get('/api/restaurant/is-verify')
       .set('Cookie', restaurantCookies);
 
     expect(res.statusCode).toBe(200);
@@ -79,10 +79,9 @@ describe('Restaurant API E2E', () => {
       .set('Cookie', restaurantCookies)
       .attach('image', Buffer.from('dummy image content'), 'test.png')
       .field('restaurant_name', 'Updated Restaurant Name')
-      .field('phone', '8888888888')
-      .field('email', 'restaurant@test.com')
-      .field('cuisine_type', 'Dessert')
-      .field('description', 'Delicious test restaurant')
+      .field('phone', '01999999999')
+      .field('email', 'new_email@example.com')
+      .field('description', 'Updated description')
       .field('street', 'New St')
       .field('city', 'New City')
       .field('postal_code', '54321')

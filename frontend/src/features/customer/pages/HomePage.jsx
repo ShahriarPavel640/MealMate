@@ -101,7 +101,7 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <div className="relative">
+      <div className="relative" ref={notificationRef}>
         <button
           onClick={() => setShowNotifications((v) => !v)}
           className="absolute top-4 right-4 bg-gray-800 text-white p-2 rounded-full shadow-lg z-10"
@@ -117,7 +117,6 @@ const Home = () => {
         {showNotifications && (
           <div
             className="absolute top-16 right-4 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 animate-fade-in"
-            ref={notificationRef}
           >
             <div className="p-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-800">
@@ -147,7 +146,10 @@ const Home = () => {
             <div className="p-4 border-t border-gray-200">
               <button
                 className="w-full text-blue-600 hover:text-blue-800"
-                onClick={clearNotifications}
+                onClick={() => {
+                  clearNotifications();
+                  setShowNotifications(false);
+                }}
               >
                 Clear All
               </button>

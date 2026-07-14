@@ -18,9 +18,10 @@ const CheckoutPage = () => {
   const { cartItems, clearCart } = useCartStore();
   const { authUser } = userAuthStore();
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [specialInstructions, setSpecialInstructions] = useState({});
   const navigate = useNavigate();
 
-  const deliveryFeePerRestaurant = 2.99;
+  const deliveryFeePerRestaurant = 30;
 
   const ordersByRestaurant = useMemo(() => {
     return cartItems.reduce((acc, item) => {
@@ -67,7 +68,7 @@ const CheckoutPage = () => {
     };
     if (paymentMethod === "cod") {
       try {
-        await axiosInstance.post("/customer/order/create", { cartItems });
+        await axiosInstance.post("/customer/order/create", { cartItems, specialInstructions });
         // toast({
         //   title: 'Orders placed successfully!',
         //   variant: 'success'
@@ -95,25 +96,14 @@ const CheckoutPage = () => {
             total_amount: grandTotal,
             tran_id,
             paymentMethod,
+            specialInstructions,
           }
         );
-        if (data.status === "success") {
-          toast.success("Orderes placed successfully!");
-
-          clearCart();
-          setTimeout(() => {
-            navigate("/order-history");
-          }, 500); // Delay navigation by 500ms to allow toast to show
+        if (data.status === "success" && data.paymentUrl) {
+          window.location.href = data.paymentUrl;
+        } else {
+          toast.error("Failed to get payment URL.");
         }
-        window.location.href = data.paymentUrl;
-        if (data.status === "success") {
-        }
-        // toast.success("Orderes placed successfully!");
-
-        // clearCart();
-        // setTimeout(() => {
-        //   navigate("/order-history");
-        // }, 500); // Delay navigation by 500ms to allow toast to show
       } catch (error) {
         // toast({
         //   title: 'Failed to initiate payment.',
@@ -157,7 +147,7 @@ const CheckoutPage = () => {
                         {item.name} x {item.quantity}
                       </span>
                       <span className="font-medium text-gray-900">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        Tk {(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -165,18 +155,31 @@ const CheckoutPage = () => {
                 <hr className="my-4" />
                 <div className="flex justify-between text-sm text-gray-700">
                   <span>Subtotal</span>
-                  <span>${order.subtotal.toFixed(2)}</span>
+                  <span>Tk {order.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-700">
                   <span>Delivery Fee</span>
-                  <span>${order.deliveryFee.toFixed(2)}</span>
+                  <span>Tk {order.deliveryFee.toFixed(2)}</span>
                 </div>
                 <hr className="my-2" />
                 <div className="flex justify-between font-semibold text-gray-900">
                   <span>Total for {order.restaurant_name}</span>
                   <span>
-                    ${(order.subtotal + order.deliveryFee).toFixed(2)}
+                    Tk {(order.subtotal + order.deliveryFee).toFixed(2)}
                   </span>
+                </div>
+                
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Special Instructions
+                  </label>
+                  <textarea
+                    className="w-full p-3 border rounded-lg text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:bg-white transition-colors text-sm"
+                    rows="2"
+                    placeholder="e.g. Please make the food extra spicy, or No onions please."
+                    value={specialInstructions[restId] || ""}
+                    onChange={(e) => setSpecialInstructions({ ...specialInstructions, [restId]: e.target.value })}
+                  ></textarea>
                 </div>
               </div>
             ))
@@ -194,20 +197,20 @@ const CheckoutPage = () => {
             <div className="space-y-2 mb-6 text-gray-700">
               <div className="flex justify-between">
                 <span>Items Subtotal</span>
-                <span>${totalItemsSubtotal.toFixed(2)}</span>
+                <span>Tk {totalItemsSubtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Total Delivery Fee</span>
-                <span>${totalDeliveryFee.toFixed(2)}</span>
+                <span>Tk {totalDeliveryFee.toFixed(2)}</span>
               </div>
               <hr className="my-2" />
               <div className="flex justify-between font-bold text-lg text-gray-900">
                 <span>Grand Total</span>
-                <span>${grandTotal.toFixed(2)}</span>
+                <span>Tk {grandTotal.toFixed(2)}</span>
               </div>
             </div>
 
-            <h3 className="text-xl font-semibold mb-4 text-gray-900">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 mt-6">
               Payment Method
             </h3>
             <RadioGroup

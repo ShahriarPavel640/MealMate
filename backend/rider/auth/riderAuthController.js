@@ -127,7 +127,7 @@ export const logout = async (req, res) => {
   }
 };
 
-export const varify = async (req, res) => {
+export const verify = async (req, res) => {
   try {
     const userId = req.user.id;
     const rider = await pool.query(

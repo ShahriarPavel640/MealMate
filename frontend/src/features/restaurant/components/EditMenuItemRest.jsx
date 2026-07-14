@@ -14,14 +14,7 @@ import { Badge } from "@/features/restaurant/components/ui/badge";
 import { ArrowLeft, Upload, Save, Eye, EyeOff } from "lucide-react";
 import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthStore";
 
-const categories = [
-  "Pizza",
-  "Burgers",
-  "Pasta",
-  "Salads",
-  "Desserts",
-  "Beverages",
-];
+
 
 const EditMenuItemRest = ({ item, onBack }) => {
   const { edit_menu_item, isChangingMenu } = restaurantAuthStore();
@@ -31,7 +24,7 @@ const EditMenuItemRest = ({ item, onBack }) => {
     name: "",
     description: "",
     price: "",
-    category: "Pizza",
+    category: "",
     menu_item_image_url: "",
     is_available: true,
     discount: "",
@@ -47,7 +40,7 @@ const EditMenuItemRest = ({ item, onBack }) => {
         name: item.name || "",
         description: item.description || "",
         price: item.price || "",
-        category: item.category || "Pizza",
+        category: item.category_name || item.category || "",
         menu_item_image_url: item.menu_item_image_url || "",
         is_available: item.is_available,
         discount: item.discount || "",
@@ -196,7 +189,7 @@ const EditMenuItemRest = ({ item, onBack }) => {
                   <Label htmlFor="price">Price *</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      $
+                      Tk
                     </span>
                     <Input
                       id="price"
@@ -205,7 +198,7 @@ const EditMenuItemRest = ({ item, onBack }) => {
                       step="0.01"
                       value={formData.price}
                       onChange={handleInputChange}
-                      className="pl-8 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                      className="pl-8 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       required
                     />
                   </div>
@@ -213,20 +206,16 @@ const EditMenuItemRest = ({ item, onBack }) => {
 
                 <div className="space-y-2">
                   <Label htmlFor="category">Category *</Label>
-                  <select
+                  <Input
                     id="category"
                     name="category"
+                    type="text"
+                    placeholder="e.g. Pizza"
                     value={formData.category}
                     onChange={handleInputChange}
                     required
-                    className="flex h-10 w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                    className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                  />
                 </div>
               </div>
 
@@ -234,7 +223,7 @@ const EditMenuItemRest = ({ item, onBack }) => {
                 <Label htmlFor="discount">Discount</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    $
+                    Tk
                   </span>
                   <Input
                     id="discount"
@@ -243,7 +232,7 @@ const EditMenuItemRest = ({ item, onBack }) => {
                     step="0.01"
                     value={formData.discount}
                     onChange={handleInputChange}
-                    className="pl-8 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                    className="pl-8 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>

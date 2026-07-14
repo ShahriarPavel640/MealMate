@@ -26,8 +26,13 @@ const Navbar = () => {
       return (
         <>
           <li>
-            <Link to="/profile">
-              {authUser.name || authUser.user?.name || "Profile"}
+            <Link to="/profile" className="flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-md transition-all shadow-sm">
+              <div className="w-7 h-7 rounded-full bg-white text-[#e21b70] flex items-center justify-center font-bold text-sm">
+                {(authUser.name || authUser.user?.name || "U").charAt(0).toUpperCase()}
+              </div>
+              <span className="font-semibold text-sm hidden sm:block">
+                {authUser.name || authUser.user?.name || "Profile"}
+              </span>
             </Link>
           </li>
           <li>
@@ -73,7 +78,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#e21b70] text-white shadow-md sticky top-0 z-50">
+    <nav className="bg-[#e21b70]/90 backdrop-blur-md text-white shadow-lg sticky top-0 z-50 border-b border-white/10 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="text-2xl font-bold">

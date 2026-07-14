@@ -211,8 +211,13 @@ export const todaysOrderStat = async (req, res) => {
       [restaurant_id]
     );
 
-    const { revenue_today, revenue_yesterday, orders_today, orders_yesterday } =
+    let { revenue_today, revenue_yesterday, orders_today, orders_yesterday } =
       result.rows[0];
+
+    revenue_today = parseFloat(revenue_today) || 0;
+    revenue_yesterday = parseFloat(revenue_yesterday) || 0;
+    orders_today = parseInt(orders_today, 10) || 0;
+    orders_yesterday = parseInt(orders_yesterday, 10) || 0;
 
     const avgOrderValueToday =
       orders_today > 0 ? revenue_today / orders_today : 0;
@@ -232,7 +237,7 @@ export const todaysOrderStat = async (req, res) => {
     const stats = [
       {
         title: "Today's Revenue",
-        value: `$${revenue_today?.toFixed(2) || "0.00"}`,
+        value: `Tk ${revenue_today?.toFixed(2) || "0.00"}`,
         ...calcChange(revenue_today, revenue_yesterday),
         description: "vs yesterday",
       },
@@ -244,7 +249,7 @@ export const todaysOrderStat = async (req, res) => {
       },
       {
         title: "Avg Order Value",
-        value: `$${avgOrderValueToday.toFixed(2)}`,
+        value: `Tk ${avgOrderValueToday.toFixed(2)}`,
         ...calcChange(avgOrderValueToday, avgOrderValueYesterday),
         description: "vs yesterday",
       },

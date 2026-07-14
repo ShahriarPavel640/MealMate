@@ -40,7 +40,7 @@ const FeaturedCategories = ({ categories = sampleCategories }) => (
             to={`/categories/${category.id}`}
             className="group"
           >
-            <div className="card bg-base-200 hover:shadow-xl transition group-hover:-translate-y-2">
+            <div className="card bg-base-200 shadow-lg hover:shadow-2xl transition-all duration-300 group-hover:-translate-y-3 rounded-3xl border border-gray-100 overflow-hidden">
               <figure className="relative overflow-hidden">
                 <img
                   src={category.menu_category_image_url}

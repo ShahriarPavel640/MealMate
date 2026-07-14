@@ -12,7 +12,7 @@ import {
   delete_menu,
   changePassword,
   logout,
-  varify,
+  verify,
   get_menu,
   getRestaurantProfile,
   editProfile,
@@ -37,7 +37,7 @@ router.post(
   upload.single("image"),
   add_menu
 );
-router.get("/is-varify", authorization, authorizeRoles(role), varify);
+router.get("/is-verify", authorization, authorizeRoles(role), verify);
 router.put(
   "/edit_menu/:menu_item_id",
   authorization,

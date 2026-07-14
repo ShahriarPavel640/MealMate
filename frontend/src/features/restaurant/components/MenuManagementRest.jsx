@@ -100,21 +100,30 @@ function MenuManagementRest() {
   };
 
   const handleSaveEdit = async (updatedItem) => {
-    const items = await edit_menu_item(updatedItem, editingItem.menu_item_id);
-    if (items != false) {
-      setMenuItems((prev) =>
-        prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-      );
-      setMenuItems(items);
+    try {
+      const items = await edit_menu_item(updatedItem, editingItem.menu_item_id);
+      if (items !== false) {
+        setMenuItems(items);
+        toast.success("Menu item updated successfully!");
+      } else {
+        toast.error("Failed to update menu item.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while updating the menu item.");
     }
   };
 
   const handleDeleteItem = async (itemId) => {
-    const items = await delete_menu_item(itemId);
-    if (items !== false) {
-      setMenuItems((prev) => prev.filter((item) => item.id !== itemId));
-      setMenuItems(items);
-    } else {
+    try {
+      const items = await delete_menu_item(itemId);
+      if (items !== false) {
+        setMenuItems(items);
+        toast.success("Menu item deleted successfully!");
+      } else {
+        toast.error("Failed to delete menu item.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while deleting the menu item.");
     }
   };
   const avgPrice =
@@ -406,7 +415,7 @@ function MenuManagementRest() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-400">
-              ${avgPrice}
+              Tk {avgPrice}
             </div>
           </CardContent>
         </Card>
@@ -417,7 +426,7 @@ function MenuManagementRest() {
 
 export default MenuManagementRest;
 
-// import React, { useEffect, useState } from "react";
+
 // import {
 //   Card,
 //   CardContent,
@@ -736,7 +745,7 @@ export default MenuManagementRest;
 //           </CardHeader>
 //           <CardContent>
 //             <div className="text-2xl font-bold text-orange-400">
-//               ${avgPrice}
+//               Tk {avgPrice}
 //             </div>
 //           </CardContent>
 //         </Card>

@@ -107,7 +107,7 @@ export const logout = async (req, res) => {
   }
 };
 
-export const varify = async (req, res) => {
+export const verify = async (req, res) => {
   const id = req.user.id;
   try {
     const restaurant = await pool.query(
@@ -123,8 +123,8 @@ export const varify = async (req, res) => {
       average_rating: restaurant.rows[0].average_rating,
     });
   } catch (err) {
-    console.log("Error in varify controller:", err.message);
-    res.status(500).json({ message: "Internal server error in varify" });
+    console.log("Error in verify controller:", err.message);
+    res.status(500).json({ message: "Internal server error in verify" });
   }
 };
 
@@ -405,7 +405,7 @@ export const get_menu_categories = async (req, res) => {
   const restaurant_id = req.user.id;
   try {
     const result = await pool.query(
-      "SELECT name FROM menu_categories WHERE restaurant_id = $1",
+      "SELECT DISTINCT c.name FROM menu_categories c JOIN menu_items m ON c.category_id = m.category_id WHERE c.restaurant_id = $1",
       [restaurant_id]
     );
 
@@ -463,7 +463,6 @@ export const getRestaurantProfile = async (req, res) => {
         r.average_rating AS rating,
         r.phone,
         r.descriptions as description,
-        r.cuisine_type,
         r.email,
         l.street,
         l.city,
@@ -508,7 +507,6 @@ export const getRestaurantProfile = async (req, res) => {
       restaurant_image: r.image_url,
       rating: r.rating,
       description: r.description,
-      cuisine_type: r.cuisine_type,
       delivery_settings: {
         delivery_fee: "",
         min_order: "",
@@ -536,7 +534,6 @@ export const editProfile = async (req, res) => {
     restaurant_name,
     phone,
     email,
-    cuisine_type,
     description,
     delivery_fee,
     min_order,
@@ -590,14 +587,13 @@ export const editProfile = async (req, res) => {
 
     await pool.query(
       `UPDATE restaurants 
-       SET name = $1, phone = $2, image_url = $3, email = $4, cuisine_type = $5, descriptionS = $6 
-       WHERE restaurant_id = $7`,
+       SET name = $1, phone = $2, image_url = $3, email = $4, descriptionS = $5 
+       WHERE restaurant_id = $6`,
       [
         restaurant_name,
         phone,
         imageUrl,
         email,
-        cuisine_type,
         description,
         restaurant_id,
       ]
@@ -623,11 +619,15 @@ export const editProfile = async (req, res) => {
       }
     }
 
-    if (Array.isArray(operating_hours) && operating_hours.length > 0) {
-      await pool.query("SELECT upsert_restaurant_hours($1, $2::jsonb)", [
-        restaurant_id,
-        JSON.stringify(operating_hours),
-      ]);
+    if (Array.isArray(operating_hours)) {
+      if (operating_hours.length > 0) {
+        await pool.query("SELECT upsert_restaurant_hours($1, $2::jsonb)", [
+          restaurant_id,
+          JSON.stringify(operating_hours),
+        ]);
+      } else {
+        await pool.query("DELETE FROM restaurant_hours WHERE restaurant_id = $1", [restaurant_id]);
+      }
     }
 
     res.status(200).json({

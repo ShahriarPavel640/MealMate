@@ -96,7 +96,7 @@ function OrderCard({ order, onUpdateStatus, onRejectOrder }) {
           </div>
           <div className="text-right">
             <p className="text-xl font-bold text-purple-400">
-              ${parseFloat(order.total_amount).toFixed(2)}
+              Tk {parseFloat(order.total_amount).toFixed(2)}
             </p>
             <p className="text-sm text-gray-400">
               {order.payment_method || "N/A"}
@@ -139,12 +139,19 @@ function OrderCard({ order, onUpdateStatus, onRejectOrder }) {
                     {item.quantity}x {item.name}
                   </span>
                   <span>
-                    ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                    Tk {(parseFloat(item.price) * item.quantity).toFixed(2)}
                   </span>
                 </div>
               ))}
           </div>
         </div>
+
+        {order.special_instructions && (
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-md p-3 mt-4">
+            <h4 className="text-yellow-500 font-semibold text-sm mb-1">Special Instructions:</h4>
+            <p className="text-gray-300 text-sm">{order.special_instructions}</p>
+          </div>
+        )}
 
         {showActionButtons && (
           <div className="flex space-x-2 pt-4 border-t border-gray-700">
@@ -167,13 +174,15 @@ function OrderCard({ order, onUpdateStatus, onRejectOrder }) {
                 Reject Order
               </Button>
             )}
-            {/* <Button
-              variant="outline"
-              className="border-gray-600 text-gray-200 hover:bg-gray-700"
-            >
-              <Phone className="h-4 w-4 mr-2" />
-              Call Customer
-            </Button> */}
+            <a href={`tel:${order.customer_phone}`} className="inline-block">
+              <Button
+                variant="outline"
+                className="border-gray-600 text-gray-200 hover:bg-gray-700 h-full"
+              >
+                <Phone className="h-4 w-4 mr-2" />
+                Call Customer
+              </Button>
+            </a>
           </div>
         )}
       </CardContent>
@@ -307,7 +316,7 @@ function OrderManagement() {
         title: "New Order Received!",
         description: `Order #${newOrder.order_id} from ${
           newOrder.customer_name
-        } for $${parseFloat(newOrder.total_amount).toFixed(2)}`,
+        } for Tk ${parseFloat(newOrder.total_amount).toFixed(2)}`,
         action: {
           label: "Accept",
           onClick: () => {
@@ -517,7 +526,7 @@ function OrderManagement() {
 
 export default OrderManagement;
 
-// import React, { useState, useEffect, useCallback } from "react";
+
 // import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 // import { Button } from "./ui/button";
 // import { Badge } from "./ui/badge";
@@ -615,7 +624,7 @@ export default OrderManagement;
 //           </div>
 //           <div className="text-right">
 //             <p className="text-xl font-bold text-purple-400">
-//               ${parseFloat(order.total_amount).toFixed(2)}
+//               Tk {parseFloat(order.total_amount).toFixed(2)}
 //             </p>
 //             <p className="text-sm text-gray-400">
 //               {order.payment_method || "N/A"}
@@ -658,7 +667,7 @@ export default OrderManagement;
 //                     {item.quantity}x {item.name}
 //                   </span>
 //                   <span>
-//                     ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+//                     Tk {(parseFloat(item.price) * item.quantity).toFixed(2)}
 //                   </span>
 //                 </div>
 //               ))}
@@ -775,7 +784,7 @@ export default OrderManagement;
 //         title: "New Order Received!",
 //         description: `Order #${newOrder.order_id} from ${
 //           newOrder.customer_name
-//         } for $${parseFloat(newOrder.total_amount).toFixed(2)}`,
+//         } for Tk ${parseFloat(newOrder.total_amount).toFixed(2)}`,
 //         action: {
 //           label: "Accept",
 //           onClick: () => {
