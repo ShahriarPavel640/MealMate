@@ -4,7 +4,7 @@ import { Star, Heart } from "lucide-react";
 import { useRestaurantStore } from "../../store/useRestaurantStore";
 
 const RestaurantCard = ({ restaurant }) => {
-  const { restaurant_id, name, email, average_rating, phone, image_url, is_favorite } =
+  const { restaurant_id, name, email, average_rating, phone, image_url, is_favorite, is_open } =
     restaurant;
 
   const navigate = useNavigate();
@@ -23,9 +23,17 @@ const RestaurantCard = ({ restaurant }) => {
           <img
             src={image_url}
             alt={name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className={`w-full h-full object-cover transition-transform duration-700 ${is_open !== false ? 'group-hover:scale-110' : 'grayscale opacity-60'}`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] to-transparent opacity-80" />
+          
+          {is_open === false && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+              <span className="bg-red-600 text-white font-bold px-4 py-2 rounded-full shadow-lg border border-red-500/50 uppercase tracking-wide text-sm z-10">
+                Currently Unavailable
+              </span>
+            </div>
+          )}
           
           <button 
             onClick={handleFavoriteClick}

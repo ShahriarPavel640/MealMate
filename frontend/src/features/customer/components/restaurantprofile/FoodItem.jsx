@@ -5,13 +5,20 @@ import { Card } from "@/features/restaurant/components/ui/card";
 import { Badge } from "@/features/restaurant/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export function FoodItem({ item, onAddToCart, cartItems }) {
+export function FoodItem({ item, onAddToCart, cartItems, restaurant_is_open }) {
   const isInCart = cartItems.some(
     (cartItem) => cartItem.menu_item_id === item.menu_item_id
   );
 
   return (
-    <Card className="overflow-hidden bg-white dark:bg-gray-900 hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800 shadow-sm hover:-translate-y-1 group rounded-3xl">
+    <Card 
+      className={cn(
+        "overflow-hidden bg-white dark:bg-gray-900 transition-all duration-300 border border-gray-100 dark:border-gray-800 rounded-3xl",
+        item.is_available === false 
+          ? "opacity-60 grayscale" 
+          : "hover:shadow-2xl shadow-sm hover:-translate-y-1 group"
+      )}
+    >
       <div className="md:flex">
         {/* Image */}
         <div className="m-3 rounded-2xl md:w-48 h-40 md:h-36 relative overflow-hidden shadow-sm">
@@ -24,6 +31,11 @@ export function FoodItem({ item, onAddToCart, cartItems }) {
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
+            {item.is_available === false && (
+              <Badge className="bg-red-500 text-white font-bold shadow-lg">
+                Currently Unavailable
+              </Badge>
+            )}
             {item.isPopular && (
               <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold shadow-lg">
                 <TrendingUp className="h-3 w-3 mr-1" />
@@ -97,6 +109,7 @@ export function FoodItem({ item, onAddToCart, cartItems }) {
               <Button
                 onClick={() => onAddToCart(item)}
                 size="lg"
+                disabled={restaurant_is_open === false}
                 className={cn(
                   "px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg",
                   isInCart

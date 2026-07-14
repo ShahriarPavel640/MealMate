@@ -125,6 +125,14 @@ export default function Restaurant() {
   }, [authUser, clearCart]);
 
   const handleAddToCart = async (item) => {
+    if (restaurant && restaurant.is_open === false) {
+      toast.error("This restaurant is currently unavailable.");
+      return;
+    }
+    if (item && item.is_available === false) {
+      toast.error("This item is currently unavailable.");
+      return;
+    }
     if (!authUser) {
       toast.error("Please log in to add items to your cart.");
       return;
@@ -193,6 +201,13 @@ export default function Restaurant() {
         {restaurant && (
           <div className="shadow-lg bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <RestaurantHeader restaurant={restaurant} />
+            {restaurant.is_open === false && (
+              <div className="bg-red-500/10 border-t border-red-500/20 px-6 py-3 text-center">
+                <p className="text-red-600 dark:text-red-400 font-bold tracking-wide uppercase text-sm">
+                  This restaurant is currently unavailable. You cannot place orders at this time.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -255,6 +270,7 @@ export default function Restaurant() {
                           item={item}
                           onAddToCart={handleAddToCart}
                           cartItems={cartItems}
+                          restaurant_is_open={restaurant?.is_open}
                         />
                       </div>
                     ))}

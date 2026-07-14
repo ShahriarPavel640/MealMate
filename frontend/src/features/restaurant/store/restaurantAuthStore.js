@@ -15,7 +15,7 @@ export const restaurantAuthStore = create((set, get) => ({
 
   checkAuthRestaurant: async () => {
     try {
-      const res = await axiosInstance.get("/restaurant/is-varify");
+      const res = await axiosInstance.get("/restaurant/is-verify");
       set({ authRestaurant: { ...res.data, role: 'restaurant' } });
     } catch (err) {
       console.log("Error in checkAuth", err);

@@ -28,7 +28,7 @@ import {
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
+  Banknote,
   ShoppingBag,
   Users,
   Star,
@@ -60,7 +60,7 @@ const AnalyticsRest = () => {
   const getDailyRevenue = async () => {
     try {
       const response = await axiosInstance.get(
-        "restaurant/stats/daily_revenue"
+        "/restaurant/stats/daily_revenue"
       );
       return response.data;
     } catch (err) {
@@ -107,7 +107,7 @@ const AnalyticsRest = () => {
   const getTopItems = async () => {
     try {
       const response = await axiosInstance.get(
-        "restaurant/stats/top_selling_items"
+        "/restaurant/stats/top_selling_items"
       );
       return response.data;
     } catch (err) {
@@ -128,7 +128,7 @@ const AnalyticsRest = () => {
   const getWeeklyRevenue = async () => {
     try {
       const response = await axiosInstance.get(
-        "restaurant/stats/monthly_revenue"
+        "/restaurant/stats/monthly_revenue"
       );
       return response.data;
     } catch (err) {
@@ -149,7 +149,7 @@ const AnalyticsRest = () => {
   const getCategoryData = async () => {
     try {
       const response = await axiosInstance.get(
-        "restaurant/stats/category_wise_sell"
+        "/restaurant/stats/category_wise_sell"
       );
       return response.data;
     } catch (err) {
@@ -183,7 +183,7 @@ const AnalyticsRest = () => {
             <CardTitle className="text-sm font-medium text-gray-400">
               Weekly Revenue
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-green-400" />
+            <Banknote className="h-4 w-4 text-green-400" />
           </CardHeader>
 
           <CardContent>
@@ -194,7 +194,7 @@ const AnalyticsRest = () => {
               return (
                 <>
                   <div className="text-2xl font-bold text-white">
-                    ৳ {lastWeek.toFixed(2)}
+                    Tk {lastWeek.toFixed(2)}
                   </div>
 
                   <div className="flex items-center space-x-1 mt-1">

@@ -16,7 +16,7 @@ export const userAuthStore = create((set, get) => ({
 
   checkAuth: async () => {
     try {
-      const res = await axiosInstance.get("/customer/is-varify");
+      const res = await axiosInstance.get("/customer/is-verify");
       set({ authUser: { ...res.data, role: "customer" } });
     } catch (err) {
       console.log("Error in checkAuth", err);

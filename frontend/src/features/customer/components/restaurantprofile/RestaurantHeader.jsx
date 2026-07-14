@@ -29,25 +29,31 @@ export function RestaurantHeader({ restaurant }) {
 
             <div className="flex flex-wrap items-center gap-4 mt-2">
               <div
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/10 rounded-full px-5 py-2.5 cursor-pointer shadow-lg"
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/10 rounded-full px-4 py-2 cursor-pointer shadow-lg group"
                 onClick={() =>
                   navigate(`/restaurant/${restaurant.restaurant_id}/reviews`)
                 }
               >
-                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                <span className="font-bold text-white text-lg">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-bold text-white text-md">
                   {restaurant.rating
                     ? parseFloat(restaurant.rating).toFixed(1)
                     : "N/A"}
                 </span>
-                <span className="text-gray-300 font-medium text-sm">Reviews</span>
+                <span className="text-gray-300 font-medium text-xs group-hover:text-white transition-colors">View all reviews</span>
               </div>
+
+              {restaurant.phone && (
+                <div className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md rounded-full px-4 py-2 shadow-lg border border-white/10 cursor-pointer" title="Call restaurant">
+                  <span className="text-white text-sm font-medium">📞 {restaurant.phone}</span>
+                </div>
+              )}
               
-              <div className="flex items-center gap-2 bg-[#e21b70]/90 backdrop-blur-md rounded-full px-5 py-2.5 shadow-lg border border-[#e21b70]">
-                <span className="font-bold text-white text-sm">
-                  {restaurant.cuisine} Cuisine
-                </span>
-              </div>
+              {restaurant.email && (
+                <div className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md rounded-full px-4 py-2 shadow-lg border border-white/10 cursor-pointer" title="Email restaurant">
+                  <span className="text-white text-sm font-medium">📧 {restaurant.email}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

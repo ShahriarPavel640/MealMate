@@ -9,7 +9,7 @@ import { Button } from "@/features/restaurant/components/ui/button";
 import { Badge } from "@/features/restaurant/components/ui/badge";
 import {
   TrendingUp,
-  DollarSign,
+  Banknote,
   ShoppingBag,
   Clock,
   Star,
@@ -38,7 +38,7 @@ const getStatusColor = (status) => {
 
 // Icon mapping based on stat titles
 const iconMap = {
-  "Today's Revenue": DollarSign,
+  "Today's Revenue": Banknote,
   "Orders Today": ShoppingBag,
   "Avg Order Value": TrendingUp,
   "Customer Rating": Star,
@@ -100,7 +100,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
         items: order.items
           .map((item) => `${item.quantity}x ${item.name}`)
           .join(", "),
-        amount: `$${order.total.toFixed(2)}`,
+        amount: `Tk ${order.total.toFixed(2)}`,
         status: order.status,
         time: getTimeAgo(order.created_at),
       }));
@@ -135,7 +135,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
               </CardTitle>
               <div className="bg-gradient-to-r from-orange-500 to-red-500 p-2 rounded-lg">
                 {(() => {
-                  const Icon = iconMap[stat.title] || DollarSign;
+                  const Icon = iconMap[stat.title] || Banknote;
                   return <Icon className="h-4 w-4 text-white" />;
                 })()}
               </div>

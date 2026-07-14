@@ -18,6 +18,7 @@ const CheckoutPage = () => {
   const { cartItems, clearCart } = useCartStore();
   const { authUser } = userAuthStore();
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [specialInstructions, setSpecialInstructions] = useState({});
   const navigate = useNavigate();
 
   const deliveryFeePerRestaurant = 30;
@@ -67,7 +68,7 @@ const CheckoutPage = () => {
     };
     if (paymentMethod === "cod") {
       try {
-        await axiosInstance.post("/customer/order/create", { cartItems });
+        await axiosInstance.post("/customer/order/create", { cartItems, specialInstructions });
         // toast({
         //   title: 'Orders placed successfully!',
         //   variant: 'success'
@@ -95,6 +96,7 @@ const CheckoutPage = () => {
             total_amount: grandTotal,
             tran_id,
             paymentMethod,
+            specialInstructions,
           }
         );
         if (data.status === "success" && data.paymentUrl) {
@@ -166,6 +168,19 @@ const CheckoutPage = () => {
                     Tk {(order.subtotal + order.deliveryFee).toFixed(2)}
                   </span>
                 </div>
+                
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Special Instructions
+                  </label>
+                  <textarea
+                    className="w-full p-3 border rounded-lg text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:bg-white transition-colors text-sm"
+                    rows="2"
+                    placeholder="e.g. Please make the food extra spicy, or No onions please."
+                    value={specialInstructions[restId] || ""}
+                    onChange={(e) => setSpecialInstructions({ ...specialInstructions, [restId]: e.target.value })}
+                  ></textarea>
+                </div>
               </div>
             ))
           ) : (
@@ -195,7 +210,7 @@ const CheckoutPage = () => {
               </div>
             </div>
 
-            <h3 className="text-xl font-semibold mb-4 text-gray-900">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 mt-6">
               Payment Method
             </h3>
             <RadioGroup

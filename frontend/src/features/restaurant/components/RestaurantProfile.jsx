@@ -41,7 +41,6 @@ function RestaurantProfile() {
       const data = res.data;
       console.log("restaurnat profile: ", data);
       setRestaurantName(data.restaurant_name || "");
-      setCuisineType(data.cuisine_type || "");
       setDescription(data.description || "");
       setPhone(data.phone || "");
       setEmail(data.email || "");
@@ -51,9 +50,9 @@ function RestaurantProfile() {
       setDeliveryRadius(data.delivery_settings?.delivery_radius || "");
       setCustomerRating(data.rating);
       setAddress({
-        city: data.city,
-        street: data.street,
-        postal_code: data.postal_code,
+        city: data.city === "null" ? "" : data.city || "",
+        street: data.street === "null" ? "" : data.street || "",
+        postal_code: data.postal_code === "null" ? "" : data.postal_code || "",
       });
 
       setImagePreview(
@@ -61,7 +60,6 @@ function RestaurantProfile() {
           "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop"
       );
       setDescription(data.description);
-      setCuisineType(data.cuisine_type);
 
       // Initialize location state from backend data
       setLocation({
@@ -100,7 +98,6 @@ function RestaurantProfile() {
   }, []);
   // Initialize state with backend data
   const [restaurantName, setRestaurantName] = React.useState("");
-  const [cuisineType, setCuisineType] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [phone, setPhone] = React.useState("");
   const [email, setEmail] = React.useState(""); // Email is not editable
@@ -162,7 +159,6 @@ function RestaurantProfile() {
 
     const formData = new FormData();
     formData.append("restaurant_name", restaurantName);
-    formData.append("cuisine_type", cuisineType);
     formData.append("description", description);
     formData.append("phone", phone);
     formData.append("email", email);
@@ -238,21 +234,12 @@ function RestaurantProfile() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="restaurant-name">Restaurant Name</Label>
                   <Input
                     id="restaurant-name"
                     value={restaurantName}
                     onChange={(e) => setRestaurantName(e.target.value)}
-                    className="bg-gray-700 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cuisine-type">Cuisine Type</Label>
-                  <Input
-                    id="cuisine-type"
-                    value={cuisineType}
-                    onChange={(e) => setCuisineType(e.target.value)}
                     className="bg-gray-700 text-white"
                   />
                 </div>
@@ -333,7 +320,7 @@ function RestaurantProfile() {
                   {location.lng ?? "-"}
                 </div> */}
                 <Label htmlFor="Location">Location coordinate</Label>
-                <div className="flex items-center-space-x-2">
+                <div className="flex items-center space-x-2">
                   <Button
                     type="button"
                     onClick={() => setLocationModalOpen(true)}
@@ -416,55 +403,7 @@ function RestaurantProfile() {
             </CardContent>
           </Card>
 
-          {/* Delivery Settings */}
-          {/* <Card className="bg-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white">Delivery Settings</CardTitle>
-              <CardDescription className="text-gray-400">
-                Configure your delivery options
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="delivery-fee">Delivery Fee</Label>
-                  <Input
-                    id="delivery-fee"
-                    value={deliveryFee}
-                    onChange={(e) => setDeliveryFee(e.target.value)}
-                    className="bg-gray-700 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="min-order">Minimum Order</Label>
-                  <Input
-                    id="min-order"
-                    value={minOrder}
-                    onChange={(e) => setMinOrder(e.target.value)}
-                    className="bg-gray-700 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="delivery-time">Delivery Time</Label>
-                  <Input
-                    id="delivery-time"
-                    value={deliveryTime}
-                    onChange={(e) => setDeliveryTime(e.target.value)}
-                    className="bg-gray-700 text-white"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="delivery-radius">Delivery Radius (km)</Label>
-                <Input
-                  id="delivery-radius"
-                  value={deliveryRadius}
-                  onChange={(e) => setDeliveryRadius(e.target.value)}
-                  className="bg-gray-700 text-white"
-                />
-              </div>
-            </CardContent>
-          </Card> */}
+
         </div>
 
         {/* Right Content */}

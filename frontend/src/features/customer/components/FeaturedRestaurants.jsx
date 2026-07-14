@@ -39,8 +39,15 @@ const FeaturedRestaurants = ({ restaurants }) => {
                   <img
                     src={restaurant.image_url}
                     alt={restaurant.name}
-                    className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
+                    className={`w-full h-56 object-cover transition-transform duration-300 ${restaurant.is_open !== false ? 'group-hover:scale-110' : 'grayscale opacity-60'}`}
                   />
+                  {restaurant.is_open === false && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] z-[5]">
+                      <span className="bg-red-600 text-white font-bold px-4 py-2 rounded-full shadow-lg border border-red-500/50 uppercase tracking-wide text-sm">
+                        Currently Unavailable
+                      </span>
+                    </div>
+                  )}
                   <button 
                     onClick={(e) => handleFavoriteClick(e, restaurant.restaurant_id)}
                     className="absolute top-4 left-4 bg-black/40 backdrop-blur-md rounded-full p-2 hover:bg-black/60 hover:scale-110 transition-all z-10 border border-white/10"
@@ -65,7 +72,11 @@ const FeaturedRestaurants = ({ restaurants }) => {
                     <div className="flex items-center text-gray-400 text-sm font-medium">
                       <div className="flex items-center gap-2 text-sm text-gray-300 bg-white/5 py-1.5 px-3 rounded-xl w-fit">
                         <Clock className="w-4 h-4 text-[#e21b70]" />
-                        <span>{restaurant.deliveryTime || "25-35 min"}</span>
+                        <span>
+                          {restaurant.distance 
+                            ? `${Math.round(15 + restaurant.distance * 4)}-${Math.round(25 + restaurant.distance * 4)} min` 
+                            : `${15 + (restaurant.restaurant_id % 5) * 5}-${25 + (restaurant.restaurant_id % 5) * 5} min`}
+                        </span>
                       </div>
                     </div>
                     <div className="badge bg-[#e21b70] border-none text-white font-semibold badge-lg shadow-md group-hover:scale-105 transition-transform">
