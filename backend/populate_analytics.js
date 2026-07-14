@@ -4,18 +4,18 @@ const populateAnalytics = async () => {
   const restaurantId = 1;
   const numOrders = 150; // Populating 150 orders
   try {
-    const usersRes = await pool.query("SELECT user_id FROM users WHERE role='customer'");
+    const usersRes = await pool.query("SELECT user_id FROM users");
     if(usersRes.rows.length === 0) {
       console.log("No customers found. Creating a dummy customer.");
-      await pool.query("INSERT INTO users (name, email, password, role) VALUES ('Analytics Tester', 'tester@example.com', 'password', 'customer')");
+      await pool.query("INSERT INTO users (name, email, password) VALUES ('Analytics Tester', 'tester@example.com', 'password')");
       usersRes.rows.push({user_id: 1}); // Failsafe
     }
     
     // Fetch users again just in case we created one
-    const usersFinalRes = await pool.query("SELECT user_id FROM users WHERE role='customer'");
+    const usersFinalRes = await pool.query("SELECT user_id FROM users");
     const users = usersFinalRes.rows.map(r => r.user_id);
     
-    const menuRes = await pool.query("SELECT menu_item_id, price FROM menu_items WHERE restaurant_id = $1", [restaurantId]);
+    const menuRes = await pool.query("SELECT m.menu_item_id, m.price FROM menu_items m JOIN menu_categories c ON m.category_id = c.category_id WHERE c.restaurant_id = $1", [restaurantId]);
     if(menuRes.rows.length === 0) {
       console.log("No menu items found for restaurant 1");
       return;
@@ -31,12 +31,16 @@ const populateAnalytics = async () => {
       const date = new Date(Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000));
       const status = statuses[Math.floor(Math.random() * statuses.length)];
       
-      const numItems = Math.floor(Math.random() * 4) + 1; // 1 to 4 items
+      const numItems = Math.min(menuItems.length, Math.floor(Math.random() * 4) + 1); // 1 to 4 items
       let totalAmount = 0;
       const orderItems = [];
       
+      // Shuffle menuItems and pick first numItems
+      const shuffledItems = [...menuItems].sort(() => 0.5 - Math.random());
+      const selectedItems = shuffledItems.slice(0, numItems);
+      
       for(let j=0; j<numItems; j++) {
-        const item = menuItems[Math.floor(Math.random() * menuItems.length)];
+        const item = selectedItems[j];
         const quantity = Math.floor(Math.random() * 3) + 1;
         totalAmount += item.price * quantity;
         orderItems.push({menu_item_id: item.menu_item_id, quantity, price: item.price});
