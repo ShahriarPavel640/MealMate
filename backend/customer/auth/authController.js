@@ -168,7 +168,7 @@ export const changePassword = async (req, res) => {
   }
 };
 
-export const varifyUser = async (req, res) => {
+export const verifyUser = async (req, res) => {
   const id = req.user.id;
 
   try {
@@ -210,7 +210,7 @@ export const varifyUser = async (req, res) => {
       address,
     });
   } catch (err) {
-    console.log("Error in varifyUser", err.message);
+    console.log("Error in verifyUser", err.message);
     res.status(500).json({ message: "internal server error" });
   }
 };

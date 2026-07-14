@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 const is_live = process.env.SSL_COMMERZ_IS_LIVE === "true";
 
 export const initiatePayment = async (req, res, store_id, store_passwd) => {
-  const { cartItems, customerInfo, total_amount, paymentMethod } = req.body;
+  const { cartItems, customerInfo, total_amount, paymentMethod, specialInstructions } = req.body;
 
   console.log(req.body);
   const userId = req.user.id;
@@ -25,7 +25,8 @@ export const initiatePayment = async (req, res, store_id, store_passwd) => {
       cartItems,
       client,
       tran_id,
-      "pending_payment"
+      "pending_payment",
+      specialInstructions
     );
 
     // 2. Create a corresponding payment record

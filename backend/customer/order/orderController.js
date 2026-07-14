@@ -9,7 +9,8 @@ export const createOrderFromCart = async (
   cartItems,
   client,
   tran_id = null,
-  status = "pending_restaurant_acceptance"
+  status = "pending_restaurant_acceptance",
+  specialInstructions = {}
 ) => {
   const ordersByRestaurant = cartItems.reduce((acc, item) => {
     const { restaurant_id } = item;
@@ -29,9 +30,10 @@ export const createOrderFromCart = async (
       0
     );
 
+    const instruction = specialInstructions[restaurantId] || "";
     const orderResult = await client.query(
-      "INSERT INTO orders (user_id, restaurant_id, total_amount, status, tran_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [userId, restaurantId, totalAmount, status, tran_id]
+      "INSERT INTO orders (user_id, restaurant_id, total_amount, status, tran_id, special_instructions) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [userId, restaurantId, totalAmount, status, tran_id, instruction]
     );
     const order = orderResult.rows[0];
     createdOrders.push(order);
@@ -76,7 +78,7 @@ export const createOrderFromCart = async (
 
 // This is the handler for the COD (Cash on Delivery) case.
 export const createOrder = async (req, res) => {
-  const { cartItems } = req.body;
+  const { cartItems, specialInstructions } = req.body;
   const userId = req.user.id;
 
   const client = await pool.connect();
@@ -84,7 +86,7 @@ export const createOrder = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const createdOrders = await createOrderFromCart(userId, cartItems, client);
+    const createdOrders = await createOrderFromCart(userId, cartItems, client, null, "pending_restaurant_acceptance", specialInstructions);
 
     for (const order of createdOrders) {
       await client.query(

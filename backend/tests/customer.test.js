@@ -47,7 +47,7 @@ describe('Customer API E2E', () => {
 
   it('should verify the customer status', async () => {
     const res = await request(app)
-      .get('/api/customer/is-varify')
+      .get('/api/customer/is-verify')
       .set('Cookie', customerCookies);
 
     expect(res.statusCode).toBe(200);

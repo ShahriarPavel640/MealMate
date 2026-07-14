@@ -19,15 +19,23 @@ import chatRoutes from "./shared/chats/chatRoutes.js";
 import restaurantOrder from "./restaurants/order/orderRoutes.js";
 import restaurnatStat from "./restaurants/stats/statsRoutes.js";
 
-dotenv.config();
-
-const app = express();
+dotenv.config();const app = express();
 const server = http.createServer(app); // Create an HTTP server
 
 // Initialize Socket.IO
 const io = initSocket(server);
 
 app.use(express.json());
+
+// Middleware to log API execution time
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[${req.method}] ${req.originalUrl} - ${duration}ms`);
+  });
+  next();
+});
 app.use(cookieParser());
 app.use(
   cors({

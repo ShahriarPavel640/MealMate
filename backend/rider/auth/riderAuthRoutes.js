@@ -7,7 +7,7 @@ import {
   signup as rider_signup,
   login as rider_login,
   logout,
-  varify,
+  verify,
 } from "./riderAuthController.js";
 
 const router = express.Router();
@@ -22,7 +22,7 @@ router.get(
   "/is-verify",
   authorization,
   authorizeRoles(role),
-  varify
+  verify
 );
 
 export default router;

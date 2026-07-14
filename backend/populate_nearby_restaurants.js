@@ -9,7 +9,6 @@ const restaurantsData = [
     name: "Dhakaiya Kacchi Ghar",
     phone: "01711122233",
     email: "kacchi@example.com",
-    cuisine_type: "Biryani & Bengali",
     descriptions: "Authentic Dhakaiya Kacchi Biryani with tender mutton, potatoes, and aromatic spices.",
     image_url: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=600&h=400&q=80",
     lat: 23.7285,
@@ -60,7 +59,6 @@ const restaurantsData = [
     name: "Lalbagh Kabab & Naan",
     phone: "01722233344",
     email: "kabab@example.com",
-    cuisine_type: "Kebabs & Grills",
     descriptions: "Juicy seekh kebabs, boti kebabs, and fresh butter naan baked in a traditional clay oven.",
     image_url: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&w=600&h=400&q=80",
     lat: 23.7198,
@@ -105,7 +103,6 @@ const restaurantsData = [
     name: "Dhaka University Cafe & Burgers",
     phone: "01733344455",
     email: "ucafe@example.com",
-    cuisine_type: "Burgers & Fast Food",
     descriptions: "Mouthwatering smash burgers, crispy chicken fries, and refreshing milkshakes.",
     image_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&h=400&q=80",
     lat: 23.7265,
@@ -156,7 +153,6 @@ const restaurantsData = [
     name: "Pizzaria Bella Italia",
     phone: "01744455566",
     email: "bella@example.com",
-    cuisine_type: "Italian Pizza & Pasta",
     descriptions: "Wood-fired Neapolitan pizzas made with imported Italian ingredients.",
     image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&h=400&q=80",
     lat: 23.7412,
@@ -201,7 +197,6 @@ const restaurantsData = [
     name: "Nourish Bowls & Salads",
     phone: "01755566677",
     email: "nourish@example.com",
-    cuisine_type: "Healthy & Salads",
     descriptions: "Nutritious salad bowls, protein shakes, and healthy wraps for a clean diet.",
     image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&h=400&q=80",
     lat: 23.7385,
@@ -268,9 +263,9 @@ const populate = async () => {
 
       // 2. Insert Restaurant without location_id first
       const restInsert = await pool.query(
-        `INSERT INTO restaurants (name, password, phone, email, average_rating, image_url, cuisine_type, descriptions)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING restaurant_id`,
-        [r.name, hashedPassword, r.phone, r.email, 4.80, r.image_url, r.cuisine_type, r.descriptions]
+        `INSERT INTO restaurants (name, password, phone, email, average_rating, image_url, descriptions)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING restaurant_id`,
+        [r.name, hashedPassword, r.phone, r.email, 4.80, r.image_url, r.descriptions]
       );
       const restaurantId = restInsert.rows[0].restaurant_id;
 

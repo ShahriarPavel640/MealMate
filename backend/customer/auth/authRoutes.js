@@ -10,7 +10,7 @@ import {
   getProfile,
   logout,
   updateProfile,
-  varifyUser,
+  verifyUser,
 } from "./authController.js";
 
 const router = express.Router();
@@ -19,7 +19,7 @@ const role = "customer";
 router.post("/register", validinfo, customer_signup);
 router.post("/login", validinfo, customer_login);
 router.get("/logout", logout);
-router.get("/is-varify", authorization, authorizeRoles(role), varifyUser);
+router.get("/is-verify", authorization, authorizeRoles(role), verifyUser);
 router.put(
   "/change_password",
   authorization,
