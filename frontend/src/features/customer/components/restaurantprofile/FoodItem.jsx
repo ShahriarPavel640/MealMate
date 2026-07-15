@@ -109,14 +109,13 @@ export function FoodItem({ item, onAddToCart, cartItems, restaurant_is_open }) {
               <Button
                 onClick={() => onAddToCart(item)}
                 size="lg"
-                disabled={restaurant_is_open === false}
+                disabled={restaurant_is_open === false || isInCart}
                 className={cn(
                   "px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg",
                   isInCart
                     ? "bg-green-500 hover:bg-green-600 text-white cursor-default transform scale-105"
-                    : "bg-[#e21b70] hover:bg-[#c2145d] text-white hover:scale-105 hover:shadow-lg"
+                    : "bg-[#e21b70] hover:bg-[#c2145d] text-white hover:scale-105 active:scale-95 hover:shadow-lg"
                 )}
-                disabled={isInCart}
               >
                 {isInCart ? (
                   <>

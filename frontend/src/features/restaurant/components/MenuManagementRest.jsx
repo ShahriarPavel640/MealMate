@@ -104,6 +104,8 @@ function MenuManagementRest() {
       const items = await edit_menu_item(updatedItem, editingItem.menu_item_id);
       if (items !== false) {
         setMenuItems(items);
+        setCurrentView("list");
+        setEditingItem(null);
         toast.success("Menu item updated successfully!");
       } else {
         toast.error("Failed to update menu item.");
@@ -182,7 +184,7 @@ function MenuManagementRest() {
           <p className="text-gray-400">Manage your restaurant's menu items</p>
         </div>
         <Button
-          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white hover:scale-105 active:scale-95 transition-all shadow-md"
           onClick={() => setCurrentView("add")}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -212,9 +214,9 @@ function MenuManagementRest() {
                   onClick={() => setSelectedCategory(category)}
                   className={`${
                     selectedCategory === category
-                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white"
-                      : "bg-gray-700 text-gray-300 border-gray-600"
-                  }`}
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md hover:scale-105"
+                      : "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:text-white"
+                  } transition-all`}
                 >
                   {category}
                 </Button>
@@ -230,13 +232,13 @@ function MenuManagementRest() {
             currentMenuItems.map((item) => (
               <Card
                 key={item.id}
-                className="hover:shadow-lg transition-shadow duration-200 bg-gray-800 border-gray-700"
+                className="hover:shadow-xl hover:shadow-purple-500/10 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 bg-gray-800 border-gray-700 group"
               >
-                <div className="relative">
+                <div className="relative overflow-hidden rounded-t-lg">
                   <img
                     src={item.menu_item_image_url}
                     alt={item.name}
-                    className="w-full h-48 object-cover rounded-t-lg"
+                    className="w-full h-48 object-cover rounded-t-lg group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-3 right-3">
                     <Badge
@@ -274,7 +276,7 @@ function MenuManagementRest() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 border-gray-600 text-gray-300"
+                      className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                       onClick={() => handleEditItem(item)}
                     >
                       <Edit className="h-4 w-4 mr-1" />
@@ -283,7 +285,7 @@ function MenuManagementRest() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-gray-600 text-gray-300"
+                      className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                       onClick={() => handleToggleStatus(item.menu_item_id)}
                     >
                       {item.is_available === true ? (
@@ -295,7 +297,7 @@ function MenuManagementRest() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-gray-600 text-red-500 hover:text-red-600"
+                      className="border-gray-600 text-red-500 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 transition-all"
                       onClick={() => handleDeleteItem(item.menu_item_id)}
                     >
                       <Trash2 className="h-4 w-4" />

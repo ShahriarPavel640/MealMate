@@ -100,7 +100,7 @@ export const getTopSellingItems = async (req, res) => {
     const topItems = result.rows.map((row) => ({
       name: row.name,
       orders: parseInt(row.orders),
-      revenue: `$${Number(row.revenue).toFixed(2)}`,
+      revenue: `Tk ${Number(row.revenue).toFixed(2)}`,
     }));
 
     res.json(topItems);

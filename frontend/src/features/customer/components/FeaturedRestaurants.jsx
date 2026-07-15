@@ -79,7 +79,7 @@ const FeaturedRestaurants = ({ restaurants }) => {
                         </span>
                       </div>
                     </div>
-                    <div className="badge bg-[#e21b70] border-none text-white font-semibold badge-lg shadow-md group-hover:scale-105 transition-transform">
+                    <div className="badge bg-[#e21b70] border-none text-white font-semibold badge-lg shadow-md group-hover:scale-105 group-active:scale-95 group-hover:shadow-lg group-hover:shadow-[#e21b70]/30 transition-all">
                       Order Now
                     </div>
                   </div>

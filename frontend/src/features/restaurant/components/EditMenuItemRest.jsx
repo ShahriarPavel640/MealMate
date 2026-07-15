@@ -16,8 +16,8 @@ import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthS
 
 
 
-const EditMenuItemRest = ({ item, onBack }) => {
-  const { edit_menu_item, isChangingMenu } = restaurantAuthStore();
+const EditMenuItemRest = ({ item, onBack, onSave }) => {
+  const { isChangingMenu } = restaurantAuthStore();
 
   const [formData, setFormData] = useState({
     menu_item_id: item?.menu_item_id || "",
@@ -66,8 +66,7 @@ const EditMenuItemRest = ({ item, onBack }) => {
       payload.append("menu_item_image_url", formData.menu_item_image_url);
     }
 
-    const success = await edit_menu_item(payload, item.menu_item_id);
-    if (success) onBack();
+    await onSave(payload);
   };
 
   const handleInputChange = (e) => {
