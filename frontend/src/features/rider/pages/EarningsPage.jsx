@@ -76,7 +76,7 @@ const RiderEarningsDashboard = () => {
           <p className="text-sm font-medium text-gray-900 mb-2">{label}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.name === 'earnings' ? '৳' : ''}{entry.value}
+              {entry.name}: {entry.name === 'earnings' ? 'Tk ' : ''}{entry.value}
             </p>
           ))}
         </div>

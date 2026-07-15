@@ -1,9 +1,18 @@
 import pool from './db.js';
 
 const populateAnalytics = async () => {
-  const restaurantId = 1;
+  const restaurantId = 11;
   const numOrders = 150; // Populating 150 orders
   try {
+    // Clean up old mistakenly populated orders for restaurant 1
+    console.log("Cleaning up previous population from restaurant 1...");
+    await pool.query("DELETE FROM notifications WHERE order_id IN (SELECT order_id FROM orders WHERE restaurant_id = 1)");
+    await pool.query("DELETE FROM payments WHERE order_id IN (SELECT order_id FROM orders WHERE restaurant_id = 1)");
+    await pool.query("DELETE FROM deliveries WHERE order_id IN (SELECT order_id FROM orders WHERE restaurant_id = 1)");
+    await pool.query("DELETE FROM reviews WHERE order_id IN (SELECT order_id FROM orders WHERE restaurant_id = 1)");
+    await pool.query("DELETE FROM order_items WHERE order_id IN (SELECT order_id FROM orders WHERE restaurant_id = 1)");
+    await pool.query("DELETE FROM orders WHERE restaurant_id = 1");
+    console.log("Cleaned up.");
     const usersRes = await pool.query("SELECT user_id FROM users");
     if(usersRes.rows.length === 0) {
       console.log("No customers found. Creating a dummy customer.");

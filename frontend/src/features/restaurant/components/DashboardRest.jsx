@@ -127,7 +127,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
         {statsCards.map((stat, index) => (
           <Card
             key={index}
-            className="bg-gray-800 hover:shadow-lg transition-shadow duration-200"
+            className="bg-gray-800 border-gray-700 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-1 transition-all duration-300"
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-300">
@@ -174,7 +174,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
                 Your latest customer orders
               </CardDescription>
             </div>
-            <Button variant="outline" className="border-gray-600 text-gray-100">
+            <Button variant="outline" className="border-gray-600 text-gray-100 hover:bg-gray-700 hover:text-white transition-colors" onClick={() => setActiveTab("orders")}>
               View All Orders
             </Button>
           </div>
@@ -184,7 +184,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
             {recentOrders.map((order, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 border border-gray-700 rounded-lg hover:bg-gray-700 transition-colors"
+                className="flex items-center justify-between p-4 border border-gray-700 rounded-lg hover:bg-gray-700/80 hover:shadow-md transition-all duration-200 cursor-pointer group"
               >
                 <div className="flex items-center space-x-4">
                   <div className="bg-gradient-to-r from-orange-500 to-red-500 p-2 rounded-lg">
@@ -216,7 +216,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
+        <Card className="bg-gradient-to-r from-orange-500 to-red-500 text-white hover:shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1 transition-all duration-300">
           <CardHeader>
             <CardTitle className="text-white">Add New Menu Item</CardTitle>
             <CardDescription className="text-orange-100">
@@ -226,7 +226,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
           <CardContent>
             <Button
               variant="secondary"
-              className="bg-white text-orange-600 hover:bg-gray-100"
+              className="bg-white text-orange-600 hover:bg-gray-100 hover:scale-105 transition-all shadow-md"
               onClick={() => {
                 setActiveTab("menu");
                 setCurrentView && setCurrentView("add");
@@ -237,7 +237,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+        <Card className="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300">
           <CardHeader>
             <CardTitle className="text-white">
               Update Restaurant Hours
@@ -249,7 +249,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
           <CardContent>
             <Button
               variant="secondary"
-              className="bg-white text-green-600 hover:bg-gray-100"
+              className="bg-white text-green-600 hover:bg-gray-100 hover:scale-105 transition-all shadow-md"
               onClick={() => setActiveTab("profile")}
             >
               Update Hours
@@ -257,7 +257,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
+        <Card className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300">
           <CardHeader>
             <CardTitle className="text-white">View Analytics</CardTitle>
             <CardDescription className="text-blue-100">
@@ -267,7 +267,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
           <CardContent>
             <Button
               variant="secondary"
-              className="bg-white text-blue-600 hover:bg-gray-100"
+              className="bg-white text-blue-600 hover:bg-gray-100 hover:scale-105 transition-all shadow-md"
               onClick={() => setActiveTab("analytics")}
             >
               View Reports

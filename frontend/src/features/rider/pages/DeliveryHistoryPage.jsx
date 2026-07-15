@@ -85,7 +85,7 @@ const DeliveryHistoryPage = () => {
                       <div className="flex items-center text-gray-700">
                         <DollarSign className="size-5 mr-2 text-green-600" />
                         <span className="font-medium">Total Amount:</span>
-                        <span className="ml-2 text-lg font-bold text-green-600">${order.total_amount}</span>
+                        <span className="ml-2 text-lg font-bold text-green-600">Tk {order.total_amount}</span>
                       </div>
                       
                       <div className="flex items-center text-gray-700">

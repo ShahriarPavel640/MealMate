@@ -264,7 +264,7 @@ const HomepageRider = () => {
                               {order.restaurant_name}
                             </p>
                             <p className="text-sm text-gray-600">
-                              Total: ${order.total_amount}
+                              Total: Tk {order.total_amount}
                             </p>
                             <p className="text-sm text-gray-600">
                               Drop-off: {order.dropoff_addr}
@@ -379,7 +379,7 @@ const HomepageRider = () => {
                     <p>
                       <span className="font-medium">Total:</span>{" "}
                       <span className="text-green-600 font-bold">
-                        ${order.total_amount}
+                        Tk {order.total_amount}
                       </span>
                     </p>
                   </div>
@@ -484,10 +484,10 @@ const HomepageRider = () => {
                       </span>
                     </div>
                     <p className="text-2xl font-bold text-green-600 mb-4">
-                      ${order.total_amount}
+                      Tk {order.total_amount}
                     </p>
                     <p className="text-lg font-semibold text-gray-800 mb-4">
-                      Delivery Fee: ${order.delivery_fee}
+                      Delivery Fee: Tk {order.delivery_fee}
                     </p>
                     <div className="space-y-2">
                       <button

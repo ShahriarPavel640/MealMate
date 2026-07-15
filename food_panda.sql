@@ -21,7 +21,8 @@ CREATE TABLE restaurants (
   location_id INT,
   average_rating DECIMAL(3,2) DEFAULT 0.0,
   image_url VARCHAR(255),
-  descriptions VARCHAR(255)
+  descriptions VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- LOCATIONS 
@@ -238,6 +239,37 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 
 
 -- FUNCTION to upsert restaurant hours
+
+CREATE OR REPLACE FUNCTION update_restaurant_average_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    UPDATE restaurants
+    SET average_rating = (
+      SELECT COALESCE(AVG(rating), 0.0)
+      FROM reviews
+      WHERE restaurant_id = NEW.restaurant_id
+    )
+    WHERE restaurant_id = NEW.restaurant_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE restaurants
+    SET average_rating = (
+      SELECT COALESCE(AVG(rating), 0.0)
+      FROM reviews
+      WHERE restaurant_id = OLD.restaurant_id
+    )
+    WHERE restaurant_id = OLD.restaurant_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_average_rating
+AFTER INSERT OR UPDATE OR DELETE ON reviews
+FOR EACH ROW
+EXECUTE FUNCTION update_restaurant_average_rating();
+
+
 
 CREATE OR REPLACE FUNCTION upsert_restaurant_hours(
     p_restaurant_id INT,

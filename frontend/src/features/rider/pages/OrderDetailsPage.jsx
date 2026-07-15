@@ -234,7 +234,7 @@ const OrderDetailsPage = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-purple-600">${item.price}</p>
+                      <p className="font-bold text-purple-600">Tk {item.price}</p>
                     </div>
                   </div>
                 </div>
@@ -256,18 +256,18 @@ const OrderDetailsPage = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Amount:</span>
-                  <span className="font-bold text-2xl text-green-600">${order.total_amount}</span>
+                  <span className="font-bold text-2xl text-green-600">Tk {order.total_amount}</span>
                 </div>
                 {order.delivery_fee && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Delivery Fee:</span>
-                    <span className="text-gray-800">${order.delivery_fee}</span>
+                    <span className="text-gray-800">Tk {order.delivery_fee}</span>
                   </div>
                 )}
                 {order.tax && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Tax:</span>
-                    <span className="text-gray-800">${order.tax}</span>
+                    <span className="text-gray-800">Tk {order.tax}</span>
                   </div>
                 )}
               </div>

@@ -252,7 +252,7 @@ const AnalyticsRest = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800 border border-gray-700 text-gray-100">
+        <Card className="bg-gray-800 border border-gray-700 text-gray-100 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">
               Total Orders
@@ -332,7 +332,7 @@ const AnalyticsRest = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800 border border-gray-700 text-gray-100">
+        <Card className="bg-gray-800 border border-gray-700 text-gray-100 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">
               New Customers
@@ -406,7 +406,7 @@ const AnalyticsRest = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800 border border-gray-700 text-gray-100">
+        <Card className="bg-gray-800 border border-gray-700 text-gray-100 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">
               Avg Rating
@@ -449,7 +449,7 @@ const AnalyticsRest = () => {
 
         <TabsContent value="revenue" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-gray-800 border border-gray-700">
+            <Card className="bg-gray-800 border border-gray-700 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-white">Daily Revenue</CardTitle>
                 <CardDescription className="text-gray-400">
@@ -466,7 +466,9 @@ const AnalyticsRest = () => {
                       contentStyle={{
                         backgroundColor: "#1f2937",
                         color: "#fff",
+                        border: "1px solid #374151"
                       }}
+                      itemStyle={{ color: "#fff" }}
                     />
                     <Bar
                       dataKey="revenue"
@@ -478,7 +480,7 @@ const AnalyticsRest = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800 border border-gray-700">
+            <Card className="bg-gray-800 border border-gray-700 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-white">Weekly Growth</CardTitle>
                 <CardDescription className="text-gray-400">
@@ -495,7 +497,9 @@ const AnalyticsRest = () => {
                       contentStyle={{
                         backgroundColor: "#1f2937",
                         color: "#fff",
+                        border: "1px solid #374151"
                       }}
+                      itemStyle={{ color: "#fff" }}
                     />
                     <Line
                       type="monotone"
@@ -513,7 +517,7 @@ const AnalyticsRest = () => {
 
         <TabsContent value="orders" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-gray-800 border border-gray-700">
+            <Card className="bg-gray-800 border border-gray-700 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-white">Daily Orders</CardTitle>
                 <CardDescription className="text-gray-400">
@@ -530,7 +534,9 @@ const AnalyticsRest = () => {
                       contentStyle={{
                         backgroundColor: "#1f2937",
                         color: "#fff",
+                        border: "1px solid #374151"
                       }}
+                      itemStyle={{ color: "#fff" }}
                     />
                     <Bar
                       dataKey="orders"
@@ -542,7 +548,7 @@ const AnalyticsRest = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800 border border-gray-700">
+            <Card className="bg-gray-800 border border-gray-700 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-white">Order Categories</CardTitle>
                 <CardDescription className="text-gray-400">
@@ -559,7 +565,18 @@ const AnalyticsRest = () => {
                       outerRadius={100}
                       fill="#8884d8"
                       dataKey="value"
-                      label={({ name, value }) => `${name} ${value}`}
+                      label={({ x, y, cx, name, value }) => (
+                        <text
+                          x={x}
+                          y={y}
+                          fill="#e5e7eb"
+                          textAnchor={x > cx ? "start" : "end"}
+                          dominantBaseline="central"
+                          fontSize={12}
+                        >
+                          {`${name} ${value}`}
+                        </text>
+                      )}
                     >
                       {categoryData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -569,7 +586,9 @@ const AnalyticsRest = () => {
                       contentStyle={{
                         backgroundColor: "#1f2937",
                         color: "#fff",
+                        border: "1px solid #374151"
                       }}
+                      itemStyle={{ color: "#fff" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -579,7 +598,7 @@ const AnalyticsRest = () => {
         </TabsContent>
 
         <TabsContent value="menu" className="space-y-6">
-          <Card className="bg-gray-800 border border-gray-700">
+          <Card className="bg-gray-800 border border-gray-700 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-white">Top Performing Items</CardTitle>
               <CardDescription className="text-gray-400">
@@ -591,7 +610,7 @@ const AnalyticsRest = () => {
                 {topItems.map((item, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 border border-gray-700 rounded-lg"
+                    className="flex items-center justify-between p-4 border border-gray-700 rounded-lg hover:bg-gray-700 hover:shadow-md transition-all duration-200 cursor-pointer"
                   >
                     <div className="flex items-center space-x-4">
                       <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">

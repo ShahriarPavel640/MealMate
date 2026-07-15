@@ -60,7 +60,7 @@ const RestaurantCard = ({ restaurant }) => {
             </p>
           </div>
 
-          <div className="inline-block bg-[#e21b70]/10 text-[#e21b70] border border-[#e21b70]/20 font-bold px-6 py-2.5 rounded-full text-center transition-all group-hover:bg-[#e21b70] group-hover:text-white">
+          <div className="inline-block bg-[#e21b70]/10 text-[#e21b70] border border-[#e21b70]/20 font-bold px-6 py-2.5 rounded-full text-center transition-all group-hover:bg-[#e21b70] group-hover:text-white group-hover:shadow-lg group-hover:shadow-[#e21b70]/30 group-active:scale-95">
             View Menu
           </div>
         </div>

@@ -55,7 +55,7 @@ export function FoodItem({ item, onAddToCart, cartItems, restaurant_is_open }) {
           {/* Discount Badge */}
           {item.discount && (
             <Badge className="absolute top-3 right-3 bg-red-500 text-white font-bold shadow-lg">
-              {Math.round((item.discount / item.price) * 100)}% OFF
+              {item.discount}% OFF
             </Badge>
           )}
         </div>
@@ -71,14 +71,7 @@ export function FoodItem({ item, onAddToCart, cartItems, restaurant_is_open }) {
 
               {/* Rating & Prep Time */}
               <div className="flex items-center gap-4 mb-3">
-                {item.average_rating && (
-                  <div className="flex items-center gap-1 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">
-                    <Star className="h-4 w-4 fill-green-500 text-green-500" />
-                    <span className="text-sm font-semibold text-green-700 dark:text-green-400">
-                      {item.average_rating}
-                    </span>
-                  </div>
-                )}
+
                 {item.prep_time && (
                   <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
                     <Clock className="h-4 w-4" />
@@ -95,11 +88,11 @@ export function FoodItem({ item, onAddToCart, cartItems, restaurant_is_open }) {
               {/* Price & Discount */}
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  Tk {item.price}
+                  Tk {item.discount ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price}
                 </span>
                 {item.discount && (
                   <span className="text-lg text-gray-400 line-through">
-                    Tk {(item.price / (1 - item.discount)).toFixed(2)}
+                    Tk {item.price}
                   </span>
                 )}
               </div>
@@ -109,14 +102,13 @@ export function FoodItem({ item, onAddToCart, cartItems, restaurant_is_open }) {
               <Button
                 onClick={() => onAddToCart(item)}
                 size="lg"
-                disabled={restaurant_is_open === false}
+                disabled={restaurant_is_open === false || isInCart}
                 className={cn(
                   "px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg",
                   isInCart
                     ? "bg-green-500 hover:bg-green-600 text-white cursor-default transform scale-105"
-                    : "bg-[#e21b70] hover:bg-[#c2145d] text-white hover:scale-105 hover:shadow-lg"
+                    : "bg-[#e21b70] hover:bg-[#c2145d] text-white hover:scale-105 active:scale-95 hover:shadow-lg"
                 )}
-                disabled={isInCart}
               >
                 {isInCart ? (
                   <>

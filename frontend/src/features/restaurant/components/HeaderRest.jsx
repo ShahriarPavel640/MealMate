@@ -105,12 +105,13 @@ const HeaderRest = ({ onLogout }) => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative text-white hover:bg-gray-800"
-            onClick={() => setShowNotifications((v) => !v)}
-          >
+          <div className="relative" ref={notificationRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative text-white hover:bg-gray-800"
+              onClick={() => setShowNotifications((v) => !v)}
+            >
             <Bell className="h-5 w-5" />
             {notifications.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -122,7 +123,6 @@ const HeaderRest = ({ onLogout }) => {
           {showNotifications && (
             <div
               className="absolute right-0 top-12 mt-2 w-80 bg-gray-800 text-white rounded-lg shadow-lg border border-gray-700 z-50 animate-fade-in"
-              ref={notificationRef}
             >
               <div className="p-4 border-b border-gray-700">
                 <h3 className="text-lg font-semibold">New Orders</h3>
@@ -179,13 +179,17 @@ const HeaderRest = ({ onLogout }) => {
                 <Button
                   variant="link"
                   className="w-full text-blue-400"
-                  onClick={clearNotifications}
+                  onClick={() => {
+                    clearNotifications();
+                    setShowNotifications(false);
+                  }}
                 >
                   Clear All
                 </Button>
               </div>
             </div>
           )}
+          </div>
 
           <div className="flex items-center space-x-3 relative" ref={menuRef}>
             <div className="text-right">

@@ -60,6 +60,10 @@ function RestaurantProfile() {
           "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop"
       );
       setDescription(data.description);
+      if (data.created_at) {
+        const date = new Date(data.created_at);
+        setCreatedAt(date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+      }
 
       // Initialize location state from backend data
       setLocation({
@@ -114,6 +118,7 @@ function RestaurantProfile() {
   const [imageFile, setImageFile] = React.useState(null);
   const [imagePreview, setImagePreview] = React.useState(null);
   const [customerRating, setCustomerRating] = React.useState(null);
+  const [createdAt, setCreatedAt] = React.useState("Recently");
   const [locationModalOpen, setLocationModalOpen] = React.useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = React.useState(false);
 
@@ -464,7 +469,7 @@ function RestaurantProfile() {
                   <MapPin className="h-4 w-4 text-green-400" />
                   <span className="text-sm">Partner Since</span>
                 </div>
-                <Badge className="bg-green-800 text-green-100">Jan 2023</Badge>
+                <Badge className="bg-green-800 text-green-100">{createdAt}</Badge>
               </div>
             </CardContent>
           </Card>

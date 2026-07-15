@@ -69,7 +69,7 @@ function OrderCard({ order, onUpdateStatus, onRejectOrder }) {
   ].includes(order.status);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200 bg-gray-800 text-gray-100 border-gray-700">
+    <Card className="hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 bg-gray-800 text-gray-100 border-gray-700">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="space-y-1">
@@ -160,7 +160,7 @@ function OrderCard({ order, onUpdateStatus, onRejectOrder }) {
                 const nextStatus = getNextStatus(order.status);
                 onUpdateStatus(order.order_id, nextStatus);
               }}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 hover:scale-105 active:scale-95 transition-all text-white shadow-md"
               disabled={order.status === "ready_for_pickup"}
             >
               {getStatusLabel(order.status)}
@@ -169,7 +169,7 @@ function OrderCard({ order, onUpdateStatus, onRejectOrder }) {
               <Button
                 variant="outline"
                 onClick={() => onRejectOrder(order.order_id)}
-                className="border-gray-600 text-gray-200 hover:bg-gray-700"
+                className="border-gray-600 text-gray-200 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 transition-all"
               >
                 Reject Order
               </Button>
@@ -177,7 +177,7 @@ function OrderCard({ order, onUpdateStatus, onRejectOrder }) {
             <a href={`tel:${order.customer_phone}`} className="inline-block">
               <Button
                 variant="outline"
-                className="border-gray-600 text-gray-200 hover:bg-gray-700 h-full"
+                className="border-gray-600 text-gray-200 hover:bg-blue-500/20 hover:text-blue-400 hover:border-blue-500/50 transition-all h-full"
               >
                 <Phone className="h-4 w-4 mr-2" />
                 Call Customer
@@ -194,8 +194,22 @@ function OrderCard({ order, onUpdateStatus, onRejectOrder }) {
 function PaginationControls({ currentPage, totalPages, onPageChange }) {
   if (totalPages <= 1) return null;
 
+  // Determine which pages to show
+  let pages = [];
+  if (totalPages <= 7) {
+    pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  } else {
+    if (currentPage <= 4) {
+      pages = [1, 2, 3, 4, 5, "...", totalPages];
+    } else if (currentPage >= totalPages - 3) {
+      pages = [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    } else {
+      pages = [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+    }
+  }
+
   return (
-    <div className="mt-8 flex justify-center items-center space-x-2">
+    <div className="mt-8 flex justify-center items-center space-x-2 flex-wrap gap-y-2">
       <Button
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
@@ -208,19 +222,23 @@ function PaginationControls({ currentPage, totalPages, onPageChange }) {
       >
         Previous
       </Button>
-      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-        <Button
-          key={page}
-          onClick={() => onPageChange(page)}
-          variant={currentPage === page ? "default" : "outline"}
-          className={`w-10 h-10 rounded-lg font-medium transition-colors ${
-            currentPage === page
-              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
-              : "bg-gray-800 text-gray-200 hover:bg-gray-700 border-gray-600"
-          }`}
-        >
-          {page}
-        </Button>
+      {pages.map((page, index) => (
+        page === "..." ? (
+          <span key={`ellipsis-${index}`} className="text-gray-400 px-2">...</span>
+        ) : (
+          <Button
+            key={page}
+            onClick={() => onPageChange(page)}
+            variant={currentPage === page ? "default" : "outline"}
+            className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+              currentPage === page
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                : "bg-gray-800 text-gray-200 hover:bg-gray-700 border-gray-600"
+            }`}
+          >
+            {page}
+          </Button>
+        )
       ))}
       <Button
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
@@ -437,7 +455,7 @@ function OrderManagement() {
 
       {/* Tabs for Order Filtering */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="flex justify-around bg-gray-800 border border-gray-700">
+        <TabsList className="flex flex-wrap justify-center bg-gray-800 border border-gray-700 h-auto gap-2 p-2">
           {[
             "all",
             "pending_restaurant_acceptance",
