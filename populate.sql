@@ -30,18 +30,18 @@ INSERT INTO user_locations (location_id, user_id, restaurant_id, street, city, p
 (11, NULL, NULL, 'Dhaka, Bangladesh', 'Dhaka', '1000', 23.72525310, 90.39248852, NULL, true);
 -- Restaurants 
 -- (Added cuisine_type and descriptions to match schema)
-INSERT INTO restaurants (restaurant_id, name, password, phone, email, location_id, average_rating, image_url, cuisine_type, descriptions) VALUES
-(1, 'Black, Davis and Simon', 'hashed_password', '489-159-3776', 'sandra22@hotmail.com', 1, 3.32, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80', 'American', 'Best burgers in town'),
-(2, 'Atkinson, Price and Williams', 'hashed_password', '598-533-6698', 'randallmcintyre@gutierrez-carroll.com', 2, 3.77, 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80', 'Healthy', 'Fresh salads and wraps'),
-(3, 'Fisher PLC', 'hashed_password', '591-386-3262', 'millerdiana@yahoo.com', 3, 4.34, 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=800&q=80', 'Dessert', 'Sweet treats for everyone'),
-(4, 'Robles LLC', 'hashed_password', '660-697-9159', 'suzanne68@navarro.biz', 4, 3.48, 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80', 'Italian', 'Authentic pasta and pizza'),
-(5, 'Cook LLC', 'hashed_password', '639-438-0388', 'kevin36@robinson.com', 5, 4.92, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80', 'Pizza', 'Wood fired oven pizzas'),
-(6, 'Dhakaiya Kacchi Ghar', 'hashed_password', '123-456-7890', 'dhakaiya@example.com', 6, 4.8, 'https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=800&q=80', 'Bengali', 'Authentic Kacchi Biryani and Bengali cuisine'),
-(7, 'Lalbagh Kabab & Naan', 'hashed_password', '123-456-7891', 'lalbagh@example.com', 7, 4.6, 'https://images.unsplash.com/photo-1544025162-8a115ce92080?auto=format&fit=crop&w=800&q=80', 'Mughlai', 'Delicious grilled kababs and hot naan'),
-(8, 'Dhaka University Cafe & Burgers', 'hashed_password', '123-456-7892', 'ducafe@example.com', 8, 4.4, 'https://images.unsplash.com/photo-1586816001966-79b736744398?auto=format&fit=crop&w=800&q=80', 'Fast Food', 'Popular burgers and fast food items for students'),
-(9, 'Pizzaria Bella Italia', 'hashed_password', '123-456-7893', 'bella@example.com', 9, 4.7, 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80', 'Italian', 'Wood-fired pizzas and creamy pastas'),
-(10, 'Nourish Bowls & Salads', 'hashed_password', '123-456-7894', 'nourish@example.com', 10, 4.9, 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80', 'Healthy', 'Fresh and organic salad bowls for healthy eating'),
-(11, 'Demo Restaurant', '$2b$10$XSoy/..4ClLa5AR8xBSXjuql7VKvVy4RzIgPRLvjLvMNvnfCURU8G', '01616524223', 'restaurant1@gmail.com', 11, 0.0, 'https://res.cloudinary.com/djcrpcgbm/image/upload/v1783970615/restaurant_profile/mggduj5x7wurpwtulysi.avif', 'Fast Food', 'Very good restaurant :D');
+INSERT INTO restaurants (restaurant_id, name, password, phone, email, location_id, average_rating, image_url, descriptions) VALUES
+(1, 'Black, Davis and Simon', 'hashed_password', '489-159-3776', 'sandra22@hotmail.com', 1, 3.32, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80', 'Best burgers in town'),
+(2, 'Atkinson, Price and Williams', 'hashed_password', '598-533-6698', 'randallmcintyre@gutierrez-carroll.com', 2, 3.77, 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80', 'Fresh salads and wraps'),
+(3, 'Fisher PLC', 'hashed_password', '591-386-3262', 'millerdiana@yahoo.com', 3, 4.34, 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=800&q=80', 'Sweet treats for everyone'),
+(4, 'Robles LLC', 'hashed_password', '660-697-9159', 'suzanne68@navarro.biz', 4, 3.48, 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80', 'Authentic pasta and pizza'),
+(5, 'Cook LLC', 'hashed_password', '639-438-0388', 'kevin36@robinson.com', 5, 4.92, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80', 'Wood fired oven pizzas'),
+(6, 'Dhakaiya Kacchi Ghar', 'hashed_password', '123-456-7890', 'dhakaiya@example.com', 6, 4.8, 'https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=800&q=80', 'Authentic Kacchi Biryani and Bengali cuisine'),
+(7, 'Lalbagh Kabab & Naan', 'hashed_password', '123-456-7891', 'lalbagh@example.com', 7, 4.6, 'https://images.unsplash.com/photo-1544025162-8a115ce92080?auto=format&fit=crop&w=800&q=80', 'Delicious grilled kababs and hot naan'),
+(8, 'Dhaka University Cafe & Burgers', 'hashed_password', '123-456-7892', 'ducafe@example.com', 8, 4.4, 'https://images.unsplash.com/photo-1586816001966-79b736744398?auto=format&fit=crop&w=800&q=80', 'Popular burgers and fast food items for students'),
+(9, 'Pizzaria Bella Italia', 'hashed_password', '123-456-7893', 'bella@example.com', 9, 4.7, 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80', 'Wood-fired pizzas and creamy pastas'),
+(10, 'Nourish Bowls & Salads', 'hashed_password', '123-456-7894', 'nourish@example.com', 10, 4.9, 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80', 'Fresh and organic salad bowls for healthy eating'),
+(11, 'Demo Restaurant', '$2b$10$XSoy/..4ClLa5AR8xBSXjuql7VKvVy4RzIgPRLvjLvMNvnfCURU8G', '01616524223', 'restaurant1@gmail.com', 11, 0.0, 'https://res.cloudinary.com/djcrpcgbm/image/upload/v1783970615/restaurant_profile/mggduj5x7wurpwtulysi.avif', 'Very good restaurant :D');
 -- Restaurant Hours
 INSERT INTO restaurant_hours (restaurant_id, day_of_week, open_time, close_time) VALUES 
 (1, 'Mon', '10:00', '19:00'), (1, 'Sat', '09:00', '20:00'), (1, 'Sun', '08:00', '16:00'), (1, 'Thu', '10:00', '19:00'), (1, 'Wed', '11:00', '21:00'),

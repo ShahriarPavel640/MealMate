@@ -468,7 +468,8 @@ export const getRestaurantProfile = async (req, res) => {
         l.city,
         l.postal_code,
         l.longitude,
-        l.latitude
+        l.latitude,
+        r.created_at
       FROM restaurants r
       LEFT JOIN user_locations l ON r.restaurant_id = l.restaurant_id
       WHERE r.restaurant_id = $1
@@ -506,6 +507,7 @@ export const getRestaurantProfile = async (req, res) => {
       longitude: r.longitude,
       restaurant_image: r.image_url,
       rating: r.rating,
+      created_at: r.created_at,
       description: r.description,
       delivery_settings: {
         delivery_fee: "",

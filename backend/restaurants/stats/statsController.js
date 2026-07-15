@@ -222,22 +222,17 @@ export const getLastTwoWeekNewCustomer = async (req, res) => {
   try {
     const result = await pool.query(
       `
-      WITH first_orders AS (
-        SELECT user_id, MIN(created_at  ) AS first_order_date
-        FROM orders
-        WHERE restaurant_id = $1 AND status = 'delivered'
-        GROUP BY user_id
-      )
       SELECT
-        COUNT(*) FILTER (
-          WHERE first_order_date >= NOW()::date - INTERVAL '7 days'
-            AND first_order_date < NOW()::date + INTERVAL '1 day'
+        COUNT(DISTINCT user_id) FILTER (
+          WHERE created_at >= NOW()::date - INTERVAL '7 days'
+            AND created_at < NOW()::date + INTERVAL '1 day'
         ) AS last_week,
-        COUNT(*) FILTER (
-          WHERE first_order_date >= NOW()::date - INTERVAL '14 days'
-            AND first_order_date < NOW()::date - INTERVAL '7 days'
+        COUNT(DISTINCT user_id) FILTER (
+          WHERE created_at >= NOW()::date - INTERVAL '14 days'
+            AND created_at < NOW()::date - INTERVAL '7 days'
         ) AS second_last_week
-      FROM first_orders
+      FROM orders
+      WHERE restaurant_id = $1 AND status = 'delivered'
       `,
       [restaurant_id]
     );
