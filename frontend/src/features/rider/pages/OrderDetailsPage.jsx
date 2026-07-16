@@ -88,7 +88,7 @@ const OrderDetailsPage = () => {
                 {order.status}
               </div>
               <div className="text-3xl font-bold text-green-600 mt-2">
-                ${order.total_amount}
+                Tk {order.total_amount}
               </div>
             </div>
           </div>

@@ -10,6 +10,8 @@ export const signup = async (req, res) => {
     phone_number,
     vehicle_type,
     current_location,
+    latitude,
+    longitude,
     is_available = true,
   } = req.body;
 
@@ -44,6 +46,15 @@ export const signup = async (req, res) => {
        VALUES ($1, $2, $3, $4) RETURNING *`,
       [userId, vehicle_type, current_location, is_available]
     );
+
+    // Insert into user_locations table so rider dashboard works immediately
+    if (latitude && longitude) {
+      await pool.query(
+        `INSERT INTO user_locations (user_id, latitude, longitude)
+         VALUES ($1, $2, $3)`,
+        [userId, latitude, longitude]
+      );
+    }
 
     // Generate token and respond
     generateToken(userId, "rider", res);

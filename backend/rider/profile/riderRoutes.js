@@ -12,6 +12,7 @@ import {
   updateOrderStatus,
   getOrderDetails,
   getEarnings,
+  getRiderReviews,
 } from "./riderController.js";
 
 const router = express.Router();
@@ -53,6 +54,8 @@ router.get(
 );
 
 router.get("/earnings", authorization, authorizeRoles(role), getEarnings);
+
+router.get("/reviews", authorization, authorizeRoles(role), getRiderReviews);
 
 router.put(
   "/orders/:orderId/accept",

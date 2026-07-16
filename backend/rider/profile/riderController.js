@@ -17,41 +17,42 @@ export const getDashboardData = async (req, res) => {
       "SELECT latitude, longitude FROM user_locations WHERE user_id = $1 LIMIT 1",
       [riderId]
     );
-    if (riderLocationResult.rows.length === 0) {
-      return res.status(400).json({ message: "Rider location not found." });
-    }
-    const riderLat = riderLocationResult.rows[0].latitude;
-    const riderLon = riderLocationResult.rows[0].longitude;
+    let availableOrders = { rows: [] };
 
-    const availableOrders = await pool.query(
-      `SELECT
-        o.order_id,
-        o.status,
-        o.total_amount,
-        r.name AS restaurant_name,
-        r.phone AS restaurant_phone,
-        r.email AS restaurant_email,
-        cu.name AS customer_name,
-        cu.phone_number AS customer_phone,
-        d.dropoff_addr,
-        d.dropoff_latitude,
-        d.dropoff_longitude,
-        get_distance_km(rl.longitude, rl.latitude, d.dropoff_longitude, d.dropoff_latitude) AS distance_km,
-        (
-          2.0 +
-          get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) * 0.50
-        )::decimal(10, 2) AS delivery_fee
-      FROM orders o
-      JOIN restaurants r ON o.restaurant_id = r.restaurant_id
-      JOIN user_locations rl ON r.location_id = rl.location_id
-      JOIN users cu ON o.user_id = cu.user_id
-      JOIN deliveries d ON o.order_id = d.order_id
-      WHERE d.status = 'pending'
-        AND get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) <= 5
-        AND get_distance_km($1, $2, rl.longitude, rl.latitude) <= 5
-      ORDER BY distance_km ASC`,
-      [riderLon, riderLat]
-    );
+    if (riderLocationResult.rows.length > 0) {
+      const riderLat = riderLocationResult.rows[0].latitude;
+      const riderLon = riderLocationResult.rows[0].longitude;
+
+      availableOrders = await pool.query(
+        `SELECT
+          o.order_id,
+          o.status,
+          o.total_amount,
+          r.name AS restaurant_name,
+          r.phone AS restaurant_phone,
+          r.email AS restaurant_email,
+          cu.name AS customer_name,
+          cu.phone_number AS customer_phone,
+          d.dropoff_addr,
+          d.dropoff_latitude,
+          d.dropoff_longitude,
+          get_distance_km(rl.longitude, rl.latitude, d.dropoff_longitude, d.dropoff_latitude) AS distance_km,
+          (
+            2.0 +
+            get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) * 0.50
+          )::decimal(10, 2) AS delivery_fee
+        FROM orders o
+        JOIN restaurants r ON o.restaurant_id = r.restaurant_id
+        JOIN user_locations rl ON r.location_id = rl.location_id
+        JOIN users cu ON o.user_id = cu.user_id
+        JOIN deliveries d ON o.order_id = d.order_id
+        WHERE d.status = 'pending'
+          AND get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) <= 5
+          AND get_distance_km($1, $2, rl.longitude, rl.latitude) <= 5
+        ORDER BY distance_km ASC`,
+        [riderLon, riderLat]
+      );
+    }
 
     // Fetch assigned order with detailed information
     const assignedOrdersResult = await pool.query(
@@ -108,6 +109,11 @@ export const getRiderProfile = async (req, res) => {
       [userId]
     );
 
+    const locationInfo = await pool.query(
+      "SELECT latitude, longitude FROM user_locations WHERE user_id = $1 LIMIT 1",
+      [userId]
+    );
+
     if (user.rows.length === 0 || riderProfile.rows.length === 0) {
       return res.status(404).json({ message: "Rider profile not found" });
     }
@@ -118,6 +124,8 @@ export const getRiderProfile = async (req, res) => {
       phone_number: user.rows[0].phone_number,
       vehicle_type: riderProfile.rows[0].vehicle_type,
       is_available: riderProfile.rows[0].is_available,
+      latitude: locationInfo.rows.length > 0 ? locationInfo.rows[0].latitude : null,
+      longitude: locationInfo.rows.length > 0 ? locationInfo.rows[0].longitude : null,
     });
   } catch (err) {
     console.error("Error fetching rider profile:", err.message);
@@ -469,6 +477,36 @@ export const getEarnings = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching earnings data:", err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getRiderReviews = async (req, res) => {
+  try {
+    const riderId = req.user.id;
+
+    const reviewsResult = await pool.query(
+      `SELECT r.review_id, r.rating, r.comment, r.created_at, u.name AS user_name
+       FROM reviews r
+       JOIN users u ON r.user_id = u.user_id
+       WHERE r.rider_id = $1
+       ORDER BY r.created_at DESC`,
+      [riderId]
+    );
+
+    const avgRatingResult = await pool.query(
+      `SELECT COALESCE(AVG(rating), 0)::numeric(10,1) AS average_rating
+       FROM reviews
+       WHERE rider_id = $1`,
+      [riderId]
+    );
+
+    res.status(200).json({
+      reviews: reviewsResult.rows,
+      averageRating: avgRatingResult.rows[0]?.average_rating || 0
+    });
+  } catch (err) {
+    console.error("Error fetching rider reviews:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };

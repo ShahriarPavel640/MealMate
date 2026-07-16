@@ -25,7 +25,7 @@ import {
   Download,
   Eye
 } from "lucide-react";
-import axios from "axios";
+import { axiosInstance } from "@/lib/axios";
 
 const RiderEarningsDashboard = () => {
   const [earningsData, setEarningsData] = useState({ weekly: [], monthly: [], peakHours: [] });
@@ -37,8 +37,8 @@ const RiderEarningsDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const earningsRes = await axios.get('/api/rider/data/earnings', { withCredentials: true });
-        const reviewsRes = await axios.get('/api/customer/review/my-reviews', { withCredentials: true });
+        const earningsRes = await axiosInstance.get('/rider/data/earnings');
+        const reviewsRes = await axiosInstance.get('/rider/data/reviews');
         setEarningsData(earningsRes.data);
         setReviewsData(reviewsRes.data);
         setLoading(false);
