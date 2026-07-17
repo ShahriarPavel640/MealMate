@@ -1,7 +1,7 @@
 import express from "express";
 import validinfo from "../../middleware/validinfo.js";
 import authorization from "../../middleware/authorization.js";
-import authorizeRoles from "../../middleware/athorizeRoles.js";
+import authorizeRoles from "../../middleware/authorizeRoles.js";
 import upload from "../../middleware/upload.js";
 
 import {

@@ -1,7 +1,7 @@
 import express from 'express';
 import * as reviewController from './reviewController.js';
 import authorization from '../../middleware/authorization.js';
-import authorizeRoles from '../../middleware/athorizeRoles.js';
+import authorizeRoles from '../../middleware/authorizeRoles.js';
 
 const router = express.Router();
 const customerRole = "customer";

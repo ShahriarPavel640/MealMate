@@ -7,12 +7,16 @@ import toast from "react-hot-toast";
 const DeliveryHistoryPage = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchHistory = async () => {
+      setLoading(true);
       try {
-        const res = await axiosInstance.get("/rider/data/history");
-        setHistory(res.data);
+        const res = await axiosInstance.get(`/rider/data/history?page=${currentPage}&limit=10`);
+        setHistory(res.data.history);
+        setTotalPages(res.data.totalPages);
       } catch (err) {
         console.error("Error fetching delivery history:", err);
         toast.error("Failed to load delivery history.");
@@ -21,7 +25,7 @@ const DeliveryHistoryPage = () => {
       }
     };
     fetchHistory();
-  }, []);
+  }, [currentPage]);
 
   if (loading) {
     return (
@@ -57,7 +61,8 @@ const DeliveryHistoryPage = () => {
           </h2>
 
           {history.length > 0 ? (
-            <div className="space-y-6">
+            <>
+              <div className="space-y-6">
               {history.map((order, index) => (
                 <div key={order.order_id} className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow duration-200">
                   <div className="flex items-start justify-between mb-4">
@@ -98,7 +103,20 @@ const DeliveryHistoryPage = () => {
                     </div>
 
                     <div className="space-y-3">
-                      
+                      <div className="flex items-center text-gray-700">
+                        <Package className="size-5 mr-2 text-indigo-600" />
+                        <span className="font-medium">Restaurant:</span>
+                        <span className="ml-2 text-md text-gray-800">{order.restaurant_name}</span>
+                      </div>
+                      <div className="flex items-center text-gray-700">
+                        <MapPin className="size-5 mr-2 text-red-600" />
+                        <span className="font-medium">Dropoff:</span>
+                        <span className="ml-2 text-sm text-gray-600 line-clamp-1" title={order.dropoff_addr}>{order.dropoff_addr}</span>
+                      </div>
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-medium">Customer:</span>
+                        <span className="ml-2 text-sm text-gray-600">{order.customer_name}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -118,6 +136,30 @@ const DeliveryHistoryPage = () => {
                 </div>
               ))}
             </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 font-medium transition-colors"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-600 font-medium">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+            </>
           ) : (
             <div className="text-center py-16">
               <Package className="size-20 text-gray-300 mx-auto mb-6" />

@@ -12,7 +12,7 @@ import {
 } from "./menuController.js"; // Import controller functions
 import authorization from "../../middleware/authorization.js";
 //import { checkRestaurant } from "../../middleware/checkRestaurant.js";
-import authorizeRoles from "../../middleware/athorizeRoles.js";
+import authorizeRoles from "../../middleware/authorizeRoles.js";
 
 const router = express.Router();
 

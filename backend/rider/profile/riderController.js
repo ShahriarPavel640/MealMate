@@ -195,6 +195,9 @@ export const updateRiderAvailability = async (req, res) => {
 export const getDeliveryHistory = async (req, res) => {
   try {
     const riderId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
     if (!riderId) {
       return res
@@ -207,15 +210,33 @@ export const getDeliveryHistory = async (req, res) => {
         o.order_id,
         o.status,
         o.total_amount,
-        o.delivered_at
+        o.delivered_at,
+        r.name AS restaurant_name,
+        cu.name AS customer_name,
+        d.dropoff_addr
       FROM orders o
       JOIN deliveries d ON o.order_id = d.order_id
+      JOIN restaurants r ON o.restaurant_id = r.restaurant_id
+      JOIN users cu ON o.user_id = cu.user_id
       WHERE o.rider_id = $1 AND o.status = 'delivered'
-      ORDER BY o.delivered_at DESC`,
-      [riderId]
+      ORDER BY o.delivered_at DESC
+      LIMIT $2 OFFSET $3`,
+      [riderId, limit, offset]
     );
 
-    res.status(200).json(history.rows);
+    const countResult = await pool.query(
+      "SELECT COUNT(*) FROM orders WHERE rider_id = $1 AND status = 'delivered'",
+      [riderId]
+    );
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      history: history.rows,
+      currentPage: page,
+      totalPages,
+      totalItems
+    });
   } catch (err) {
     console.error("Error fetching delivery history:", err.message);
     res.status(500).json({ message: "Server error" });
@@ -223,12 +244,15 @@ export const getDeliveryHistory = async (req, res) => {
 };
 
 export const acceptOrder = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { orderId } = req.params;
     const riderId = req.user.id;
 
+    await client.query("BEGIN");
+
     // Check if the rider already has an active order (status 'out_for_delivery')
-    const activeCheck = await pool.query(
+    const activeCheck = await client.query(
       "SELECT order_id FROM orders WHERE rider_id = $1 AND status = 'out_for_delivery'",
       [riderId]
     );
@@ -236,7 +260,7 @@ export const acceptOrder = async (req, res) => {
       return res.status(400).json({ message: "You can only have one active delivery at a time. Please complete your current delivery to accept new orders." });
     }
 
-    const updatedOrder = await pool.query(
+    const updatedOrder = await client.query(
       "UPDATE orders SET rider_id = $1, status = 'out_for_delivery' WHERE order_id = $2 AND status = 'ready_for_pickup' RETURNING *",
       [riderId, orderId]
     );
@@ -247,20 +271,20 @@ export const acceptOrder = async (req, res) => {
         .json({ message: "Order not found or not ready for pickup" });
     }
 
-    await pool.query(
+    await client.query(
       "UPDATE deliveries SET start_time = NOW() WHERE order_id = $1",
       [orderId]
     );
 
     // Fetch rider profile for notification
-    const riderProfileResult = await pool.query(
+    const riderProfileResult = await client.query(
       "SELECT user_id, name, phone_number FROM users WHERE user_id = $1",
       [riderId]
     );
     const riderProfile = riderProfileResult.rows[0];
 
     // Fetch order details to get customer_id and restaurant_id
-    const orderDetailsResult = await pool.query(
+    const orderDetailsResult = await client.query(
       "SELECT user_id, restaurant_id FROM orders WHERE order_id = $1",
       [orderId]
     );
@@ -279,7 +303,7 @@ export const acceptOrder = async (req, res) => {
     });
 
     // Store notification for the restaurant
-    await pool.query(
+    await client.query(
       "INSERT INTO notifications (user_id, target_type, target_id, order_id, type, message) VALUES ($1, $2, $3, $4, $5, $6)",
       [
         riderId,
@@ -292,7 +316,7 @@ export const acceptOrder = async (req, res) => {
     );
 
     // Store notification for the customer
-    await pool.query(
+    await client.query(
       "INSERT INTO notifications (user_id, target_type, target_id, order_id, type, message) VALUES ($1, $2, $3, $4, $5, $6)",
       [
         riderId,
@@ -304,17 +328,23 @@ export const acceptOrder = async (req, res) => {
       ]
     );
 
+    await client.query("COMMIT");
+
     res.status(200).json({
       message: "Order accepted successfully",
       order: updatedOrder.rows[0],
     });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error accepting order:", err.message);
     res.status(500).json({ message: "Server error" });
+  } finally {
+    client.release();
   }
 };
 
 export const updateOrderStatus = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { orderId } = req.params;
     const { status } = req.body;
@@ -322,27 +352,30 @@ export const updateOrderStatus = async (req, res) => {
 
     const validStatuses = ["out_for_delivery", "delivered"];
     if (!validStatuses.includes(status)) {
+      client.release();
       return res.status(400).json({ message: "Invalid status update" });
     }
+
+    await client.query("BEGIN");
 
     let updatedOrder;
 
     if (status === "delivered") {
-      await pool.query(
+      await client.query(
         "UPDATE payments SET status = 'completed', paid_at = CURRENT_TIMESTAMP WHERE order_id = $1 AND method_type = 'cod' AND status = 'pending'",
         [orderId]
       );
 
-      updatedOrder = await pool.query(
+      updatedOrder = await client.query(
         "UPDATE orders SET status = $1, delivered_at = NOW() WHERE order_id = $2 AND rider_id = $3 RETURNING *",
         [status, orderId, riderId]
       );
-      await pool.query(
+      await client.query(
         "UPDATE deliveries SET end_time = NOW() WHERE order_id = $1",
         [orderId]
       );
     } else {
-      updatedOrder = await pool.query(
+      updatedOrder = await client.query(
         "UPDATE orders SET status = $1 WHERE order_id = $2 AND rider_id = $3 RETURNING *",
         [status, orderId, riderId]
       );
@@ -352,13 +385,18 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    await client.query("COMMIT");
+
     res.status(200).json({
       message: "Order status updated successfully",
       order: updatedOrder.rows[0],
     });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error updating order status:", err.message);
     res.status(500).json({ message: "Server error" });
+  } finally {
+    client.release();
   }
 };
 
@@ -489,15 +527,26 @@ export const getEarnings = async (req, res) => {
 export const getRiderReviews = async (req, res) => {
   try {
     const riderId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
 
     const reviewsResult = await pool.query(
       `SELECT r.review_id, r.rating, r.comment, r.created_at, u.name AS user_name
        FROM reviews r
        JOIN users u ON r.user_id = u.user_id
        WHERE r.rider_id = $1
-       ORDER BY r.created_at DESC`,
+       ORDER BY r.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [riderId, limit, offset]
+    );
+
+    const countResult = await pool.query(
+      "SELECT COUNT(*) FROM reviews WHERE rider_id = $1",
       [riderId]
     );
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
 
     const avgRatingResult = await pool.query(
       `SELECT COALESCE(AVG(rating), 0)::numeric(10,1) AS average_rating
@@ -508,7 +557,10 @@ export const getRiderReviews = async (req, res) => {
 
     res.status(200).json({
       reviews: reviewsResult.rows,
-      averageRating: avgRatingResult.rows[0]?.average_rating || 0
+      averageRating: avgRatingResult.rows[0]?.average_rating || 0,
+      currentPage: page,
+      totalPages,
+      totalItems
     });
   } catch (err) {
     console.error("Error fetching rider reviews:", err.message);

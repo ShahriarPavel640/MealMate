@@ -15,9 +15,13 @@ export const signup = async (req, res) => {
     is_available = true,
   } = req.body;
 
+  const client = await pool.connect();
+
   try {
+    await client.query("BEGIN");
+
     // Check if the email already exists in the users table
-    const existingUser = await pool.query(
+    const existingUser = await client.query(
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
@@ -32,7 +36,7 @@ export const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Insert into users table
-    const newUser = await pool.query(
+    const newUser = await client.query(
       `INSERT INTO users (name, email, password, phone_number, role_id)
        VALUES ($1, $2, $3, $4, 'rider') RETURNING *`,
       [name, email, hashedPassword, phone_number]
@@ -41,7 +45,7 @@ export const signup = async (req, res) => {
     const userId = newUser.rows[0].user_id;
 
     // Insert into rider_profiles table
-    await pool.query(
+    await client.query(
       `INSERT INTO rider_profiles (user_id, vehicle_type, current_location, is_available)
        VALUES ($1, $2, $3, $4) RETURNING *`,
       [userId, vehicle_type, current_location, is_available]
@@ -49,12 +53,14 @@ export const signup = async (req, res) => {
 
     // Insert into user_locations table so rider dashboard works immediately
     if (latitude && longitude) {
-      await pool.query(
+      await client.query(
         `INSERT INTO user_locations (user_id, latitude, longitude)
          VALUES ($1, $2, $3)`,
         [userId, latitude, longitude]
       );
     }
+
+    await client.query("COMMIT");
 
     // Generate token and respond
     generateToken(userId, "rider", res);
@@ -70,8 +76,11 @@ export const signup = async (req, res) => {
       is_available,
     });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error during rider signup:", err.message);
     res.status(500).json({ message: "Server error", error: err.message });
+  } finally {
+    client.release();
   }
 };
 
