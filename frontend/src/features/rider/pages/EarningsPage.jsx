@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   LineChart, 
   Line, 
@@ -23,9 +23,10 @@ import {
   Award,
   ChevronDown,
   Download,
-  Eye
+  Eye,
+  Loader2
 } from "lucide-react";
-import axios from "axios";
+import { axiosInstance } from "@/lib/axios";
 
 const RiderEarningsDashboard = () => {
   const [earningsData, setEarningsData] = useState({ weekly: [], monthly: [], peakHours: [] });
@@ -34,13 +35,21 @@ const RiderEarningsDashboard = () => {
   const [error, setError] = useState(null);
   const [selectedMetric, setSelectedMetric] = useState('earnings');
 
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [totalReviewPages, setTotalReviewPages] = useState(1);
+  const [isFetchingReviews, setIsFetchingReviews] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const earningsRes = await axios.get('/api/rider/data/earnings', { withCredentials: true });
-        const reviewsRes = await axios.get('/api/customer/review/my-reviews', { withCredentials: true });
+        const earningsRes = await axiosInstance.get('/rider/data/earnings');
+        const reviewsRes = await axiosInstance.get('/rider/data/reviews?page=1&limit=10');
         setEarningsData(earningsRes.data);
-        setReviewsData(reviewsRes.data);
+        setReviewsData({
+          reviews: reviewsRes.data.reviews,
+          averageRating: reviewsRes.data.averageRating
+        });
+        setTotalReviewPages(reviewsRes.data.totalPages);
         setLoading(false);
       } catch (err) {
         setError('Failed to fetch data.');
@@ -50,6 +59,32 @@ const RiderEarningsDashboard = () => {
 
     fetchData();
   }, []);
+
+  const loadMoreReviews = useCallback(async () => {
+    if (isFetchingReviews || reviewsPage >= totalReviewPages) return;
+    setIsFetchingReviews(true);
+    try {
+      const nextPage = reviewsPage + 1;
+      const res = await axiosInstance.get(`/rider/data/reviews?page=${nextPage}&limit=10`);
+      setReviewsData(prev => ({
+        ...prev,
+        reviews: [...prev.reviews, ...res.data.reviews]
+      }));
+      setReviewsPage(nextPage);
+      setTotalReviewPages(res.data.totalPages);
+    } catch (err) {
+      console.error("Error loading more reviews:", err);
+    } finally {
+      setIsFetchingReviews(false);
+    }
+  }, [reviewsPage, totalReviewPages, isFetchingReviews]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollHeight - scrollTop <= clientHeight + 5) {
+      loadMoreReviews();
+    }
+  };
 
   const StatCard = ({ title, value, change, icon: Icon, color, suffix = '' }) => (
     <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
@@ -233,7 +268,11 @@ const RiderEarningsDashboard = () => {
         {/* Recent Reviews */}
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Reviews</h3>
-          <div className="space-y-4">
+          <div 
+            className="space-y-4 overflow-y-auto pr-2" 
+            style={{ maxHeight: '400px' }}
+            onScroll={handleScroll}
+          >
             {reviewsData.reviews.length > 0 ? (
               reviewsData.reviews.map((review, index) => (
                 <div key={index} className="border-b border-gray-200 pb-4 last:border-b-0">
@@ -255,6 +294,16 @@ const RiderEarningsDashboard = () => {
               ))
             ) : (
               <p className="text-gray-500">No reviews yet.</p>
+            )}
+            
+            {isFetchingReviews && (
+              <div className="flex justify-center py-4">
+                <Loader2 className="size-6 animate-spin text-blue-600" />
+              </div>
+            )}
+            
+            {!isFetchingReviews && reviewsPage >= totalReviewPages && reviewsData.reviews.length > 0 && (
+              <p className="text-center text-gray-400 text-sm py-4">No more reviews to load.</p>
             )}
           </div>
         </div>

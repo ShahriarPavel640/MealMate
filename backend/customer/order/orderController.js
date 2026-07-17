@@ -55,14 +55,13 @@ export const createOrderFromCart = async (
       const location = locationResult.rows[0];
       const address = `${location.street}, ${location.city}, ${location.postal_code}`;
       await client.query(
-        "INSERT INTO deliveries (order_id, restaurant_id, dropoff_latitude, dropoff_longitude, dropoff_addr, status) VALUES ($1, $2, $3, $4, $5, $6)",
+        "INSERT INTO deliveries (order_id, restaurant_id, dropoff_latitude, dropoff_longitude, dropoff_addr) VALUES ($1, $2, $3, $4, $5)",
         [
           order.order_id,
           restaurantId,
           location.latitude,
           location.longitude,
           address,
-          "awaiting_restaurant",
         ]
       );
     } else {

@@ -403,20 +403,7 @@ const HomepageRider = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
-                  {order.order_status === "preparing" && (
-                    <button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm"
-                      onClick={() =>
-                        handleUpdateOrderStatus(
-                          order.order_id,
-                          "out_for_delivery"
-                        )
-                      }
-                    >
-                      <Truck className="size-4 mr-2" />
-                      Mark as Picked Up
-                    </button>
-                  )}
+
                   {order.order_status === "out_for_delivery" && (
                     <button
                       className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm"
@@ -490,41 +477,48 @@ const HomepageRider = () => {
                       Delivery Fee: Tk {order.delivery_fee}
                     </p>
                     <div className="space-y-2">
-                      <button
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
-                        onClick={async () => {
-                          try {
-                            await axiosInstance.put(
-                              `/rider/data/orders/${order.order_id}/accept`
-                            );
-                            toast.success("Order accepted!");
-                            clearNotifications();
-                            setShowNotifications(false);
-                            setDashboardData((prevData) => ({
-                              ...prevData,
-                              availableOrders: prevData.availableOrders.filter(
-                                (ao) => ao.order_id !== order.order_id
-                              ),
-                              assignedOrders: [
-                                ...(prevData.assignedOrders || []),
-                                { ...order, order_status: "out_for_delivery" },
-                              ],
-                            }));
-                          } catch (err) {
-                            console.error(
-                              "Error accepting order from notification:",
-                              err
-                            );
-                            toast.error(
-                              err?.response?.data?.message ||
-                                "Failed to accept order."
-                            );
-                          }
-                        }}
-                      >
-                        <CheckCircle className="size-5 mr-2" />
-                        Accept Order
-                      </button>
+                      {dashboardData?.assignedOrders?.length > 0 ? (
+                        <div className="w-full bg-gray-100 text-gray-600 font-medium py-3 px-4 rounded-lg flex items-center justify-center text-sm text-center">
+                          <CheckCircle className="size-4 mr-2" />
+                          You have an active delivery. Complete it to accept new orders.
+                        </div>
+                      ) : (
+                        <button
+                          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                          onClick={async () => {
+                            try {
+                              await axiosInstance.put(
+                                `/rider/data/orders/${order.order_id}/accept`
+                              );
+                              toast.success("Order accepted!");
+                              clearNotifications();
+                              setShowNotifications(false);
+                              setDashboardData((prevData) => ({
+                                ...prevData,
+                                availableOrders: prevData.availableOrders.filter(
+                                  (ao) => ao.order_id !== order.order_id
+                                ),
+                                assignedOrders: [
+                                  ...(prevData.assignedOrders || []),
+                                  { ...order, order_status: "out_for_delivery" },
+                                ],
+                              }));
+                            } catch (err) {
+                              console.error(
+                                "Error accepting order:",
+                                err
+                              );
+                              toast.error(
+                                err?.response?.data?.message ||
+                                  "Failed to accept order."
+                              );
+                            }
+                          }}
+                        >
+                          <CheckCircle className="size-5 mr-2" />
+                          Accept Order
+                        </button>
+                      )}
                       <Link
                         to={`/rider/data/orders/${order.order_id}`}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"

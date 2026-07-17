@@ -1,6 +1,6 @@
 import express from "express";
 import authorization from "../../middleware/authorization.js";
-import authorizeRoles from "../../middleware/athorizeRoles.js";
+import authorizeRoles from "../../middleware/authorizeRoles.js";
 import { handleIPN, initiatePayment, handleSuccess, handleFail, handleCancel } from "./paymentController.js";
 
 export default (store_id, store_passwd) => {

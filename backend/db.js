@@ -9,6 +9,7 @@ const pool = new Pool({
   host: process.env.DB_HOST || "127.0.0.1",
   port: process.env.DB_PORT || 5434,
   database: process.env.DB_NAME || "food_panda",
+  max: 20,
 });
 
 // Log connection status
