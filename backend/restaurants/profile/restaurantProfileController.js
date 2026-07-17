@@ -720,11 +720,6 @@ export const updateOrderStatus = async (req, res) => {
       .emit("order_status_updated", order);
 
     if (status === "ready_for_pickup") {
-      await client.query(
-        `UPDATE deliveries SET status = 'pending' WHERE order_id = $1`,
-        [orderId]
-      );
-
       const deliveryDetailsResult = await client.query(
         `SELECT
           o.*,

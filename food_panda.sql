@@ -64,7 +64,6 @@ CREATE TYPE weekday AS ENUM ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
 CREATE TYPE cart_status AS ENUM ('active', 'abandoned', 'completed');
 CREATE TYPE order_status AS ENUM ('pending_payment', 'pending_restaurant_acceptance', 'restaurant_rejected', 'preparing', 'ready_for_pickup', 'out_for_delivery', 'delivered', 'cancelled');
 CREATE TYPE payment_method AS ENUM ('cod', 'sslcommerz');
-CREATE TYPE delivery_status AS ENUM ('awaiting_restaurant', 'pending','in_transit','delivered');
 CREATE TYPE notification_target AS ENUM ('user','rider','restaurant');
 CREATE TYPE notification_type AS ENUM ('order_update','promotion','delivery_status');
 CREATE TYPE chat_type AS ENUM ('order','support');
@@ -162,7 +161,6 @@ CREATE TABLE deliveries (
   dropoff_latitude DECIMAL(10,8),
   dropoff_longitude DECIMAL(11,8),
   dropoff_addr VARCHAR(250),
-  status delivery_status,
   start_time TIMESTAMP,
   end_time TIMESTAMP
 );

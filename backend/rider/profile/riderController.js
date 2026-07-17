@@ -46,7 +46,7 @@ export const getDashboardData = async (req, res) => {
         JOIN user_locations rl ON r.location_id = rl.location_id
         JOIN users cu ON o.user_id = cu.user_id
         JOIN deliveries d ON o.order_id = d.order_id
-        WHERE d.status = 'pending'
+        WHERE o.status = 'ready_for_pickup'
           AND get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) <= 5
           AND get_distance_km($1, $2, rl.longitude, rl.latitude) <= 5
         ORDER BY distance_km ASC`,
@@ -72,7 +72,7 @@ export const getDashboardData = async (req, res) => {
       JOIN deliveries d ON o.order_id = d.order_id
       JOIN restaurants r ON o.restaurant_id = r.restaurant_id
       JOIN users cu ON o.user_id = cu.user_id
-      WHERE o.rider_id = $1 AND o.status IN ('preparing', 'ready_for_pickup', 'out_for_delivery')`,
+      WHERE o.rider_id = $1 AND o.status = 'out_for_delivery'`,
       [riderId]
     );
 
@@ -156,8 +156,8 @@ export const updateRiderProfile = async (req, res) => {
     );
     if (prevLocation.rows.length > 0) {
       await pool.query(
-        "UPDATE user_locations SET longitude = $1, latitude = $2",
-        [longitude, latitude]
+        "UPDATE user_locations SET longitude = $1, latitude = $2 WHERE user_id = $3",
+        [longitude, latitude, userId]
       );
     } else {
       await pool.query(
@@ -227,7 +227,14 @@ export const acceptOrder = async (req, res) => {
     const { orderId } = req.params;
     const riderId = req.user.id;
 
-    // Check if the rider already has an active order (status 'preparing' or 'out_for_delivery')
+    // Check if the rider already has an active order (status 'out_for_delivery')
+    const activeCheck = await pool.query(
+      "SELECT order_id FROM orders WHERE rider_id = $1 AND status = 'out_for_delivery'",
+      [riderId]
+    );
+    if (activeCheck.rows.length > 0) {
+      return res.status(400).json({ message: "You can only have one active delivery at a time. Please complete your current delivery to accept new orders." });
+    }
 
     const updatedOrder = await pool.query(
       "UPDATE orders SET rider_id = $1, status = 'out_for_delivery' WHERE order_id = $2 AND status = 'ready_for_pickup' RETURNING *",
@@ -241,7 +248,7 @@ export const acceptOrder = async (req, res) => {
     }
 
     await pool.query(
-      "UPDATE deliveries SET status = 'in_transit', start_time = NOW() WHERE order_id = $1",
+      "UPDATE deliveries SET start_time = NOW() WHERE order_id = $1",
       [orderId]
     );
 
@@ -311,6 +318,12 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
+    const riderId = req.user.id;
+
+    const validStatuses = ["out_for_delivery", "delivered"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status update" });
+    }
 
     let updatedOrder;
 
@@ -321,17 +334,17 @@ export const updateOrderStatus = async (req, res) => {
       );
 
       updatedOrder = await pool.query(
-        "UPDATE orders SET status = $1, delivered_at = NOW() WHERE order_id = $2 RETURNING *",
-        [status, orderId]
+        "UPDATE orders SET status = $1, delivered_at = NOW() WHERE order_id = $2 AND rider_id = $3 RETURNING *",
+        [status, orderId, riderId]
       );
       await pool.query(
-        "UPDATE deliveries SET status = 'delivered', end_time = NOW() WHERE order_id = $1",
+        "UPDATE deliveries SET end_time = NOW() WHERE order_id = $1",
         [orderId]
       );
     } else {
       updatedOrder = await pool.query(
-        "UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *",
-        [status, orderId]
+        "UPDATE orders SET status = $1 WHERE order_id = $2 AND rider_id = $3 RETURNING *",
+        [status, orderId, riderId]
       );
     }
 
@@ -393,14 +406,6 @@ export const getOrderDetails = async (req, res) => {
     return res
       .status(403)
       .json({ message: "Order not authorized for this rider" });
-
-    if (orderResult.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Order not found or not authorized" });
-    }
-
-    res.status(200).json({ order: orderResult.rows[0] });
   } catch (err) {
     console.error("Error fetching single order details:", err.message);
     res.status(500).json({ message: "Server error" });
