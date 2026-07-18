@@ -37,10 +37,7 @@ export const getDashboardData = async (req, res) => {
           d.dropoff_latitude,
           d.dropoff_longitude,
           get_distance_km(rl.longitude, rl.latitude, d.dropoff_longitude, d.dropoff_latitude) AS distance_km,
-          (
-            2.0 +
-            get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) * 0.50
-          )::decimal(10, 2) AS delivery_fee
+          30.00::decimal(10, 2) AS delivery_fee
         FROM orders o
         JOIN restaurants r ON o.restaurant_id = r.restaurant_id
         JOIN user_locations rl ON r.location_id = rl.location_id
@@ -67,7 +64,8 @@ export const getDashboardData = async (req, res) => {
         r.phone AS restaurant_phone,
         r.email AS restaurant_email,
         cu.name AS customer_name,
-        cu.phone_number AS customer_phone
+        cu.phone_number AS customer_phone,
+        30.00::decimal(10, 2) AS delivery_fee
       FROM orders o
       JOIN deliveries d ON o.order_id = d.order_id
       JOIN restaurants r ON o.restaurant_id = r.restaurant_id
@@ -418,7 +416,11 @@ export const getOrderDetails = async (req, res) => {
         cu.phone_number AS customer_phone,
         d.dropoff_addr,
         d.dropoff_latitude,
-        d.dropoff_longitude
+        d.dropoff_longitude,
+        30.00::decimal(10, 2) AS delivery_fee,
+        o.created_at,
+        d.start_time AS accepted_at,
+        o.delivered_at
       FROM orders o
       JOIN restaurants r ON o.restaurant_id = r.restaurant_id
       JOIN users cu ON o.user_id = cu.user_id

@@ -17,4 +17,9 @@ pool.query("SELECT NOW()")
   .then(res => console.log("Dockerized Database connected successfully. Current database time:", res.rows[0].now))
   .catch(err => console.error("Dockerized Database connection error details:", err));
 
+// Catch idle client errors so the application doesn't crash on DB disconnect
+pool.on('error', (err, client) => {
+  console.error("Unexpected error on idle database client:", err.message);
+});
+
 export default pool;

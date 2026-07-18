@@ -14,15 +14,18 @@ import {
   Check,
   AlertCircle,
   MapPin,
+  ArrowLeft
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRiderAuthStore } from "@/features/rider/store/riderAuthStore";
+import { useNavigate } from "react-router-dom";
 
 const ProfilePageRider = () => {
   const { authrider, checkAuthRider } = useRiderAuthStore();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -140,6 +143,13 @@ const ProfilePageRider = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar />
       <section className="container mx-auto p-6 max-w-4xl">
+        <button
+          onClick={() => navigate('/rider')}
+          className="mb-6 flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Dashboard
+        </button>
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
@@ -250,16 +260,20 @@ const ProfilePageRider = () => {
                       Vehicle Type
                     </div>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     id="vehicle_type"
                     name="vehicle_type"
                     value={formData.vehicle_type}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Enter your vehicle type"
+                    className="w-full px-4 py-3 border border-gray-300 text-gray-700 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     required
-                  />
+                  >
+                    <option value="" disabled>Select your vehicle type</option>
+                    <option value="Bicycle">Bicycle</option>
+                    <option value="Motorcycle">Motorcycle</option>
+                    <option value="Car">Car</option>
+                    <option value="Walking">Walking</option>
+                  </select>
                 </div>
 
                 {/* Location Section */}

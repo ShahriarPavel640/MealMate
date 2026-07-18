@@ -382,7 +382,6 @@ function OrderManagement() {
 
   useEffect(() => {
     if (restaurant && restaurant.restaurant_id) {
-      socketService.connect(restaurant.restaurant_id, "restaurant");
       // Join the correct room for this restaurant to receive notifications
       if (socketService.socket) {
         socketService.socket.emit(
@@ -848,7 +847,7 @@ export default OrderManagement;
 
 //   useEffect(() => {
 //     if (restaurant && restaurant.restaurant_id) {
-//       socketService.connect(restaurant.restaurant_id, "restaurant");
+//       socketService.joinRoom(`restaurant_${restaurant.restaurant_id}`);
 //       // Join the correct room for this restaurant to receive notifications
 //       if (socketService.socket) {
 //         socketService.socket.emit(

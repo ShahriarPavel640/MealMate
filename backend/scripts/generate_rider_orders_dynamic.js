@@ -30,7 +30,7 @@ const reviewsSql = [];
 
 const riders = [4, 5];
 const customers = [1, 2, 3];
-const restaurants = [1, 2, 3, 4, 5];
+const restaurants = [6, 7, 8, 9, 10, 11];
 
 const startId = 1001;
 
@@ -63,33 +63,27 @@ for (let i = 0; i < 100; i++) {
   const customerId = randomChoice(customers);
   const restaurantId = randomChoice(restaurants);
   
-  // Random days ago between 0 and 30 for historical data
-  const daysAgo = randomInt(0, 30);
+  // Random days ago between 0 and 90 for 3 months of historical data
+  const daysAgo = randomInt(0, 90);
   const createdInterval = `CURRENT_TIMESTAMP - INTERVAL '${daysAgo} days'`;
   const deliveredInterval = `CURRENT_TIMESTAMP - INTERVAL '${daysAgo} days' + INTERVAL '30 minutes'`;
   
   let status, deliveryStatus, riderId, deliveredVal, createdVal;
   
-  if (i < 10) {
-    status = 'pending_restaurant_acceptance';
-    deliveryStatus = 'pending';
+  if (i < 20) {
+    status = 'ready_for_pickup';
+    deliveryStatus = 'pending'; // No rider assigned yet
     riderId = 'NULL';
     deliveredVal = 'NULL';
     createdVal = "CURRENT_TIMESTAMP";
-  } else if (i < 20) {
-    status = 'ready_for_pickup';
-    deliveryStatus = 'in_transit';
-    riderId = 4;
-    deliveredVal = 'NULL';
-    createdVal = "CURRENT_TIMESTAMP";
-  } else if (i < 30) {
+  } else if (i === 20) {
     status = 'out_for_delivery';
     deliveryStatus = 'in_transit';
     riderId = 4;
     deliveredVal = 'NULL';
     createdVal = "CURRENT_TIMESTAMP";
   } else {
-    // 70 delivered orders
+    // 79 delivered orders
     status = 'delivered';
     deliveryStatus = 'delivered';
     riderId = 4;
@@ -111,8 +105,8 @@ for (let i = 0; i < 100; i++) {
   paymentsSql.push(`(${orderId}, ${orderId}, ${customerId}, 'sslcommerz', ${totalAmount}, 'paid', '${tranId}')`);
   
   // Deliveries
-  const lat = (23.8103 + (Math.random() * 0.1 - 0.05)).toFixed(8);
-  const lng = (90.4125 + (Math.random() * 0.1 - 0.05)).toFixed(8);
+  const lat = (23.7285 + (Math.random() * 0.04 - 0.02)).toFixed(8);
+  const lng = (90.3952 + (Math.random() * 0.04 - 0.02)).toFixed(8);
   const addr = `Random Addr ${orderId}`;
   
   const startTime = createdVal;

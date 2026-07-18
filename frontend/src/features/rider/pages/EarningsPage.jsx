@@ -21,12 +21,12 @@ import {
   Star,
   Target,
   Award,
-  ChevronDown,
-  Download,
-  Eye,
-  Loader2
+  Wallet,
+  Loader2,
+  ArrowLeft
 } from "lucide-react";
 import { axiosInstance } from "@/lib/axios";
+import { useNavigate } from "react-router-dom";
 
 const RiderEarningsDashboard = () => {
   const [earningsData, setEarningsData] = useState({ weekly: [], monthly: [], peakHours: [] });
@@ -34,6 +34,7 @@ const RiderEarningsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMetric, setSelectedMetric] = useState('earnings');
+  const navigate = useNavigate();
 
   const [reviewsPage, setReviewsPage] = useState(1);
   const [totalReviewPages, setTotalReviewPages] = useState(1);
@@ -133,6 +134,13 @@ const RiderEarningsDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
+        <button
+          onClick={() => navigate('/rider')}
+          className="mb-6 flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Dashboard
+        </button>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -149,9 +157,9 @@ const RiderEarningsDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Earnings (Weekly)"
-            value={`${weeklyStats.totalEarnings.toFixed(2)}`}
+            value={`Tk ${weeklyStats.totalEarnings.toFixed(2)}`}
             change="+12.5" // Placeholder
-            icon={DollarSign}
+            icon={Wallet}
             color="bg-gradient-to-r from-green-500 to-green-600"
           />
           <StatCard

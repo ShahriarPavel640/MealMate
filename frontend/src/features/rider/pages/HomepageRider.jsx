@@ -77,7 +77,6 @@ const HomepageRider = () => {
   useEffect(() => {
     if (authrider) {
       // Connect and join rooms
-      socketService.connect(authrider.user_id, "rider");
       socketService.joinRoom("riders");
 
       // Define event handlers
@@ -110,11 +109,10 @@ const HomepageRider = () => {
       // Cleanup on component unmount or when authrider changes
       return () => {
         console.log(
-          "Cleaning up rider homepage socket listeners and disconnecting."
+          "Cleaning up rider homepage socket listeners."
         );
         socketService.off("new_delivery", handleNewDelivery);
         socketService.off("order_accepted", handleOrderAcceptedByOtherRider);
-        socketService.disconnect();
       };
     }
   }, [authrider, addNotification]);
