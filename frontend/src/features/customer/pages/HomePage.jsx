@@ -62,19 +62,17 @@ const Home = () => {
   // Effect for managing socket connection and event listeners
   useEffect(() => {
     if (user && user.user_id) {
-      console.log(`HomePage: Connecting socket with user ID: ${user.user_id}`);
-      socketService.connect(user.user_id, "customer"); // Connect with user_id and type
+      console.log(`HomePage: Initializing socket listeners for customer ID: ${user.user_id}`);
 
       socketService.on("order_accepted", handleOrderAccepted);
       socketService.on("order_status_updated", handleOrderStatusUpdated);
 
       return () => {
         console.log(
-          "HomePage: Cleaning up customer homepage socket listeners and disconnecting."
+          "HomePage: Cleaning up customer homepage socket listeners."
         );
         socketService.off("order_accepted", handleOrderAccepted);
         socketService.off("order_status_updated", handleOrderStatusUpdated);
-        socketService.disconnect();
       };
     }
   }, [user, handleOrderAccepted, handleOrderStatusUpdated]);

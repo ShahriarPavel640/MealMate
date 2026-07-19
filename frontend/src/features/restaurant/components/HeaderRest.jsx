@@ -39,7 +39,6 @@ const HeaderRest = ({ onLogout }) => {
 
   useEffect(() => {
     if (authRestaurant && authRestaurant.restaurant_id) {
-      socketService.connect(authRestaurant.restaurant_id, "restaurant");
 
       const handleNewOrder = (newOrder) => {
         console.log("New order notification:", newOrder);

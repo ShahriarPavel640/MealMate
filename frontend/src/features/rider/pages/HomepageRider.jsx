@@ -17,7 +17,7 @@ import {
   LogOut,
   Bell,
   MessageCircle,
-  DollarSign,
+  Wallet,
   Eye,
 } from "lucide-react";
 import ChatModal from "@/components/ChatModal";
@@ -77,7 +77,6 @@ const HomepageRider = () => {
   useEffect(() => {
     if (authrider) {
       // Connect and join rooms
-      socketService.connect(authrider.user_id, "rider");
       socketService.joinRoom("riders");
 
       // Define event handlers
@@ -110,11 +109,10 @@ const HomepageRider = () => {
       // Cleanup on component unmount or when authrider changes
       return () => {
         console.log(
-          "Cleaning up rider homepage socket listeners and disconnecting."
+          "Cleaning up rider homepage socket listeners."
         );
         socketService.off("new_delivery", handleNewDelivery);
         socketService.off("order_accepted", handleOrderAcceptedByOtherRider);
-        socketService.disconnect();
       };
     }
   }, [authrider, addNotification]);
@@ -611,7 +609,7 @@ const HomepageRider = () => {
             to="/rider/earnings"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center"
           >
-            <DollarSign className="size-5 mr-2" />
+            <Wallet className="size-5 mr-2" />
             View Performance
           </Link>
           <Link

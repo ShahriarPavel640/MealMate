@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { userAuthStore } from "@/features/customer/store/userAuthStore";
 import { useRiderAuthStore } from "@/features/rider/store/riderAuthStore";
 
@@ -49,7 +49,13 @@ const Navbar = () => {
       return (
         <>
           <li>
-            <Link to="/rider/data/profile">{authrider.name}</Link>
+            <Link 
+              to="/rider/data/profile"
+              className="flex items-center gap-2 px-4 py-1.5 bg-white text-[#e21b70] font-semibold rounded-full hover:bg-gray-100 transition shadow-sm"
+            >
+              <User className="size-4" />
+              {authrider.name}
+            </Link>
           </li>
         </>
       );
@@ -164,9 +170,10 @@ const Navbar = () => {
               <Link
                 to="/rider/data/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className="hover:underline"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-[#e21b70] font-semibold rounded-full hover:bg-gray-100 transition shadow-sm w-full"
               >
-                Profile
+                <User className="size-4" />
+                Profile ({authrider.name})
               </Link>
             </li>
           ) : (

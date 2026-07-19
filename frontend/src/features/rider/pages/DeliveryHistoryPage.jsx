@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/features/customer/components/skeleton/Navbar";
 import { axiosInstance } from "@/lib/axios";
-import { Loader2, Package, Calendar, DollarSign, CheckCircle, Clock, MapPin, TrendingUp, Award } from "lucide-react";
+import { Loader2, Package, Calendar, Wallet, CheckCircle, Clock, MapPin, TrendingUp, Award, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const DeliveryHistoryPage = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -46,6 +48,13 @@ const DeliveryHistoryPage = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-8 mb-8">
+          <button
+            onClick={() => navigate('/rider')}
+            className="mb-6 flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium bg-gray-50 px-4 py-2 rounded-lg shadow-sm border border-gray-100"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back to Dashboard
+          </button>
           <div className="flex items-center mb-6">
             <Package className="size-8 text-blue-600 mr-4" />
             <h1 className="text-4xl font-bold text-gray-800">Delivery History</h1>
@@ -88,7 +97,7 @@ const DeliveryHistoryPage = () => {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <div className="flex items-center text-gray-700">
-                        <DollarSign className="size-5 mr-2 text-green-600" />
+                        <Wallet className="size-5 mr-2 text-green-600" />
                         <span className="font-medium">Total Amount:</span>
                         <span className="ml-2 text-lg font-bold text-green-600">Tk {order.total_amount}</span>
                       </div>
