@@ -17,7 +17,7 @@ import {
   LogOut,
   Bell,
   MessageCircle,
-  DollarSign,
+  Wallet,
   Eye,
 } from "lucide-react";
 import ChatModal from "@/components/ChatModal";
@@ -609,7 +609,7 @@ const HomepageRider = () => {
             to="/rider/earnings"
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center"
           >
-            <DollarSign className="size-5 mr-2" />
+            <Wallet className="size-5 mr-2" />
             View Performance
           </Link>
           <Link

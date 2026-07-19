@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { axiosInstance } from "@/lib/axios";
 import Navbar from "@/features/customer/components/skeleton/Navbar";
-import { Loader2, Package, MapPin, User, Phone, Mail, DollarSign, Clock, ArrowLeft, ExternalLink, Store, Navigation } from "lucide-react";
+import { Loader2, Package, MapPin, User, Phone, Mail, Wallet, Clock, ArrowLeft, ExternalLink, Store, Navigation } from "lucide-react";
 import toast from "react-hot-toast";
 
 const OrderDetailsPage = () => {
@@ -246,7 +246,7 @@ const OrderDetailsPage = () => {
         {/* Order Summary */}
         <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl shadow-lg border border-blue-200 p-8 mt-8">
           <div className="flex items-center mb-6">
-            <DollarSign className="size-6 text-green-600 mr-3" />
+            <Wallet className="size-6 text-green-600 mr-3" />
             <h2 className="text-2xl font-bold text-gray-800">Order Summary</h2>
           </div>
           

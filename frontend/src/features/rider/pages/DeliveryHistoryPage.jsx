@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/features/customer/components/skeleton/Navbar";
 import { axiosInstance } from "@/lib/axios";
-import { Loader2, Package, Calendar, DollarSign, CheckCircle, Clock, MapPin, TrendingUp, Award, ArrowLeft } from "lucide-react";
+import { Loader2, Package, Calendar, Wallet, CheckCircle, Clock, MapPin, TrendingUp, Award, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -97,7 +97,7 @@ const DeliveryHistoryPage = () => {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <div className="flex items-center text-gray-700">
-                        <DollarSign className="size-5 mr-2 text-green-600" />
+                        <Wallet className="size-5 mr-2 text-green-600" />
                         <span className="font-medium">Total Amount:</span>
                         <span className="ml-2 text-lg font-bold text-green-600">Tk {order.total_amount}</span>
                       </div>
