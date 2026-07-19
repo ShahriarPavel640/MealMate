@@ -22,3 +22,7 @@ fix 8: ![1784297013850](image/rider_fixes/1784297013850.png)
 need to populate data of several months to properly visualize this
 
 fix 9:
+![1784472887944](image/rider_fixes/1784472887944.png)
+remove dollar sign
+
+f
