@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { 
   LineChart, 
   Line, 
@@ -27,13 +29,14 @@ import {
 } from "lucide-react";
 import { axiosInstance } from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
+import RiderLayout from "@/features/rider/components/RiderLayout";
 
 const RiderEarningsDashboard = () => {
   const [earningsData, setEarningsData] = useState({ weekly: [], monthly: [], peakHours: [] });
   const [reviewsData, setReviewsData] = useState({ reviews: [], averageRating: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedMetric, setSelectedMetric] = useState('earnings');
+
   const navigate = useNavigate();
 
   const [reviewsPage, setReviewsPage] = useState(1);
@@ -52,7 +55,7 @@ const RiderEarningsDashboard = () => {
         });
         setTotalReviewPages(reviewsRes.data.totalPages);
         setLoading(false);
-      } catch (err) {
+      } catch (error) {
         setError('Failed to fetch data.');
         setLoading(false);
       }
@@ -87,22 +90,24 @@ const RiderEarningsDashboard = () => {
     }
   };
 
-  const StatCard = ({ title, value, change, icon: Icon, color, suffix = '' }) => (
-    <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+  const StatCard = ({ title, value, icon: Icon, color, suffix = '' }) => (
+    <motion.div 
+      variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+      className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-sm border border-white/50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+    >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-gray-900">{value}{suffix}</p>
+          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+          <p className="text-3xl font-extrabold text-gray-900">{value}{suffix}</p>
           <div className="flex items-center mt-2">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            {/* <span className="text-sm text-green-600 font-medium">{change}% vs last period</span> */}
+            <TrendingUp className="h-4 w-4 text-[#e21b70] mr-1" />
           </div>
         </div>
-        <div className={`p-3 rounded-full ${color}`}>
+        <div className={`p-4 rounded-2xl ${color} shadow-sm`}>
           <Icon className="h-6 w-6 text-white" />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -132,88 +137,75 @@ const RiderEarningsDashboard = () => {
   }, { totalEarnings: 0, totalOrders: 0, totalHours: 0 });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        <button
-          onClick={() => navigate('/rider')}
-          className="mb-6 flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
-        </button>
+    <RiderLayout>
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Performance Dashboard</h1>
-              <p className="text-gray-600">Track your performance and earnings</p>
+              <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Performance Dashboard</h1>
+              <p className="text-gray-500 font-medium">Track your performance and earnings</p>
             </div>
             <div className="flex items-center space-x-4">
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { transition: { staggerChildren: 0.1 } }
+          }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        >
           <StatCard
             title="Total Earnings (Weekly)"
             value={`Tk ${weeklyStats.totalEarnings.toFixed(2)}`}
             change="+12.5" // Placeholder
             icon={Wallet}
-            color="bg-gradient-to-r from-green-500 to-green-600"
+            color="bg-gradient-to-br from-[#e21b70] to-[#c21760]"
           />
           <StatCard
             title="Orders Completed (Weekly)"
             value={weeklyStats.totalOrders}
             change="+8.3" // Placeholder
             icon={Package}
-            color="bg-gradient-to-r from-blue-500 to-blue-600"
+            color="bg-gradient-to-br from-pink-500 to-rose-500"
           />
           <StatCard
             title="Overall Average Rating"
             value={reviewsData.averageRating || 'N/A'}
             change="+2.1" // Placeholder
             icon={Star}
-            color="bg-gradient-to-r from-yellow-500 to-yellow-600"
+            color="bg-gradient-to-br from-orange-400 to-orange-500"
           />
           <StatCard
             title="Hours Worked (Weekly)"
             value={weeklyStats.totalHours.toFixed(2)}
             change="+5.7" // Placeholder
             icon={Clock}
-            color="bg-gradient-to-r from-purple-500 to-purple-600"
+            color="bg-gradient-to-br from-purple-500 to-purple-600"
             suffix="h"
           />
-        </div>
+        </motion.div>
 
         {/* Main Charts Section */}
-        <div className="space-y-6 mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-6 mb-8"
+        >
           {/* Earnings Trend */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-sm border border-white/50">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Weekly Earnings Trend</h3>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setSelectedMetric('earnings')}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                    selectedMetric === 'earnings' 
-                      ? 'bg-blue-100 text-blue-700' 
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Earnings
-                </button>
-                <button
-                  onClick={() => setSelectedMetric('orders')}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                    selectedMetric === 'orders' 
-                      ? 'bg-blue-100 text-blue-700' 
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Orders
-                </button>
-              </div>
+              <h3 className="text-lg font-bold text-gray-900">Weekly Earnings Trend</h3>
             </div>
             <ResponsiveContainer width="100%" height={350}>
               <AreaChart data={earningsData.weekly}>
@@ -223,15 +215,15 @@ const RiderEarningsDashboard = () => {
                 <Tooltip content={<CustomTooltip />} />
                 <Area
                   type="monotone"
-                  dataKey={selectedMetric}
-                  stroke="#3B82F6"
+                  dataKey="earnings"
+                  stroke="#e21b70"
                   strokeWidth={3}
                   fill="url(#colorGradient)"
                 />
                 <defs>
                   <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05}/>
+                    <stop offset="5%" stopColor="#e21b70" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#e21b70" stopOpacity={0.05}/>
                   </linearGradient>
                 </defs>
               </AreaChart>
@@ -239,22 +231,22 @@ const RiderEarningsDashboard = () => {
           </div>
 
           {/* Peak Hours Analysis */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Peak Hours Analysis</h3>
+          <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-sm border border-white/50">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Peak Hours Analysis</h3>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={earningsData.peakHours}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="time_slot" stroke="#666" />
                 <YAxis stroke="#666" />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="orders" fill="#10B981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="orders" fill="#c21760" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Monthly Performance */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Monthly Performance</h3>
+          <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-sm border border-white/50">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Monthly Performance</h3>
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={earningsData.monthly}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -264,18 +256,23 @@ const RiderEarningsDashboard = () => {
                 <Line
                   type="monotone"
                   dataKey="earnings"
-                  stroke="#3B82F6"
+                  stroke="#e21b70"
                   strokeWidth={3}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 6 }}
+                  dot={{ fill: '#e21b70', strokeWidth: 2, r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
         {/* Recent Reviews */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Reviews</h3>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white/70 backdrop-blur-md rounded-3xl p-6 shadow-sm border border-white/50"
+        >
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Recent Reviews</h3>
           <div 
             className="space-y-4 overflow-y-auto pr-2" 
             style={{ maxHeight: '400px' }}
@@ -314,9 +311,9 @@ const RiderEarningsDashboard = () => {
               <p className="text-center text-gray-400 text-sm py-4">No more reviews to load.</p>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </RiderLayout>
   );
 };
 

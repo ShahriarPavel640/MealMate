@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRiderAuthStore } from "@/features/rider/store/riderAuthStore";
-import Navbar from "@/features/customer/components/skeleton/Navbar";
+import RiderLayout from "@/features/rider/components/RiderLayout";
 import {
   Loader2,
   MapPin,
@@ -214,8 +216,7 @@ const HomepageRider = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <Navbar />
+    <RiderLayout onChatClick={() => setIsChatModalOpen(true)}>
       <ChatModal
         isOpen={isChatModalOpen}
         onClose={() => setIsChatModalOpen(false)}
@@ -223,14 +224,18 @@ const HomepageRider = () => {
       />
       <div className="container mx-auto px-4 py-8">
         {/* Header Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-8 mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-sm border border-white/50 p-8 mb-8"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-2">
+              <h1 className="text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">
                 Rider Dashboard
               </h1>
-              <p className="text-xl text-gray-600 flex items-center">
-                <User className="size-5 mr-2 text-blue-600" />
+              <p className="text-xl text-gray-600 flex items-center font-medium">
+                <User className="size-5 mr-2 text-[#e21b70]" />
                 Welcome back, {authrider?.name || "Rider"}!
               </p>
             </div>
@@ -238,7 +243,7 @@ const HomepageRider = () => {
               <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => setShowNotifications((v) => !v)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center"
+                  className="bg-[#e21b70] hover:bg-[#c21760] text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center shadow-md hover:shadow-lg hover:-translate-y-0.5"
                 >
                   <Bell className="size-5 mr-2" />
                   Notifications
@@ -305,9 +310,9 @@ const HomepageRider = () => {
                             </button>
                           </div>
                         ))}
-                        <div className="p-4 border-t border-gray-200">
+                        <div className="p-4 border-t border-gray-100">
                           <button
-                            className="w-full text-blue-600 hover:text-blue-800"
+                            className="w-full text-[#e21b70] hover:text-[#c21760] font-medium"
                             onClick={clearNotifications}
                           >
                             Clear All
@@ -337,20 +342,28 @@ const HomepageRider = () => {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Assigned Order Section */}
         {dashboardData?.assignedOrders &&
         dashboardData.assignedOrders.length > 0 ? (
-          <div className="space-y-8">
-            {dashboardData.assignedOrders.map((order) => (
-              <div
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ staggerChildren: 0.1 }}
+            className="space-y-8"
+          >
+            {dashboardData.assignedOrders.map((order, index) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
                 key={order.order_id}
-                className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl shadow-lg border border-amber-200 p-6 mb-4"
+                className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-[#e21b70]/20 p-6 mb-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center mb-4">
-                  <Package className="size-5 text-amber-600 mr-2" />
-                  <h3 className="text-xl font-bold text-amber-800">
+                  <Package className="size-5 text-[#e21b70] mr-2" />
+                  <h3 className="text-xl font-bold text-gray-900">
                     Order #{order.order_id}
                   </h3>
                   <span
@@ -421,27 +434,36 @@ const HomepageRider = () => {
                     View Details
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl shadow-lg border border-blue-200 p-8 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/50 backdrop-blur-sm rounded-3xl shadow-sm border border-gray-200 p-8 mb-8"
+          >
             <div className="text-center">
-              <Package className="size-16 text-blue-300 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-blue-800 mb-2">
+              <Package className="size-16 text-gray-300 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
                 No Active Deliveries
               </h2>
               <p className="text-blue-600">
                 You are currently not assigned to any delivery.
               </p>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Available Orders Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-            <Package className="size-6 mr-3 text-green-600" />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-sm border border-white/50 p-8 mb-8"
+        >
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <Package className="size-6 mr-3 text-[#e21b70]" />
             Available Orders
           </h2>
 
@@ -449,13 +471,16 @@ const HomepageRider = () => {
           dashboardData.availableOrders.length > 0 ? (
             <div className="space-y-6" ref={availableOrdersRef}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentAvailableOrders.map((order) => (
-                  <div
+                {currentAvailableOrders.map((order, index) => (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
                     key={order.order_id}
-                    className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200"
+                    className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-bold text-gray-900">
                         Order #{order.order_id}
                       </h3>
                       <span
@@ -525,7 +550,7 @@ const HomepageRider = () => {
                         View Details
                       </Link>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
@@ -587,48 +612,10 @@ const HomepageRider = () => {
               </p>
             </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-4 justify-center">
-          <button
-            onClick={() => setIsChatModalOpen(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center"
-          >
-            <MessageCircle className="size-5 mr-2" />
-            Chats
-          </button>
-          <Link
-            to="/rider/history"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center"
-          >
-            <History className="size-5 mr-2" />
-            View Delivery History
-          </Link>
-          <Link
-            to="/rider/earnings"
-            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center"
-          >
-            <Wallet className="size-5 mr-2" />
-            View Performance
-          </Link>
-          <Link
-            to="/rider/data/profile"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center"
-          >
-            <Settings className="size-5 mr-2" />
-            View Profile
-          </Link>
-          <button
-            onClick={logout}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center"
-          >
-            <LogOut className="size-5 mr-2" />
-            Logout
-          </button>
-        </div>
       </div>
-    </div>
+    </RiderLayout>
   );
 };
 
