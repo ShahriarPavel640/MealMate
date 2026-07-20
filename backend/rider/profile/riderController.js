@@ -460,7 +460,7 @@ export const getEarnings = async (req, res) => {
     const weeklyEarnings = await pool.query(
       `SELECT 
         TO_CHAR(DATE_TRUNC('day', o.delivered_at), 'Day') AS day,
-        SUM(2.0 + (ST_Distance(ST_MakePoint(rl.longitude, rl.latitude)::geography, ST_MakePoint(d.dropoff_longitude, d.dropoff_latitude)::geography) / 1000) * 0.50) AS earnings,
+        SUM(30.0) AS earnings,
         COUNT(o.order_id) AS orders,
         COALESCE(SUM(EXTRACT(EPOCH FROM (d.end_time - d.start_time))/3600), 0) AS hours
       FROM orders o
@@ -477,7 +477,7 @@ export const getEarnings = async (req, res) => {
     const monthlyEarnings = await pool.query(
       `SELECT 
         TO_CHAR(DATE_TRUNC('month', o.delivered_at), 'Month') AS month,
-        SUM(2.0 + (ST_Distance(ST_MakePoint(rl.longitude, rl.latitude)::geography, ST_MakePoint(d.dropoff_longitude, d.dropoff_latitude)::geography) / 1000) * 0.50) AS earnings,
+        SUM(30.0) AS earnings,
         COUNT(o.order_id) AS orders,
         AVG(rev.rating) AS avg_rating
       FROM orders o
@@ -504,7 +504,7 @@ export const getEarnings = async (req, res) => {
           ELSE 'Other'
         END AS time_slot,
         COUNT(o.order_id) AS orders,
-        SUM(2.0 + (ST_Distance(ST_MakePoint(rl.longitude, rl.latitude)::geography, ST_MakePoint(d.dropoff_longitude, d.dropoff_latitude)::geography) / 1000) * 0.50) AS earnings
+        SUM(30.0) AS earnings
       FROM orders o
       JOIN deliveries d ON o.order_id = d.order_id
       JOIN restaurants r ON o.restaurant_id = r.restaurant_id
