@@ -18,6 +18,7 @@ import reviewRoutes from "./shared/reviews/reviewRoutes.js";
 import chatRoutes from "./shared/chats/chatRoutes.js";
 import restaurantOrder from "./restaurants/order/orderRoutes.js";
 import restaurnatStat from "./restaurants/stats/statsRoutes.js";
+import notificationRoutes from "./shared/notifications/notificationRoutes.js";
 
 dotenv.config();const app = express();
 const server = http.createServer(app); // Create an HTTP server
@@ -93,6 +94,7 @@ app.use("/api/customer", customerCartRoutes);
 app.use("/api/customer/order", customerOrderRoutes);
 
 app.use("/api/chat", chatRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 const PORT = process.env.PORT || 5001;
 if (process.env.NODE_ENV !== "test") {

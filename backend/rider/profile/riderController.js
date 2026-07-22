@@ -385,11 +385,31 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    const order = updatedOrder.rows[0];
+
+    // Notify customer and restaurant about order status update
+    const io = getIO();
+    io.to(`customer_${order.user_id}`).emit("order_status_updated", order);
+    io.to(`restaurant_${order.restaurant_id}`).emit("order_status_updated", order);
+
+    await client.query(
+      "INSERT INTO notifications (user_id, target_type, target_id, order_id, type, message) VALUES ($1, $2, $3, $4, $5, $6)",
+      [
+        order.user_id,
+        "user",
+        order.user_id,
+        orderId,
+        "order_update",
+        `Your order #${orderId} status has been updated to ${status} by the rider.`,
+      ]
+    );
+
     await client.query("COMMIT");
 
     res.status(200).json({
       message: "Order status updated successfully",
-      order: updatedOrder.rows[0],
+      order: order,
+
     });
   } catch (err) {
     await client.query("ROLLBACK");

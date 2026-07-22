@@ -719,6 +719,22 @@ export const updateOrderStatus = async (req, res) => {
       .to(`restaurant_${order.restaurant_id}`)
       .emit("order_status_updated", order);
 
+    getIO()
+      .to(`customer_${order.user_id}`)
+      .emit("order_status_updated", order);
+
+    await client.query(
+      "INSERT INTO notifications (user_id, target_type, target_id, order_id, type, message) VALUES ($1, $2, $3, $4, $5, $6)",
+      [
+        order.user_id,
+        "user",
+        order.user_id,
+        orderId,
+        "order_update",
+        `Your order #${orderId} status has been updated to ${status}.`,
+      ]
+    );
+
     if (status === "ready_for_pickup") {
       const deliveryDetailsResult = await client.query(
         `SELECT
