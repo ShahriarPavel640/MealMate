@@ -255,6 +255,7 @@ export const acceptOrder = async (req, res) => {
       [riderId]
     );
     if (activeCheck.rows.length > 0) {
+      await client.query("ROLLBACK");
       return res.status(400).json({ message: "You can only have one active delivery at a time. Please complete your current delivery to accept new orders." });
     }
 
@@ -264,6 +265,7 @@ export const acceptOrder = async (req, res) => {
     );
 
     if (updatedOrder.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res
         .status(404)
         .json({ message: "Order not found or not ready for pickup" });

@@ -291,7 +291,7 @@ const HomepageRider = () => {
                                       prevData.availableOrders.filter(
                                         (ao) => ao.order_id !== order.order_id
                                       ),
-                                    assignedOrder: order, // Assuming the accepted order becomes the assigned one
+                                    assignedOrders: [...prevData.assignedOrders, order],
                                   }));
                                   setShowNotifications(false); // Close notifications after accepting
                                 } catch (err) {
