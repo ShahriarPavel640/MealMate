@@ -1,17 +1,22 @@
 import React, { useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
+import { useCartStore } from "@/features/customer/store/cartStore";
 
 const PaymentSuccessPage = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const tran_id = queryParams.get('tran_id');
+  const clearCart = useCartStore((state) => state.clearCart);
 
   useEffect(() => {
+    // Clear cart upon successful payment redirect
+    clearCart();
+    
     // You might want to make an API call to your backend here
     // to confirm the payment status for this tran_id,
     // especially if you didn't rely solely on IPN.
     console.log('Payment Success for Transaction ID:', tran_id);
-  }, [tran_id]);
+  }, [tran_id, clearCart]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50">

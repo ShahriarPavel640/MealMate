@@ -7,7 +7,7 @@ import { Clock, MapPin, Phone, User } from "lucide-react";
 import socketService from "@/services/socketService";
 import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthStore";
 import axios from "axios";
-import { toast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 
 // --- Helper Functions ---
 
@@ -290,11 +290,7 @@ function OrderManagement() {
       } catch (error) {
         console.error("Error updating order status:", error);
         fetchOrders();
-        toast({
-          title: "Error",
-          description: "Failed to update order status. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Failed to update order status. Please try again.");
       }
     },
     [restaurant, fetchOrders]
@@ -316,11 +312,7 @@ function OrderManagement() {
       } catch (error) {
         console.error("Error rejecting order:", error);
         fetchOrders();
-        toast({
-          title: "Error",
-          description: "Failed to reject order. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Failed to reject order. Please try again.");
       }
     },
     [fetchOrders]
@@ -330,27 +322,12 @@ function OrderManagement() {
   const handleNewOrder = useCallback(
     (newOrder) => {
       setOrderList((prevOrders) => [newOrder, ...prevOrders]);
-      const t = toast({
-        title: "New Order Received!",
-        description: `Order #${newOrder.order_id} from ${
+      toast.success(
+        `New Order Received! Order #${newOrder.order_id} from ${
           newOrder.customer_name
         } for Tk ${parseFloat(newOrder.total_amount).toFixed(2)}`,
-        action: {
-          label: "Accept",
-          onClick: () => {
-            updateOrderStatus(newOrder.order_id, "preparing");
-            t.dismiss();
-          },
-        },
-        cancel: {
-          label: "Reject",
-          onClick: () => {
-            rejectOrder(newOrder.order_id);
-            t.dismiss();
-          },
-        },
-        duration: 1000000,
-      });
+        { duration: 5000, icon: '🍽️' }
+      );
     },
     [updateOrderStatus, rejectOrder]
   );

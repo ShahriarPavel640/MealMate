@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Bell, Search, User, LogOut } from "lucide-react";
+import { Bell, Search, User, LogOut, Info, Clock, Check } from "lucide-react";
 import { Button } from "@/features/restaurant/components/ui/button";
 import { Input } from "@/features/restaurant/components/ui/input";
 import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthStore";
@@ -11,57 +11,64 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 const HeaderRest = ({ onLogout }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const { notifications, addNotification, clearNotifications } =
-    useNotificationStore();
+  const { 
+    notifications, 
+    addNotification, 
+    clearNotifications,
+    unreadCount,
+    fetchNotifications,
+    markAllAsRead,
+    hasMore,
+    loading
+  } = useNotificationStore();
   const menuRef = useRef();
   const notificationRef = useRef();
   const navigate = useNavigate();
 
   const { logout, authRestaurant } = restaurantAuthStore();
 
-  const handleAcceptOrder = (orderId) => {
-    console.log(`Attempting to accept order: ${orderId}`);
-    socketService.emit("accept_order", {
-      orderId,
-      restaurantId: authRestaurant.restaurant_id,
-    });
-    toast.success(`Order #${orderId} accepted!`);
+  useEffect(() => {
+    if (authRestaurant && authRestaurant.restaurant_id) {
+      fetchNotifications(0, 10);
+    }
+  }, [authRestaurant, fetchNotifications]);
+
+  const handleScroll = (e) => {
+    const { scrollHeight, scrollTop, clientHeight } = e.target;
+    if (Math.abs(scrollHeight - scrollTop - clientHeight) <= 1 && hasMore && !loading) {
+      fetchNotifications(notifications.length, 10);
+    }
   };
 
-  const handleRejectOrder = (orderId) => {
-    console.log(`Attempting to reject order: ${orderId}`);
-    socketService.emit("reject_order", {
-      orderId,
-      restaurantId: authRestaurant.restaurant_id,
-    });
-    toast.error(`Order #${orderId} rejected.`);
-  };
 
   useEffect(() => {
     if (authRestaurant && authRestaurant.restaurant_id) {
 
       const handleNewOrder = (newOrder) => {
         console.log("New order notification:", newOrder);
-        addNotification(newOrder);
+        addNotification({
+          type: "new_order",
+          message: `You have a new order (#${newOrder.order_id}) from a customer.`,
+          created_at: new Date().toISOString(),
+        });
       };
 
-      const handleOrderStatusUpdated = (updatedOrder) => {
-        // Optional: Handle order status updates if needed, e.g., remove from a list of pending orders
-      };
 
       const handleOrderAcceptedByRider = ({ orderId, riderProfile }) => {
         console.log(`Order ${orderId} accepted by rider:`, riderProfile);
-        addNotification({ orderId, riderProfile, type: "order_accepted" });
+        addNotification({ 
+          type: "order_accepted",
+          message: `Order #${orderId} accepted by rider ${riderProfile.name} (${riderProfile.phone_number})`,
+          created_at: new Date().toISOString(),
+        });
         toast.success(`Order #${orderId} accepted by ${riderProfile.name}!`);
       };
 
       socketService.on("new_order", handleNewOrder);
-      socketService.on("order_status_updated", handleOrderStatusUpdated);
       socketService.on("order_accepted", handleOrderAcceptedByRider);
 
       return () => {
         socketService.off("new_order", handleNewOrder);
-        socketService.off("order_status_updated", handleOrderStatusUpdated);
         socketService.off("order_accepted", handleOrderAcceptedByRider);
       };
     }
@@ -112,80 +119,72 @@ const HeaderRest = ({ onLogout }) => {
               onClick={() => setShowNotifications((v) => !v)}
             >
             <Bell className="h-5 w-5" />
-            {notifications.length > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {notifications.length}
+                {unreadCount}
               </span>
             )}
           </Button>
 
           {showNotifications && (
             <div
-              className="absolute right-0 top-12 mt-2 w-80 bg-gray-800 text-white rounded-lg shadow-lg border border-gray-700 z-50 animate-fade-in"
+              className="absolute right-0 top-14 mt-2 w-80 sm:w-96 bg-gray-900 text-white rounded-xl shadow-2xl border border-gray-700 z-50 transform transition-all origin-top-right animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
             >
-              <div className="p-4 border-b border-gray-700">
-                <h3 className="text-lg font-semibold">New Orders</h3>
+              <div className="p-4 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-gray-100">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <span className="bg-purple-500/20 text-purple-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </div>
+                <button 
+                  onClick={markAllAsRead}
+                  disabled={unreadCount === 0}
+                  className={`text-xs flex items-center gap-1 transition-colors ${unreadCount > 0 ? 'text-gray-400 hover:text-purple-400' : 'text-gray-600 cursor-not-allowed'}`}
+                >
+                  <Check size={14} />
+                  Mark as read
+                </button>
               </div>
               {notifications.length > 0 ? (
-                <div className="max-h-60 overflow-y-auto">
+                <div 
+                  className="max-h-60 overflow-y-auto"
+                  onScroll={handleScroll}
+                >
                   {notifications.map((notif, index) => (
                     <div
                       key={index}
-                      className="p-4 border-b border-gray-700 last:border-b-0"
+                      className={`p-4 border-b border-gray-800 last:border-b-0 hover:bg-gray-800 transition-colors flex items-start gap-3 cursor-pointer ${notif.is_read ? 'bg-gray-900' : 'bg-purple-900/10'}`}
                     >
-                      {notif.type === "order_accepted" ? (
-                        <p className="font-medium">
-                          Order #{notif.orderId} accepted by{" "}
-                          {notif.riderProfile.name} (
-                          {notif.riderProfile.phone_number})
+                      <div className={`mt-0.5 p-1.5 rounded-full shrink-0 ${notif.is_read ? 'bg-gray-800 text-gray-500' : 'bg-purple-500/20 text-purple-400'}`}>
+                        <Info size={16} />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-sm leading-relaxed ${notif.is_read ? 'text-gray-400' : 'text-gray-100 font-semibold'}`}>
+                          {notif.message}
                         </p>
-                      ) : (
-                        <>
-                          <p className="font-medium">
-                            Order #{notif.order_id} from {notif.customer_name}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Total: ${notif.total_amount}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Status: {notif.status.replace(/_/g, " ")}
-                          </p>
-                          <div className="flex space-x-2 mt-2">
-                            <Button
-                              variant="outline"
-                              className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 h-auto"
-                              onClick={() => handleAcceptOrder(notif.order_id)}
-                            >
-                              Accept
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 h-auto"
-                              onClick={() => handleRejectOrder(notif.order_id)}
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        </>
+                        <div className="flex items-center text-xs mt-1.5 font-medium text-gray-500">
+                          <Clock size={12} className="mr-1" />
+                          {new Date(notif.created_at || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </div>
+                      </div>
+                      {!notif.is_read && (
+                        <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0 shadow-sm shadow-purple-500/50"></div>
                       )}
                     </div>
                   ))}
+                  {loading && (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      Loading...
+                    </div>
+                  )}
                 </div>
               ) : (
-                <p className="p-4 text-gray-400">No new orders</p>
+                <p className="p-4 text-gray-400">No notifications yet</p>
               )}
-              <div className="p-4 border-t border-gray-700">
-                <Button
-                  variant="link"
-                  className="w-full text-blue-400"
-                  onClick={() => {
-                    clearNotifications();
-                    setShowNotifications(false);
-                  }}
-                >
-                  Clear All
-                </Button>
-              </div>
+
             </div>
           )}
           </div>

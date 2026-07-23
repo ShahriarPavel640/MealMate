@@ -38,6 +38,7 @@ import ChatButton from "@/components/ChatButton";
 import ChatModal from "@/components/ChatModal";
 
 import socketService from "@/services/socketService";
+import { useNotificationStore } from "@/features/customer/store/notificationStore";
 
 const ChatPage = ({ openChat }) => {
   const { orderId } = useParams();
@@ -53,6 +54,7 @@ function App() {
     restaurantAuthStore();
   const { authrider, checkAuthRider, isCheckingAuthRider } =
     useRiderAuthStore();
+  const { addNotification } = useNotificationStore();
 
   // Derive current user ID and type for stable socket connection dependencies
   const currentAuthUser = authUser || authRestaurant || authrider;
@@ -99,6 +101,61 @@ function App() {
       socketService.disconnect();
     };
   }, [currentUserId, currentUserType]);
+
+  // Global socket listeners for the customer
+  useEffect(() => {
+    if (currentUserType === "customer") {
+      const handleOrderAccepted = ({ orderId, riderProfile }) => {
+        addNotification({ 
+          type: "order_accepted",
+          message: `Your order #${orderId} has been accepted by rider ${riderProfile.name} (${riderProfile.phone_number}).`
+        });
+      };
+
+      const handleOrderStatusUpdated = (updatedOrder) => {
+        let notificationMessage = `Your order #${updatedOrder.order_id} status has been updated to ${updatedOrder.status}.`;
+        switch(updatedOrder.status) {
+          case "preparing":
+            notificationMessage = `Restaurant has accepted and is preparing your order #${updatedOrder.order_id}.`;
+            break;
+          case "restaurant_rejected":
+            notificationMessage = `Restaurant has rejected your order #${updatedOrder.order_id}.`;
+            break;
+          case "ready_for_pickup":
+            notificationMessage = `Your order #${updatedOrder.order_id} is ready for pickup by the rider.`;
+            break;
+          case "out_for_delivery":
+            notificationMessage = `Your order #${updatedOrder.order_id} is out for delivery!`;
+            break;
+          case "delivered":
+            notificationMessage = `Your order #${updatedOrder.order_id} has been delivered. Enjoy your meal!`;
+            break;
+        }
+        addNotification({
+          type: "order_update",
+          message: notificationMessage,
+        });
+      };
+
+      const handleReceiveMessage = (message) => {
+        addNotification({
+          type: "new_message",
+          message: `New message from ${message.sender_name}: "${message.message}"`,
+        });
+      };
+
+      socketService.on("order_accepted", handleOrderAccepted);
+      socketService.on("order_status_updated", handleOrderStatusUpdated);
+      socketService.on("receive_message", handleReceiveMessage);
+
+      return () => {
+        socketService.off("order_accepted", handleOrderAccepted);
+        socketService.off("order_status_updated", handleOrderStatusUpdated);
+        socketService.off("receive_message", handleReceiveMessage);
+      };
+    }
+  }, [currentUserType, addNotification]);
+
 
   if (isCheckingAuth || isCheckingRestaurant || isCheckingAuthRider)
     return (

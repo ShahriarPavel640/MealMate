@@ -46,7 +46,7 @@ export const getDashboardData = async (req, res) => {
         WHERE o.status = 'ready_for_pickup'
           AND get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) <= 5
           AND get_distance_km($1, $2, rl.longitude, rl.latitude) <= 5
-        ORDER BY distance_km ASC`,
+        ORDER BY o.updated_at DESC NULLS LAST`,
         [riderLon, riderLat]
       );
     }
@@ -255,6 +255,7 @@ export const acceptOrder = async (req, res) => {
       [riderId]
     );
     if (activeCheck.rows.length > 0) {
+      await client.query("ROLLBACK");
       return res.status(400).json({ message: "You can only have one active delivery at a time. Please complete your current delivery to accept new orders." });
     }
 
@@ -264,6 +265,7 @@ export const acceptOrder = async (req, res) => {
     );
 
     if (updatedOrder.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res
         .status(404)
         .json({ message: "Order not found or not ready for pickup" });
@@ -311,6 +313,15 @@ export const acceptOrder = async (req, res) => {
         "delivery_status",
         `Rider ${riderProfile.name} has accepted order #${orderId}.`,
       ]
+    );
+
+    // Emit event to all riders so they remove this delivery from their screen
+    io.to("riders").emit("delivery_removed", { orderId });
+
+    // Delete stale "new delivery" notifications for all OTHER riders
+    await client.query(
+      "DELETE FROM notifications WHERE target_type = 'rider' AND type = 'delivery_status' AND order_id = $1 AND user_id != $2",
+      [orderId, riderId]
     );
 
     // Store notification for the customer
@@ -383,11 +394,31 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    const order = updatedOrder.rows[0];
+
+    // Notify customer and restaurant about order status update
+    const io = getIO();
+    io.to(`customer_${order.user_id}`).emit("order_status_updated", order);
+    io.to(`restaurant_${order.restaurant_id}`).emit("order_status_updated", order);
+
+    await client.query(
+      "INSERT INTO notifications (user_id, target_type, target_id, order_id, type, message) VALUES ($1, $2, $3, $4, $5, $6)",
+      [
+        order.user_id,
+        "user",
+        order.user_id,
+        orderId,
+        "order_update",
+        `Your order #${orderId} status has been updated to ${status} by the rider.`,
+      ]
+    );
+
     await client.query("COMMIT");
 
     res.status(200).json({
       message: "Order status updated successfully",
-      order: updatedOrder.rows[0],
+      order: order,
+
     });
   } catch (err) {
     await client.query("ROLLBACK");

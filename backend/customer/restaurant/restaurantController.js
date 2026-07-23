@@ -12,9 +12,8 @@ export const getNearbyRestaurants = async (req, res) => {
     );
 
     if (userLocationResult.rows.length === 0) {
-      // If user has no location, fallback to returning all restaurants
-      const fallbackResult = await pool.query("SELECT * FROM restaurants LIMIT 60");
-      return res.status(200).json(fallbackResult.rows);
+      // If user has no location, return empty list and let frontend prompt for location
+      return res.status(200).json([]);
     }
     const userLat = userLocationResult.rows[0].latitude;
     const userLon = userLocationResult.rows[0].longitude;
@@ -42,11 +41,6 @@ export const getNearbyRestaurants = async (req, res) => {
 
     let result = await pool.query(query, [userLon, userLat, radius, id]);
 
-    // If no restaurants found in 5km, try 50000km (essentially anywhere)
-    if (result.rows.length === 0) {
-      const radius2 = 50000; // 50000km
-      result = await pool.query(query, [userLon, userLat, radius2, id]);
-    }
     res.status(200).json(result.rows);
   } catch (err) {
     console.error("Error in getNearbyRestaurants:", err.message);

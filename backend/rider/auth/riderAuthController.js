@@ -28,6 +28,7 @@ export const signup = async (req, res) => {
 
     if (existingUser.rows.length !== 0) {
       // If a user with the same email already exists, return an error
+      await client.query("ROLLBACK");
       return res.status(409).json({ message: "Email already in use" });
     }
 

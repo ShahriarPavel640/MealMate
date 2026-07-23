@@ -4,44 +4,14 @@ import { Card } from "@/features/restaurant/components/ui/card";
 import { Star } from "lucide-react";
 
 const RestaurantReviewDashboard = () => {
-  const [menuItems, setMenuItems] = useState([]);
   const [reviews, setReviews] = useState([]);
-  const [selectedItemId, setSelectedItemId] = useState("all");
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchMenuItems = async () => {
-      try {
-        const res = await axiosInstance.get("/restaurant/get_menu_items");
-        console.log(res.data);
-        setMenuItems(res.data);
-      } catch (err) {
-        console.error("Failed to load menu items", err);
-      }
-    };
-    fetchMenuItems();
-  }, []);
-
-  //    try {
-  //       const res = await axiosInstance.get("/restaurant/get_menu_items");
-  //       //console.log(res.data);
-  //       set({ initialMenuItems: res.data });
-  //       return res.data;
-  //     } catch (err) {
-  //       toast.error(err?.response?.data?.message || "failed loading menu");
-  //       return [];
-  //     }
 
   useEffect(() => {
     const fetchReviews = async () => {
       setLoading(true);
       try {
-        const url =
-          selectedItemId === "all"
-            ? "/restaurant/reviews"
-            : `/restaurant/reviews/menu/${selectedItemId}`;
-        const res = await axiosInstance.get(url);
-
+        const res = await axiosInstance.get("/restaurant/reviews");
         setReviews(res.data);
         console.log(res.data);
       } catch (err) {
@@ -52,30 +22,13 @@ const RestaurantReviewDashboard = () => {
     };
 
     fetchReviews();
-  }, [selectedItemId]);
+  }, []);
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Customer Reviews</h1>
-        <p className="text-gray-400">Filter reviews by menu item</p>
-      </div>
-
-      {/* Filter Dropdown */}
-      <div>
-        <label className="text-sm font-medium mr-2">Filter by item:</label>
-        <select
-          value={selectedItemId}
-          onChange={(e) => setSelectedItemId(e.target.value)}
-          className="bg-gray-800 text-white px-4 py-2 rounded border border-gray-700"
-        >
-          <option value="all">All Items</option>
-          {menuItems.map((item) => (
-            <option key={item.menu_item_id} value={item.menu_item_id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
+        <p className="text-gray-400">All customer reviews for your restaurant</p>
       </div>
 
       {/* Reviews */}

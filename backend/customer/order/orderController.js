@@ -92,9 +92,49 @@ export const createOrder = async (req, res) => {
         "INSERT INTO payments (order_id, user_id, method_type, amount, status) VALUES ($1, $2, $3, $4, $5)",
         [order.order_id, userId, "cod", order.total_amount, "pending"]
       );
+      
+      // Fetch full order details to emit to restaurant
+      const fullOrderResult = await client.query(
+        `SELECT
+          o.order_id,
+          o.user_id AS customer_id,
+          u.name AS customer_name,
+          u.phone_number AS customer_phone,
+          o.total_amount,
+          o.status,
+          p.method_type AS payment_method,
+          d.dropoff_addr,
+          o.created_at,
+          o.rider_id,
+          r.name AS rider_name,
+          r.phone_number AS rider_phone,
+          JSON_AGG(
+            json_build_object(
+            'order_id', oi.order_id,
+            'quantity', oi.quantity,
+            'menu_item_id', mi.menu_item_id,
+            'name', mi.name,
+            'price', mi.price,
+            'menu_item_image_url',mi.menu_item_image_url
+            )
+          ) AS items
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        LEFT JOIN users r ON o.rider_id = r.user_id
+        LEFT JOIN deliveries d ON o.order_id = d.order_id
+        LEFT JOIN payments p ON o.order_id = p.order_id
+        JOIN order_items oi ON o.order_id = oi.order_id
+        JOIN menu_items mi ON mi.menu_item_id = oi.menu_item_id
+        WHERE o.order_id = $1
+        GROUP BY o.order_id, u.name, u.phone_number, r.name, r.phone_number, d.dropoff_addr, p.method_type`,
+        [order.order_id]
+      );
+      
+      const fullOrder = fullOrderResult.rows[0] || order;
+
       // Emit a new order event to the restaurant
       const io = getIO();
-      io.to(`restaurant_${order.restaurant_id}`).emit("new_order", order);
+      io.to(`restaurant_${order.restaurant_id}`).emit("new_order", fullOrder);
 
       // Store notification for the restaurant
       await client.query(

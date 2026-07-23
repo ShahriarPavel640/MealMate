@@ -471,7 +471,7 @@ export const getRestaurantProfile = async (req, res) => {
         l.latitude,
         r.created_at
       FROM restaurants r
-      LEFT JOIN user_locations l ON r.restaurant_id = l.restaurant_id
+      LEFT JOIN user_locations l ON r.location_id = l.location_id
       WHERE r.restaurant_id = $1
     `;
     const restaurantRes = await pool.query(restaurantQuery, [restaurant_id]);
@@ -549,6 +549,9 @@ export const editProfile = async (req, res) => {
     postal_code,
   } = req.body;
 
+  if (!latitude || !longitude) {
+    return res.status(400).json({ message: "Latitude and Longitude are required." });
+  }
   let operating_hours = [];
   try {
     if (operatingHoursRaw) {
@@ -704,7 +707,7 @@ export const updateOrderStatus = async (req, res) => {
     await client.query("BEGIN");
 
     const orderResult = await client.query(
-      "UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *",
+      "UPDATE orders SET status = $1, updated_at = NOW() WHERE order_id = $2 RETURNING *",
       [status, orderId]
     );
 
@@ -719,12 +722,30 @@ export const updateOrderStatus = async (req, res) => {
       .to(`restaurant_${order.restaurant_id}`)
       .emit("order_status_updated", order);
 
+    getIO()
+      .to(`customer_${order.user_id}`)
+      .emit("order_status_updated", order);
+
+    await client.query(
+      "INSERT INTO notifications (user_id, target_type, target_id, order_id, type, message) VALUES ($1, $2, $3, $4, $5, $6)",
+      [
+        order.user_id,
+        "user",
+        order.user_id,
+        orderId,
+        "order_update",
+        `Your order #${orderId} status has been updated to ${status}.`,
+      ]
+    );
+
     if (status === "ready_for_pickup") {
       const deliveryDetailsResult = await client.query(
         `SELECT
           o.*,
           r.name as restaurant_name,
           d.dropoff_addr,
+          rl.longitude AS rest_longitude,
+          rl.latitude AS rest_latitude,
           (
             2.0 + 
             (
@@ -737,7 +758,7 @@ export const updateOrderStatus = async (req, res) => {
          FROM orders o
          JOIN restaurants r ON o.restaurant_id = r.restaurant_id
          JOIN deliveries d ON o.order_id = d.order_id
-         JOIN user_locations rl on rl.restaurant_id = r.restaurant_id
+         JOIN user_locations rl on r.location_id = rl.location_id
          WHERE o.order_id = $1`,
         [orderId]
       );
@@ -745,12 +766,20 @@ export const updateOrderStatus = async (req, res) => {
       if (deliveryDetailsResult.rows.length > 0) {
         const deliveryDetails = deliveryDetailsResult.rows[0];
         const io = getIO();
-        io.to("riders").emit("new_delivery", deliveryDetails);
 
+        // Find available riders within 5km radius of the restaurant
         const availableRiders = await client.query(
-          "SELECT user_id FROM rider_profiles WHERE is_available = true"
+          `SELECT DISTINCT rp.user_id 
+           FROM rider_profiles rp
+           JOIN user_locations ul ON rp.user_id = ul.user_id
+           WHERE rp.is_available = true 
+             AND get_distance_km($1, $2, ul.longitude, ul.latitude) <= 5`,
+          [deliveryDetails.rest_longitude, deliveryDetails.rest_latitude]
         );
+
         for (const rider of availableRiders.rows) {
+          io.to(`rider_${rider.user_id}`).emit("new_delivery", deliveryDetails);
+          
           await client.query(
             "INSERT INTO notifications (user_id, target_type, target_id, order_id, type, message) VALUES ($1, $2, $3, $4, $5, $6)",
             [
@@ -759,7 +788,7 @@ export const updateOrderStatus = async (req, res) => {
               rider.user_id,
               orderId,
               "delivery_status",
-              `A new delivery is available from ${deliveryDetails.restaurant_name}.`,
+              `A new delivery (#${orderId}) is available from ${deliveryDetails.restaurant_name}.`,
             ]
           );
         }
@@ -839,3 +868,4 @@ export const getIndividualMenuReview = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+// end of file
