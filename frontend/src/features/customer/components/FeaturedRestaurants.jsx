@@ -88,8 +88,17 @@ const FeaturedRestaurants = ({ restaurants }) => {
             </Link>
           ))
         ) : (
-          <div className="text-center text-gray-400 py-10 col-span-full">
-            No restaurants available.
+          <div className="text-center py-12 col-span-full bg-[#1a1a1a] rounded-3xl border border-white/5 shadow-xl">
+            <h3 className="text-2xl font-bold text-white mb-3">No nearby restaurants found</h3>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              We couldn't find any restaurants within a 5km radius of your location, or you haven't set a delivery location yet.
+            </p>
+            <Link 
+              to="/profile" 
+              className="btn bg-[#e21b70] hover:bg-[#c2145d] text-white border-none rounded-full px-8 shadow-lg"
+            >
+              Set Delivery Location
+            </Link>
           </div>
         )}
       </div>

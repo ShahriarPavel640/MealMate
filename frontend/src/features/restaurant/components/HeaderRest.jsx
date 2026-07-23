@@ -40,23 +40,6 @@ const HeaderRest = ({ onLogout }) => {
     }
   };
 
-  const handleAcceptOrder = (orderId) => {
-    console.log(`Attempting to accept order: ${orderId}`);
-    socketService.emit("accept_order", {
-      orderId,
-      restaurantId: authRestaurant.restaurant_id,
-    });
-    toast.success(`Order #${orderId} accepted!`);
-  };
-
-  const handleRejectOrder = (orderId) => {
-    console.log(`Attempting to reject order: ${orderId}`);
-    socketService.emit("reject_order", {
-      orderId,
-      restaurantId: authRestaurant.restaurant_id,
-    });
-    toast.error(`Order #${orderId} rejected.`);
-  };
 
   useEffect(() => {
     if (authRestaurant && authRestaurant.restaurant_id) {
@@ -70,9 +53,6 @@ const HeaderRest = ({ onLogout }) => {
         });
       };
 
-      const handleOrderStatusUpdated = (updatedOrder) => {
-        // Optional: Handle order status updates if needed, e.g., remove from a list of pending orders
-      };
 
       const handleOrderAcceptedByRider = ({ orderId, riderProfile }) => {
         console.log(`Order ${orderId} accepted by rider:`, riderProfile);
@@ -85,12 +65,10 @@ const HeaderRest = ({ onLogout }) => {
       };
 
       socketService.on("new_order", handleNewOrder);
-      socketService.on("order_status_updated", handleOrderStatusUpdated);
       socketService.on("order_accepted", handleOrderAcceptedByRider);
 
       return () => {
         socketService.off("new_order", handleNewOrder);
-        socketService.off("order_status_updated", handleOrderStatusUpdated);
         socketService.off("order_accepted", handleOrderAcceptedByRider);
       };
     }

@@ -25,7 +25,6 @@ This document outlines the current state of notifications across the application
 1. **New Order Placed**: When a customer successfully places an order, the restaurant gets a `new_order` socket event and DB record.
 2. **Rider Assigned**: When a rider accepts the order for delivery, the restaurant receives an `order_accepted` socket event and DB record.
 3. **Action Echoes**: When the restaurant accepts or rejects an order via their socket dashboard, they receive an immediate echo `order_status_updated` event to update their UI.
-4. **New Chat Messages**: Emits a `receive_message` socket event for incoming chats.
 
 ### Evaluation
 * **Are these cases perfect?** Mostly. The restaurant needs to know when to start cooking and who is picking it up.

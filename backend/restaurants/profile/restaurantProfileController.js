@@ -471,7 +471,7 @@ export const getRestaurantProfile = async (req, res) => {
         l.latitude,
         r.created_at
       FROM restaurants r
-      LEFT JOIN user_locations l ON r.restaurant_id = l.restaurant_id
+      LEFT JOIN user_locations l ON r.location_id = l.location_id
       WHERE r.restaurant_id = $1
     `;
     const restaurantRes = await pool.query(restaurantQuery, [restaurant_id]);
@@ -549,6 +549,9 @@ export const editProfile = async (req, res) => {
     postal_code,
   } = req.body;
 
+  if (!latitude || !longitude) {
+    return res.status(400).json({ message: "Latitude and Longitude are required." });
+  }
   let operating_hours = [];
   try {
     if (operatingHoursRaw) {

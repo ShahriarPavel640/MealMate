@@ -154,6 +154,11 @@ function RestaurantProfile() {
 
   // Prepare data for backend
   const handleSave = async () => {
+    if (location.lat === null || location.lng === null || location.lat === "" || location.lng === "") {
+      toast.error("Please pick your restaurant's location on the map.", { duration: 3000 });
+      return;
+    }
+
     const backendHours = operatingHours
       .filter((h) => h.enabled)
       .map((h) => ({
