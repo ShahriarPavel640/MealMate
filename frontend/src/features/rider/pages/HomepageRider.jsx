@@ -21,6 +21,7 @@ import {
   MessageCircle,
   Wallet,
   Eye,
+  Info,
 } from "lucide-react";
 import ChatModal from "@/components/ChatModal";
 import { axiosInstance } from "@/lib/axios";
@@ -48,6 +49,11 @@ const HomepageRider = () => {
     notifications: globalNotifications,
     addNotification,
     clearNotifications,
+    unreadCount,
+    fetchNotifications,
+    markAllAsRead,
+    hasMore,
+    loading: notificationsLoading
   } = useNotificationStore();
 
   useEffect(() => {
@@ -75,6 +81,22 @@ const HomepageRider = () => {
     }
   }, [authrider]);
 
+  // Fetch DB notifications on mount
+  useEffect(() => {
+    if (authrider && authrider.user_id) {
+      fetchNotifications(0, 10);
+    }
+  }, [authrider, fetchNotifications]);
+
+  const handleScroll = (e) => {
+    const { scrollHeight, scrollTop, clientHeight } = e.target;
+    // Allow a 1px margin for fractional pixel rounding errors
+    const bottom = Math.abs(scrollHeight - scrollTop - clientHeight) <= 1;
+    if (bottom && hasMore && !notificationsLoading) {
+      fetchNotifications(globalNotifications.length, 10);
+    }
+  };
+
   // Effect for managing socket connection and event listeners
   useEffect(() => {
     if (authrider) {
@@ -85,28 +107,54 @@ const HomepageRider = () => {
       const handleNewDelivery = (newOrder) => {
         console.log("Rider received new_delivery event with data:", newOrder);
         toast.success(`New order #${newOrder.order_id} available!`);
-        addNotification(newOrder);
+        addNotification({
+          type: "delivery_status",
+          message: `A new delivery (#${newOrder.order_id}) is available from ${newOrder.restaurant_name}.`,
+          created_at: new Date().toISOString(),
+          is_read: false,
+          id: Date.now()
+        });
         setDashboardData((prevData) => ({
           ...prevData,
           availableOrders: [newOrder, ...(prevData?.availableOrders || [])],
         }));
       };
 
-      const handleOrderAcceptedByOtherRider = ({ orderId, riderId }) => {
-        if (authrider.user_id !== riderId) {
-          toast.info(`Order #${orderId} was accepted by another rider.`);
-          setDashboardData((prevData) => ({
-            ...prevData,
-            availableOrders: prevData.availableOrders.filter(
-              (order) => order.order_id !== orderId
-            ),
-          }));
-        }
+      const handleDeliveryRemoved = ({ orderId }) => {
+        setDashboardData((prevData) => {
+          const orderExists = prevData?.availableOrders?.some(
+            (order) => order.order_id === orderId
+          );
+          
+          if (orderExists) {
+            toast.info(`Order #${orderId} is no longer available.`);
+            return {
+              ...prevData,
+              availableOrders: prevData.availableOrders.filter(
+                (order) => order.order_id !== orderId
+              ),
+            };
+          }
+          return prevData;
+        });
+      };
+
+      const handleReceiveMessage = (message) => {
+        toast.success(`New message from ${message.sender_name}: "${message.message}"`, {
+          icon: '💬',
+          duration: 5000,
+        });
+        addNotification({
+          type: "new_message",
+          message: `New message from ${message.sender_name}: "${message.message}"`,
+          id: Date.now(),
+        });
       };
 
       // Register event listeners
       socketService.on("new_delivery", handleNewDelivery);
-      socketService.on("order_accepted", handleOrderAcceptedByOtherRider);
+      socketService.on("delivery_removed", handleDeliveryRemoved);
+      socketService.on("receive_message", handleReceiveMessage);
 
       // Cleanup on component unmount or when authrider changes
       return () => {
@@ -114,7 +162,8 @@ const HomepageRider = () => {
           "Cleaning up rider homepage socket listeners."
         );
         socketService.off("new_delivery", handleNewDelivery);
-        socketService.off("order_accepted", handleOrderAcceptedByOtherRider);
+        socketService.off("delivery_removed", handleDeliveryRemoved);
+        socketService.off("receive_message", handleReceiveMessage);
       };
     }
   }, [authrider, addNotification]);
@@ -227,7 +276,7 @@ const HomepageRider = () => {
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-sm border border-white/50 p-8 mb-8"
+          className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-sm border border-white/50 p-8 mb-8 relative z-50"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -247,80 +296,64 @@ const HomepageRider = () => {
                 >
                   <Bell className="size-5 mr-2" />
                   Notifications
-                  {globalNotifications.length > 0 && (
+                  {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {globalNotifications.length}
+                      {unreadCount}
                     </span>
                   )}
                 </button>
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-10 max-h-96 overflow-y-auto">
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 max-h-96 overflow-y-auto" onScroll={handleScroll}>
+                    <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center sticky top-0 z-20">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-semibold text-gray-900">Notifications</h3>
+                        {unreadCount > 0 && (
+                          <span className="bg-[#e21b70]/10 text-[#e21b70] text-xs font-bold px-2 py-0.5 rounded-full">
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </div>
+                      <button 
+                        onClick={markAllAsRead}
+                        disabled={unreadCount === 0}
+                        className={`text-xs flex items-center gap-1 transition-colors ${unreadCount > 0 ? 'text-gray-600 hover:text-[#e21b70]' : 'text-gray-400 cursor-not-allowed'}`}
+                      >
+                        <CheckCircle size={14} />
+                        Mark as read
+                      </button>
+                    </div>
                     {globalNotifications.length > 0 ? (
                       <div>
-                        {globalNotifications.map((order) => (
+                        {globalNotifications.map((notif, index) => (
                           <div
-                            key={order.order_id}
-                            className="p-4 border-b border-gray-200 last:border-b-0"
+                            key={notif.id || index}
+                            className={`p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors flex items-start gap-3 cursor-pointer ${notif.is_read ? 'bg-white' : 'bg-[#e21b70]/5'}`}
                           >
-                            <p className="font-medium text-gray-900">
-                              New Order #{order.order_id} from{" "}
-                              {order.restaurant_name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Total: Tk {order.total_amount}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Drop-off: {order.dropoff_addr}
-                            </p>
-                            <button
-                              className="mt-2 w-full bg-green-600
-                              hover:bg-green-700 text-white font-semibold py-2
-                              px-4 rounded-lg transition-colors duration-200
-                              text-sm"
-                              onClick={async () => {
-                                try {
-                                  await axiosInstance.put(
-                                    `/rider/data/orders/${order.order_id}/accept`
-                                  );
-                                  toast.success("Order accepted!");
-                                  clearNotifications(); // Clear all notifications after accepting one
-                                  // Optimistically remove the order from available orders and add to assigned
-                                  setDashboardData((prevData) => ({
-                                    ...prevData,
-                                    availableOrders:
-                                      prevData.availableOrders.filter(
-                                        (ao) => ao.order_id !== order.order_id
-                                      ),
-                                    assignedOrders: [...prevData.assignedOrders, order],
-                                  }));
-                                  setShowNotifications(false); // Close notifications after accepting
-                                } catch (err) {
-                                  console.error(
-                                    "Error accepting order from notification:",
-                                    err
-                                  );
-                                  toast.error(
-                                    err?.response?.data?.message ||
-                                      "Failed to accept order."
-                                  );
-                                }
-                              }}
-                            >
-                              Accept Order
-                            </button>
+                            <div className={`mt-0.5 p-1.5 rounded-full shrink-0 ${notif.is_read ? 'bg-gray-100 text-gray-500' : 'bg-[#e21b70]/10 text-[#e21b70]'}`}>
+                              {notif.type === 'new_message' ? <MessageCircle size={16} /> : <Info size={16} />}
+                            </div>
+                            <div className="flex-1">
+                              <p className={`text-sm leading-relaxed ${notif.is_read ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>
+                                {notif.message}
+                              </p>
+                              <div className="flex items-center text-xs mt-1.5 font-medium text-gray-500">
+                                <Clock size={12} className="mr-1" />
+                                {new Date(notif.created_at || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </div>
+                            </div>
+                            {!notif.is_read && (
+                              <div className="w-2 h-2 rounded-full bg-[#e21b70] mt-1.5 shrink-0 shadow-sm shadow-[#e21b70]/50"></div>
+                            )}
                           </div>
                         ))}
-                        <div className="p-4 border-t border-gray-100">
-                          <button
-                            className="w-full text-[#e21b70] hover:text-[#c21760] font-medium"
-                            onClick={clearNotifications}
-                          >
-                            Clear All
-                          </button>
-                        </div>
+                        {notificationsLoading && (
+                          <div className="p-4 text-center text-sm text-gray-500">
+                            Loading...
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <p className="p-4 text-gray-600">No new deliveries</p>
+                      <p className="p-4 text-gray-500">No notifications yet</p>
                     )}
                   </div>
                 )}

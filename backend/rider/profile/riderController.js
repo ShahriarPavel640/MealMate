@@ -46,7 +46,7 @@ export const getDashboardData = async (req, res) => {
         WHERE o.status = 'ready_for_pickup'
           AND get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) <= 5
           AND get_distance_km($1, $2, rl.longitude, rl.latitude) <= 5
-        ORDER BY distance_km ASC`,
+        ORDER BY o.updated_at DESC NULLS LAST`,
         [riderLon, riderLat]
       );
     }
@@ -313,6 +313,15 @@ export const acceptOrder = async (req, res) => {
         "delivery_status",
         `Rider ${riderProfile.name} has accepted order #${orderId}.`,
       ]
+    );
+
+    // Emit event to all riders so they remove this delivery from their screen
+    io.to("riders").emit("delivery_removed", { orderId });
+
+    // Delete stale "new delivery" notifications for all OTHER riders
+    await client.query(
+      "DELETE FROM notifications WHERE target_type = 'rider' AND type = 'delivery_status' AND order_id = $1 AND user_id != $2",
+      [orderId, riderId]
     );
 
     // Store notification for the customer
