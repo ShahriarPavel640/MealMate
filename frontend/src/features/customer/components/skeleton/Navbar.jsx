@@ -276,6 +276,15 @@ const Navbar = () => {
             <>
               <li>
                 <Link
+                  to="/order-history"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:underline"
+                >
+                  Orders
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/profile"
                   onClick={() => setMobileMenuOpen(false)}
                   className="hover:underline"

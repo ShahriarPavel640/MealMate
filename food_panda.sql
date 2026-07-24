@@ -204,6 +204,7 @@ CREATE TABLE chat_participants (
   chat_id INT REFERENCES chats(chat_id) ON DELETE CASCADE,
   user_id INT REFERENCES users(user_id),
   role participant_role,
+  unread_count INT DEFAULT 0,
   PRIMARY KEY (chat_id, user_id)
 );
 

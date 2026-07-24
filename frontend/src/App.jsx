@@ -137,21 +137,12 @@ function App() {
         });
       };
 
-      const handleReceiveMessage = (message) => {
-        addNotification({
-          type: "new_message",
-          message: `New message from ${message.sender_name}: "${message.message}"`,
-        });
-      };
-
       socketService.on("order_accepted", handleOrderAccepted);
       socketService.on("order_status_updated", handleOrderStatusUpdated);
-      socketService.on("receive_message", handleReceiveMessage);
 
       return () => {
         socketService.off("order_accepted", handleOrderAccepted);
         socketService.off("order_status_updated", handleOrderStatusUpdated);
-        socketService.off("receive_message", handleReceiveMessage);
       };
     }
   }, [currentUserType, addNotification]);

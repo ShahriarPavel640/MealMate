@@ -78,6 +78,12 @@ export const getMessages = async (req, res) => {
       [orderId]
     );
 
+    // Mark chat as read since it was just opened
+    await pool.query(
+      'UPDATE chat_participants SET unread_count = 0 WHERE chat_id = $1 AND user_id = $2',
+      [chatId, userId]
+    );
+
     // Combine messages with other participant's name
     res.json({
       messages: messages.rows,
@@ -116,6 +122,9 @@ export const sendMessage = async (req, res) => {
         }
 
         const { user_id, rider_id } = order.rows[0];
+        if (!rider_id) {
+          return res.status(400).json({ message: "Cannot start a chat before a rider has accepted the order." });
+        }
         console.log(`Backend: Extracted user_id: ${user_id}, rider_id: ${rider_id}`);
 
         await pool.query('INSERT INTO chat_participants (chat_id, user_id, role) VALUES ($1, $2, $3), ($1, $4, $5)', [chatId, user_id, 'customer', rider_id, 'rider']);
@@ -147,9 +156,14 @@ export const sendMessage = async (req, res) => {
     const senderInfo = await pool.query('SELECT name, role_id FROM users WHERE user_id = $1', [userId]);
     const messageWithSenderName = { ...newMessage.rows[0], sender_name: senderInfo.rows[0].name, sender_role: senderInfo.rows[0].role_id };
 
+    // Increment unread_count for the other participant(s)
+    await pool.query(
+      'UPDATE chat_participants SET unread_count = unread_count + 1 WHERE chat_id = $1 AND user_id != $2',
+      [chatId, userId]
+    );
+
     const io = getIO();
-    console.log(`Attempting to emit 'receive_message' to room: ${orderId} with message:`, messageWithSenderName);
-    io.to(orderId).emit('receive_message', messageWithSenderName);
+    const rooms = [orderId.toString()];
 
     // Also emit to individual participant rooms
     const participants = await pool.query(
@@ -158,14 +172,47 @@ export const sendMessage = async (req, res) => {
     );
 
     participants.rows.forEach(participant => {
-      const roomName = `${participant.role}_${participant.user_id}`;
-      console.log(`Attempting to emit 'receive_message' to individual room: ${roomName}`);
-      io.to(roomName).emit('receive_message', messageWithSenderName);
+      rooms.push(`${participant.role}_${participant.user_id}`);
     });
+
+    console.log(`Attempting to emit 'receive_message' to rooms:`, rooms);
+    io.to(rooms).emit('receive_message', messageWithSenderName);
 
     res.json(messageWithSenderName);
   } catch (err) {
     console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+export const getUnreadCount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      'SELECT SUM(unread_count) AS total_unread FROM chat_participants WHERE user_id = $1',
+      [userId]
+    );
+    const count = parseInt(result.rows[0].total_unread) || 0;
+    res.json({ unreadCount: count });
+  } catch (err) {
+    console.error('Error fetching unread count:', err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+export const markAsRead = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const userId = req.user.id;
+
+    await pool.query(
+      'UPDATE chat_participants SET unread_count = 0 WHERE chat_id = $1 AND user_id = $2',
+      [chatId, userId]
+    );
+
+    res.json({ message: 'Chat marked as read' });
+  } catch (err) {
+    console.error('Error marking chat as read:', err.message);
     res.status(500).send('Server error');
   }
 };
