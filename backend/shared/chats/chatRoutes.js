@@ -8,6 +8,6 @@ router.get('/', authorization, chatController.getConversations);
 router.get('/unread-count', authorization, chatController.getUnreadCount);
 router.get('/:orderId', authorization, chatController.getMessages);
 router.post('/:orderId', authorization, chatController.sendMessage);
-router.put('/:chatId/read', authorization, chatController.markAsRead);
+router.put('/:orderId/read', authorization, chatController.markAsRead);
 
 export default router;

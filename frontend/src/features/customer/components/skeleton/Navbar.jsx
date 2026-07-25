@@ -4,6 +4,10 @@ import { Menu, X, User, Bell, Info, Clock, Check } from "lucide-react";
 import { userAuthStore } from "@/features/customer/store/userAuthStore";
 import { useRiderAuthStore } from "@/features/rider/store/riderAuthStore";
 import { useNotificationStore } from "@/features/customer/store/notificationStore";
+import { axiosInstance } from "@/lib/axios";
+import { toast } from "react-hot-toast";
+import ChatButton from "@/Components/ChatButton";
+import { useChatStore } from "@/features/customer/store/chatStore";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -160,6 +164,13 @@ const Navbar = () => {
             )}
             {renderAuthButtons()}
           </ul>
+
+          {/* Chat Button (Customer Only) */}
+          {authUser && (
+            <div className="relative mr-2 md:mr-4">
+              <ChatButton isChatOpen={useChatStore((state) => state.isChatOpen)} />
+            </div>
+          )}
 
           {/* Always Visible Notification Bell */}
           {authUser && (

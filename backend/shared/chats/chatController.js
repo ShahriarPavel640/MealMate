@@ -14,7 +14,8 @@ export const getConversations = async (req, res) => {
           c.order_id,
           other_p.user_id AS participant_user_id,
           u.name AS participant_name,
-          other_p.role AS participant_role
+          other_p.role AS participant_role,
+          self_p.unread_count
       FROM
           chat_participants AS self_p
       JOIN
@@ -154,7 +155,7 @@ export const sendMessage = async (req, res) => {
     );
 
     const senderInfo = await pool.query('SELECT name, role_id FROM users WHERE user_id = $1', [userId]);
-    const messageWithSenderName = { ...newMessage.rows[0], sender_name: senderInfo.rows[0].name, sender_role: senderInfo.rows[0].role_id };
+    const messageWithSenderName = { ...newMessage.rows[0], sender_name: senderInfo.rows[0].name, sender_role: senderInfo.rows[0].role_id, chat_order_id: orderId };
 
     // Increment unread_count for the other participant(s)
     await pool.query(
@@ -202,8 +203,15 @@ export const getUnreadCount = async (req, res) => {
 
 export const markAsRead = async (req, res) => {
   try {
-    const { chatId } = req.params;
+    const { orderId } = req.params;
     const userId = req.user.id;
+
+    // Look up the chat_id from the order
+    const chatResult = await pool.query('SELECT chat_id FROM chats WHERE order_id = $1', [orderId]);
+    if (chatResult.rows.length === 0) {
+      return res.json({ message: 'No chat found for this order' });
+    }
+    const chatId = chatResult.rows[0].chat_id;
 
     await pool.query(
       'UPDATE chat_participants SET unread_count = 0 WHERE chat_id = $1 AND user_id = $2',

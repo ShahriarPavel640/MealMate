@@ -4,9 +4,10 @@ import { Button } from "@/features/restaurant/components/ui/button";
 import socketService from "@/services/socketService";
 import { axiosInstance } from "@/lib/axios";
 import { userAuthStore } from "@/features/customer/store/userAuthStore";
+import { useChatStore } from "@/features/customer/store/chatStore";
 import toast from "react-hot-toast";
 
-const ChatButton = ({ onClick }) => {
+const ChatButton = ({ onClick, isChatOpen }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const { authUser } = userAuthStore();
   const currentUserId = authUser?.user_id || authUser?.id;
@@ -29,44 +30,43 @@ const ChatButton = ({ onClick }) => {
       // Don't toast or increment count if the message was sent by ourselves
       if (Number(message.sender_id) === Number(currentUserId)) return;
 
-      // Don't toast or increment count if the chat modal is currently open
-      if (document.body.dataset.chatOpen === "true") return;
+      const incomingOrderId = String(message.chat_order_id || message.order_id);
+      if (document.body.dataset.openChatOrderId === incomingOrderId) {
+        // We are currently looking at this specific chat. Do not toast or increment badge!
+        return;
+      }
 
-      // Increment unread count globally when a new message arrives
       setUnreadCount(prev => prev + 1);
       toast.success(`New message from ${message.sender_name || 'someone'}`);
     };
 
-    socketService.on("receive_message", handleReceiveMessage);
+    // When a chat is marked as read (e.g. user opens a conversation), refetch the count
+    const handleChatReadUpdate = () => fetchUnreadCount();
 
-    // Also listen for a custom event we can emit locally when a chat is opened
-    // to clear the count, or just poll/refetch when window focuses
-    const handleFocus = () => fetchUnreadCount();
-    window.addEventListener("focus", handleFocus);
+    socketService.on("receive_message", handleReceiveMessage);
+    window.addEventListener("chatReadUpdate", handleChatReadUpdate);
 
     return () => {
       socketService.off("receive_message", handleReceiveMessage);
-      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("chatReadUpdate", handleChatReadUpdate);
     };
   }, [currentUserId]);
 
   return (
-    <Button
+    <button
       onClick={() => {
-        // Reset locally immediately for snappier UI, backend will be marked read soon
         setUnreadCount(0);
-        onClick();
+        useChatStore.getState().openChat();
       }}
-      className="fixed bottom-24 right-8 md:bottom-8 md:right-8 rounded-full p-4 shadow-lg bg-pink-600 hover:bg-pink-700 text-white z-[60]"
-      size="icon"
+      className="relative p-2 text-white hover:text-gray-200 transition bg-transparent border-0"
     >
       <MessageCircle className="h-6 w-6" />
-      {unreadCount > 0 && (
-        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white shadow-sm">
-          {unreadCount > 99 ? '99+' : unreadCount}
+      {unreadCount > 0 && !isChatOpen && (
+        <span className="absolute top-0 right-0 bg-[#e21b70] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
+          {unreadCount > 9 ? '9+' : unreadCount}
         </span>
       )}
-    </Button>
+    </button>
   );
 };
 

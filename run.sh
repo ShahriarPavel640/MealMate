@@ -6,8 +6,13 @@ set -e
 # Define cleanup function to terminate background tasks and stop docker compose
 cleanup() {
     echo -e "\nStopping backend and frontend processes..."
-    # Kill all background jobs started by this script
+    # Kill background jobs and any orphaned node/nodemon/vite processes
     kill $(jobs -p) 2>/dev/null || true
+    pkill -f "node index.js" 2>/dev/null || true
+    pkill -f "nodemon" 2>/dev/null || true
+    pkill -f "vite" 2>/dev/null || true
+    fuser -k 5001/tcp 2>/dev/null || true
+    fuser -k 5173/tcp 2>/dev/null || true
     echo "Stopping Docker containers..."
     if command -v docker-compose &> /dev/null; then
         docker-compose down

@@ -32,21 +32,25 @@ const RiderLayout = ({ children, onChatClick }) => {
         // Don't toast or increment count if the message was sent by ourselves
         if (Number(message.sender_id) === Number(currentUserId)) return;
 
-        // Don't toast or increment count if the chat modal is currently open
-        if (document.body.dataset.chatOpen === "true") return;
+        const incomingOrderId = String(message.chat_order_id || message.order_id);
+        if (document.body.dataset.openChatOrderId === incomingOrderId) {
+          // We are currently looking at this specific chat. Do not toast or increment badge!
+          return;
+        }
 
         setUnreadCount(prev => prev + 1);
         toast.success(`New message from ${message.sender_name || 'someone'}`);
       };
 
-      socketService.on("receive_message", handleReceiveMessage);
+      // When a chat is marked as read (e.g. user opens a conversation), refetch the count
+      const handleChatReadUpdate = () => fetchUnreadCount();
 
-      const handleFocus = () => fetchUnreadCount();
-      window.addEventListener("focus", handleFocus);
+      socketService.on("receive_message", handleReceiveMessage);
+      window.addEventListener("chatReadUpdate", handleChatReadUpdate);
 
       return () => {
         socketService.off("receive_message", handleReceiveMessage);
-        window.removeEventListener("focus", handleFocus);
+        window.removeEventListener("chatReadUpdate", handleChatReadUpdate);
       };
     }
   }, [authrider, currentUserId]);

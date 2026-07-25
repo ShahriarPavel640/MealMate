@@ -48,6 +48,8 @@ const ChatPage = ({ openChat }) => {
   return <Navigate to="/order-history" />; // Redirect back to order history
 };
 
+import { useChatStore } from "@/features/customer/store/chatStore";
+
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = userAuthStore();
   const { authRestaurant, checkAuthRestaurant, isCheckingRestaurant } =
@@ -55,6 +57,7 @@ function App() {
   const { authrider, checkAuthRider, isCheckingAuthRider } =
     useRiderAuthStore();
   const { addNotification } = useNotificationStore();
+  const { isChatOpen, chatOrderId, closeChat } = useChatStore();
 
   // Derive current user ID and type for stable socket connection dependencies
   const currentAuthUser = authUser || authRestaurant || authrider;
@@ -63,19 +66,6 @@ function App() {
   const currentUserType =
     currentAuthUser?.role ||
     (currentAuthUser?.restaurant_id ? "restaurant" : undefined);
-
-  const [isChatWindowOpen, setIsChatWindowOpen] = useState(false);
-  const [chatOrderId, setChatOrderId] = useState(null);
-
-  const openChat = (orderId = null) => {
-    setChatOrderId(orderId);
-    setIsChatWindowOpen(true);
-  };
-
-  const closeChat = () => {
-    setIsChatWindowOpen(false);
-    setChatOrderId(null);
-  };
 
   useEffect(() => {
     checkAuth();
@@ -202,26 +192,10 @@ function App() {
         <Route path="/payment-cancel" element={<PaymentCancelledPage />} />
         <Route
           path="/chat/:orderId"
-          element={<ChatPage openChat={openChat} />}
+          element={<ChatPage />}
         />
 
         {/* Restaurant */}
-        {/* <Route
-            path="/partner/signup"
-            element={
-              !authRestaurant ? <LoginPageRest /> : <Navigate to="/partner" />
-            }
-          />
-          <Route
-            path="/partner/login"
-            element={
-              !authRestaurant ? (
-                <LoginPageRest />
-              ) : (
-                <Navigate to="/restaurant/" />
-              )
-            }
-          /> */}
         <Route path="/partner" element={<HomepageRest />} />
 
         {/* Rider */}
@@ -264,9 +238,8 @@ function App() {
           }
         />
       </Routes>
-      {authUser && <ChatButton onClick={() => openChat()} />}
       <ChatModal
-        isOpen={isChatWindowOpen}
+        isOpen={isChatOpen}
         onClose={closeChat}
         orderId={chatOrderId}
         currentAuthUser={currentAuthUser}

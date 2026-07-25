@@ -4,7 +4,7 @@ const SOCKET_URL = 'http://localhost:5001'; // Your backend URL
 
 class SocketService {
   constructor() {
-    this.socket = null;
+    this.socket = io(SOCKET_URL, { transports: ['websocket'], autoConnect: false });
     this.connecting = false;
     this.roomQueue = []; // Queue for rooms to join upon connection
   }
@@ -20,7 +20,7 @@ class SocketService {
     }
 
     this.connecting = true;
-    this.socket = io(SOCKET_URL, { transports: ['websocket'] });
+    this.socket.connect();
 
     this.socket.on('connect', () => {
       console.log('SocketService: Connected. Socket ID:', this.socket.id);
@@ -69,10 +69,9 @@ class SocketService {
   }
 
   disconnect() {
-    if (this.socket) {
+    if (this.socket && this.socket.connected) {
       console.log('SocketService: Disconnecting socket.');
       this.socket.disconnect();
-      this.socket = null;
       this.connecting = false; // Ensure flag is reset on manual disconnect
     }
   }

@@ -19,6 +19,8 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
   const [currentChatParticipantName, setCurrentChatParticipantName] =
     useState("");
   const messagesEndRef = useRef(null);
+  // Track which orderId is currently open so socket handlers can reference it
+  const currentChatOrderIdRef = useRef(currentChatOrderId);
 
   const currentUserId =
     currentAuthUser?.user_id || currentAuthUser?.restaurant_id;
@@ -41,16 +43,55 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
     }
   }, [orderId]);
 
-  const handleReceiveMessage = useCallback((message) => {
-    console.log("Frontend: Received message:", message);
-    setMessages((prevMessages) => [...prevMessages, message]);
-    
-    // If we receive a message while the modal is open, and it's not from us, mark it as read!
-    if (message.sender_id !== currentUserId && currentChatOrderId) {
-      axiosInstance.put(`/chat/${currentChatOrderId}/read`).catch(console.error);
+  // Keep ref in sync with state
+  useEffect(() => {
+    currentChatOrderIdRef.current = currentChatOrderId;
+    if (isOpen && currentChatOrderId) {
+      document.body.dataset.openChatOrderId = currentChatOrderId;
+    } else {
+      delete document.body.dataset.openChatOrderId;
     }
-  }, [currentUserId, currentChatOrderId]);
+  }, [isOpen, currentChatOrderId]);
 
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      delete document.body.dataset.openChatOrderId;
+    };
+  }, []);
+
+  // Dispatch chatReadUpdate to notify ChatButton/RiderLayout to refetch unread count
+  const dispatchChatReadUpdate = () => {
+    window.dispatchEvent(new CustomEvent("chatReadUpdate"));
+  };
+
+  const handleReceiveMessage = useCallback((message) => {
+    const openOrderId = currentChatOrderIdRef.current;
+
+    // If a specific chat is open and the message belongs to it, add it to the view
+    if (openOrderId && String(message.chat_order_id || message.order_id) === String(openOrderId)) {
+      setMessages((prevMessages) => [...prevMessages, message]);
+
+      // If the message is not from us, mark it as read immediately since we're looking at it
+      if (Number(message.sender_id) !== Number(currentUserId)) {
+        axiosInstance.put(`/chat/${openOrderId}/read`).then(() => {
+          dispatchChatReadUpdate();
+        }).catch(console.error);
+      }
+    } else if (!openOrderId) {
+      // We're on the conversation list view — update the per-conversation unread count
+      if (Number(message.sender_id) !== Number(currentUserId)) {
+        setConversations(prev => prev.map(convo => {
+          if (String(convo.order_id) === String(message.chat_order_id || message.order_id)) {
+            return { ...convo, unread_count: (parseInt(convo.unread_count) || 0) + 1 };
+          }
+          return convo;
+        }));
+      }
+    }
+  }, [currentUserId]);
+
+  // Fetch data when modal opens or conversation changes
   useEffect(() => {
     if (isOpen && currentAuthUser) {
       if (currentChatOrderId) {
@@ -59,6 +100,8 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
           .then((res) => {
             setMessages(res.data.messages);
             setCurrentChatParticipantName(res.data.otherParticipantName);
+            // Dispatch event after the backend successfully marks it as read
+            dispatchChatReadUpdate();
           })
           .catch((error) => {
             console.error("Error fetching chat messages:", error);
@@ -66,13 +109,14 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
             setCurrentChatParticipantName("");
           });
 
-        // Only emit if socket is connected
+        // Join the order room for real-time messages
         if (socketService.socket && socketService.socket.connected) {
           socketService.emit("join_room", currentChatOrderId);
           const userRoomName = `${currentUserRole}_${currentUserId}`;
           socketService.emit("join_room", userRoomName);
         }
       } else {
+        // Fetch conversation list
         axiosInstance
           .get("/chat")
           .then((res) => {
@@ -102,29 +146,16 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
     currentUserRole,
   ]);
 
+  // Socket listener management
   useEffect(() => {
     if (isOpen) {
-      document.body.dataset.chatOpen = "true";
       socketService.on("receive_message", handleReceiveMessage);
-    } else {
-      document.body.dataset.chatOpen = "false";
     }
 
     return () => {
       socketService.off("receive_message", handleReceiveMessage);
-      document.body.dataset.chatOpen = "false";
     };
   }, [isOpen, handleReceiveMessage]);
-
-  // useEffect(() => {
-  //   if (currentChatOrderId) {
-  //     socketService.on("receive_message", handleReceiveMessage);
-  //   }
-
-  //   return () => {
-  //     socketService.off("receive_message", handleReceiveMessage);
-  //   };
-  // }, [currentChatOrderId, handleReceiveMessage]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !currentChatOrderId) return;
@@ -425,14 +456,25 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
                   {conversations.map((convo) => (
                     <div
                       key={convo.chat_id}
-                      className="p-5 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:border-indigo-300 transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                      className={`p-5 border-2 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow-md ${
+                        parseInt(convo.unread_count) > 0
+                          ? "border-indigo-300 bg-indigo-50/30"
+                          : "border-gray-200 bg-white"
+                      }`}
                       onClick={() => handleConversationClick(convo)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                            {convo.participant_name?.charAt(0)?.toUpperCase() ||
-                              "U"}
+                          <div className="relative">
+                            <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                              {convo.participant_name?.charAt(0)?.toUpperCase() ||
+                                "U"}
+                            </div>
+                            {parseInt(convo.unread_count) > 0 && (
+                              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white shadow-sm">
+                                {parseInt(convo.unread_count) > 9 ? '9+' : convo.unread_count}
+                              </span>
+                            )}
                           </div>
                           <div>
                             <h3 className="font-bold text-gray-800 text-lg">
@@ -456,7 +498,12 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="flex items-center gap-3">
+                          {parseInt(convo.unread_count) > 0 && (
+                            <span className="text-xs font-semibold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">
+                              {convo.unread_count} new
+                            </span>
+                          )}
                           <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center">
                             <svg
                               className="w-5 h-5 text-indigo-600"
@@ -486,4 +533,3 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
   );
 };
 export default ChatModal;
-
