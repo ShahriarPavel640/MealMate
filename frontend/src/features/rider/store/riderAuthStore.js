@@ -28,7 +28,7 @@ export const useRiderAuthStore = create((set) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/rider/login", data);
-      set({ authrider: res.data });
+      set({ authrider: { ...res.data, role: 'rider' } });
       toast.success("Logged in successfully");
     } catch (err) {
       toast.error(err?.response?.data?.message || "Login failed");
@@ -41,7 +41,7 @@ export const useRiderAuthStore = create((set) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/rider/signup", data);
-      set({ authrider: res.data });
+      set({ authrider: { ...res.data, role: 'rider' } });
       toast.success("Signed up successfully");
     } catch (err) {
       toast.error(err?.response?.data?.message || "Signup failed");

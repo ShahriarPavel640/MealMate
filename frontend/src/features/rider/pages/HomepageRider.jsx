@@ -38,8 +38,10 @@ const HomepageRider = () => {
   // Initialize isAvailable to true by default, it will be updated by fetched data
   const [isAvailable, setIsAvailable] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
-  const notificationRef = useRef();
+  const [error, setError] = useState(null);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const notificationRef = useRef();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; // Display 6 available orders per page
   const availableOrdersRef = useRef(null);
@@ -139,22 +141,9 @@ const HomepageRider = () => {
         });
       };
 
-      const handleReceiveMessage = (message) => {
-        toast.success(`New message from ${message.sender_name}: "${message.message}"`, {
-          icon: '💬',
-          duration: 5000,
-        });
-        addNotification({
-          type: "new_message",
-          message: `New message from ${message.sender_name}: "${message.message}"`,
-          id: Date.now(),
-        });
-      };
-
       // Register event listeners
       socketService.on("new_delivery", handleNewDelivery);
       socketService.on("delivery_removed", handleDeliveryRemoved);
-      socketService.on("receive_message", handleReceiveMessage);
 
       // Cleanup on component unmount or when authrider changes
       return () => {
@@ -163,7 +152,6 @@ const HomepageRider = () => {
         );
         socketService.off("new_delivery", handleNewDelivery);
         socketService.off("delivery_removed", handleDeliveryRemoved);
-        socketService.off("receive_message", handleReceiveMessage);
       };
     }
   }, [authrider, addNotification]);
@@ -265,11 +253,12 @@ const HomepageRider = () => {
   }
 
   return (
-    <RiderLayout onChatClick={() => setIsChatModalOpen(true)}>
+    <RiderLayout onChatClick={() => { setSelectedOrderId(null); setIsChatModalOpen(true); }}>
       <ChatModal
         isOpen={isChatModalOpen}
-        onClose={() => setIsChatModalOpen(false)}
+        onClose={() => { setIsChatModalOpen(false); setSelectedOrderId(null); }}
         currentAuthUser={authrider}
+        orderId={selectedOrderId}
       />
       <div className="container mx-auto px-4 py-8">
         {/* Header Section */}
@@ -447,6 +436,16 @@ const HomepageRider = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => {
+                      setSelectedOrderId(order.order_id);
+                      setIsChatModalOpen(true);
+                    }}
+                    className="w-full bg-pink-100 hover:bg-pink-200 text-pink-700 font-semibold py-2 px-3 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm"
+                  >
+                    <MessageCircle className="size-4 mr-2" />
+                    Chat with Customer
+                  </button>
 
                   {order.order_status === "out_for_delivery" && (
                     <button

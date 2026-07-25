@@ -1,13 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, History, Wallet, User, MessageCircle, LogOut, Menu, X, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRiderAuthStore } from '@/features/rider/store/riderAuthStore';
+import socketService from "@/services/socketService";
+import { axiosInstance } from "@/lib/axios";
+import toast from "react-hot-toast";
 
 const RiderLayout = ({ children, onChatClick }) => {
   const { authrider, logout } = useRiderAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await axiosInstance.get('/chat/unread-count');
+      setUnreadCount(res.data.unreadCount || 0);
+    } catch (err) {
+      console.error("Error fetching unread chat count:", err);
+    }
+  };
+
+  const currentUserId = authrider?.user_id || authrider?.id;
+
+  useEffect(() => {
+    if (authrider && currentUserId) {
+      fetchUnreadCount();
+
+      const handleReceiveMessage = (message) => {
+        // Don't toast or increment count if the message was sent by ourselves
+        if (Number(message.sender_id) === Number(currentUserId)) return;
+
+        const incomingOrderId = String(message.chat_order_id || message.order_id);
+        if (document.body.dataset.openChatOrderId === incomingOrderId) {
+          // We are currently looking at this specific chat. Do not toast or increment badge!
+          return;
+        }
+
+        setUnreadCount(prev => prev + 1);
+        toast.success(`New message from ${message.sender_name || 'someone'}`);
+      };
+
+      // When a chat is marked as read (e.g. user opens a conversation), refetch the count
+      const handleChatReadUpdate = () => fetchUnreadCount();
+
+      socketService.on("receive_message", handleReceiveMessage);
+      window.addEventListener("chatReadUpdate", handleChatReadUpdate);
+
+      return () => {
+        socketService.off("receive_message", handleReceiveMessage);
+        window.removeEventListener("chatReadUpdate", handleChatReadUpdate);
+      };
+    }
+  }, [authrider, currentUserId]);
+
+  const handleChatClick = () => {
+    setUnreadCount(0);
+    if (onChatClick) onChatClick();
+  };
 
   const handleLogout = () => {
     logout();
@@ -30,8 +81,13 @@ const RiderLayout = ({ children, onChatClick }) => {
         </Link>
         <div className="flex items-center space-x-2">
           {onChatClick && (
-            <button onClick={onChatClick} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+            <button onClick={handleChatClick} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full relative">
               <MessageCircle className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute 0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
           )}
         </div>
@@ -104,14 +160,28 @@ const RiderLayout = ({ children, onChatClick }) => {
               <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Communication</p>
             )}
             <button
-              onClick={onChatClick}
+              onClick={handleChatClick}
               title={isSidebarCollapsed ? "Chats" : ""}
-              className={`w-full flex items-center rounded-2xl transition-all duration-200 text-gray-600 hover:bg-purple-50 hover:text-purple-600 ${
+              className={`w-full flex items-center rounded-2xl transition-all duration-200 text-gray-600 hover:bg-purple-50 hover:text-purple-600 relative ${
                 isSidebarCollapsed ? 'p-3 justify-center' : 'p-3'
               }`}
             >
-              <MessageCircle className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
-              {!isSidebarCollapsed && <span>Chats</span>}
+              <div className="relative flex items-center">
+                <MessageCircle className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
+                {unreadCount > 0 && isSidebarCollapsed && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-3 w-3 flex items-center justify-center"></span>
+                )}
+              </div>
+              {!isSidebarCollapsed && (
+                <div className="flex items-center justify-between flex-1">
+                  <span>Chats</span>
+                  {unreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </div>
+              )}
             </button>
           </div>
         )}

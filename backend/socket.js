@@ -22,10 +22,6 @@ export const initSocket = (server) => {
     // Register restaurant-specific socket event handlers
     handleRestaurantSocketEvents(socket);
 
-    socket.on('send_message', (data) => {
-      io.to(data.orderId).emit('receive_message', data);
-    });
-
     socket.on('leave_room', (room) => {
       socket.leave(room);
       console.log(`Socket ${socket.id} left room ${room}`);
