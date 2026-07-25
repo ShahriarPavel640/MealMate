@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, History, Wallet, User, MessageCircle, LogOut, Menu, X, Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, History, TrendingUp, User, MessageCircle, LogOut, Menu, X, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRiderAuthStore } from '@/features/rider/store/riderAuthStore';
 import socketService from "@/services/socketService";
 import { axiosInstance } from "@/lib/axios";
@@ -68,7 +68,7 @@ const RiderLayout = ({ children, onChatClick }) => {
   const navItems = [
     { name: 'Dashboard', path: '/rider', icon: Home },
     { name: 'History', path: '/rider/history', icon: History },
-    { name: 'Earnings', path: '/rider/earnings', icon: Wallet },
+    { name: 'Performance', path: '/rider/earnings', icon: TrendingUp },
     { name: 'Profile', path: '/rider/data/profile', icon: User },
   ];
 
