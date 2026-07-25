@@ -12,6 +12,10 @@ class SocketService {
   connect(userId, userType) {
     if (this.socket && this.socket.connected) {
       console.log('SocketService: Already connected.');
+      // Ensure the user joins their specific room even if already connected (e.g. background reconnects)
+      if (userId && userType) {
+        this.joinRoom(`${userType}_${userId}`);
+      }
       return;
     }
     if (this.connecting) {
@@ -69,7 +73,7 @@ class SocketService {
   }
 
   disconnect() {
-    if (this.socket && this.socket.connected) {
+    if (this.socket) {
       console.log('SocketService: Disconnecting socket.');
       this.socket.disconnect();
       this.connecting = false; // Ensure flag is reset on manual disconnect

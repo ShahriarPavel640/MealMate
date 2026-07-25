@@ -112,8 +112,6 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
         // Join the order room for real-time messages
         if (socketService.socket && socketService.socket.connected) {
           socketService.emit("join_room", currentChatOrderId);
-          const userRoomName = `${currentUserRole}_${currentUserId}`;
-          socketService.emit("join_room", userRoomName);
         }
       } else {
         // Fetch conversation list
@@ -133,8 +131,6 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
       if (currentChatOrderId && currentAuthUser) {
         if (socketService.socket && socketService.socket.connected) {
           socketService.emit("leave_room", currentChatOrderId);
-          const userRoomName = `${currentUserRole}_${currentUserId}`;
-          socketService.emit("leave_room", userRoomName);
         }
       }
     };
