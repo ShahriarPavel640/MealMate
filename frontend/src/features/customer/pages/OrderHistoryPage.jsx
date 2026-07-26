@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { axiosInstance } from "@/lib/axios";
 import { Button } from "@/features/restaurant/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Navigation } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/features/restaurant/components/ui/dialog";
 import RatingModal from "@/features/customer/components/RatingModal";
+import LiveTrackingModal from "@/features/customer/components/LiveTrackingModal";
 
 const OrderHistoryPage = () => {
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
@@ -12,6 +13,11 @@ const OrderHistoryPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Tracking Modal State
+  const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [trackingOrderData, setTrackingOrderData] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -108,13 +114,30 @@ const OrderHistoryPage = () => {
                 </div>
               )}
               {order.status === 'out_for_delivery' && (
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/chat/${order.order_id}`)}
                   >
                     Chat with Rider
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
+                    onClick={() => {
+                      setTrackingOrderData({
+                        orderId: order.order_id,
+                        dropoffLocation: order.dropoff_latitude && order.dropoff_longitude 
+                          ? { lat: parseFloat(order.dropoff_latitude), lng: parseFloat(order.dropoff_longitude) }
+                          : null
+                      });
+                      setIsTrackingModalOpen(true);
+                    }}
+                  >
+                    <Navigation className="w-4 h-4 mr-2" />
+                    Track Live
                   </Button>
                 </div>
               )}
@@ -161,6 +184,18 @@ const OrderHistoryPage = () => {
           setIsRatingModalOpen(false);
         }}
       />
+
+      {isTrackingModalOpen && trackingOrderData && (
+        <LiveTrackingModal
+          isOpen={isTrackingModalOpen}
+          onClose={() => {
+            setIsTrackingModalOpen(false);
+            setTrackingOrderData(null);
+          }}
+          orderId={trackingOrderData.orderId}
+          dropoffLocation={trackingOrderData.dropoffLocation}
+        />
+      )}
     </div>
   );
 };

@@ -27,6 +27,14 @@ export const initSocket = (server) => {
       console.log(`Socket ${socket.id} left room ${room}`);
     });
 
+    socket.on('update_location', (data) => {
+      // data should contain { orderId, latitude, longitude }
+      if (data.orderId) {
+        // Broadcast to the specific order's room
+        io.to(data.orderId.toString()).emit('rider_location_update', data);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
     });

@@ -182,11 +182,14 @@ export const getOrders = async (req, res) => {
         r.name as restaurant_name, 
         r.restaurant_id, 
         u.name as rider_name,
+        d.dropoff_latitude,
+        d.dropoff_longitude,
         EXISTS(SELECT 1 FROM reviews WHERE user_id = o.user_id AND restaurant_id = o.restaurant_id AND order_id = o.order_id) as has_restaurant_review,
         EXISTS(SELECT 1 FROM reviews WHERE user_id = o.user_id AND rider_id = o.rider_id AND order_id = o.order_id) as has_rider_review
       FROM orders o 
       JOIN restaurants r ON o.restaurant_id = r.restaurant_id 
       LEFT JOIN users u ON o.rider_id = u.user_id 
+      LEFT JOIN deliveries d ON o.order_id = d.order_id
       WHERE o.user_id = $1 
       ORDER BY o.created_at DESC`,
       [userId]

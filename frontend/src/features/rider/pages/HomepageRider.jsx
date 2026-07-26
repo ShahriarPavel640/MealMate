@@ -178,6 +178,48 @@ const HomepageRider = () => {
     };
   }, [showNotifications]);
 
+  // Effect for live order tracking (GPS broadcasting)
+  useEffect(() => {
+    let watchId;
+
+    if (dashboardData?.assignedOrders?.length > 0) {
+      if ("geolocation" in navigator) {
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+
+            // Broadcast to all active assigned orders
+            dashboardData.assignedOrders.forEach((order) => {
+              if (order.status !== "delivered") {
+                socketService.emit("update_location", {
+                  orderId: order.order_id,
+                  latitude,
+                  longitude,
+                });
+              }
+            });
+          },
+          (error) => {
+            console.error("Error watching location:", error);
+          },
+          {
+            enableHighAccuracy: true,
+            maximumAge: 10000,
+            timeout: 5000,
+          }
+        );
+      } else {
+        console.warn("Geolocation is not supported by this browser.");
+      }
+    }
+
+    return () => {
+      if (watchId !== undefined) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [dashboardData?.assignedOrders]);
+
   const handleAvailabilityToggle = async () => {
     try {
       const newAvailability = !isAvailable;
