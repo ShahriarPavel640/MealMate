@@ -64,9 +64,10 @@ const HomepageRider = () => {
 
   // Effect for fetching initial data
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (lat = null, lon = null) => {
       try {
-        const res = await axiosInstance.get("/rider/data/dashboard");
+        const query = (lat && lon) ? `?lat=${lat}&lon=${lon}` : "";
+        const res = await axiosInstance.get(`/rider/data/dashboard${query}`);
         setDashboardData(res.data);
         setIsAvailable(res.data.isAvailable);
         console.log(res.data);
@@ -79,7 +80,21 @@ const HomepageRider = () => {
     };
 
     if (authrider) {
-      fetchDashboardData();
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            fetchDashboardData(position.coords.latitude, position.coords.longitude);
+          },
+          (error) => {
+            console.error("Error getting location for dashboard:", error);
+            // Fallback to fetching without live coordinates
+            fetchDashboardData();
+          },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      } else {
+        fetchDashboardData();
+      }
     }
   }, [authrider]);
 
@@ -181,23 +196,35 @@ const HomepageRider = () => {
   // Effect for live order tracking (GPS broadcasting)
   useEffect(() => {
     let watchId;
-
-    if (dashboardData?.assignedOrders?.length > 0) {
+    // We want to broadcast location if they are available for new orders OR if they are currently delivering
+    if (isAvailable || dashboardData?.assignedOrders?.length > 0) {
       if ("geolocation" in navigator) {
         watchId = navigator.geolocation.watchPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
 
-            // Broadcast to all active assigned orders
-            dashboardData.assignedOrders.forEach((order) => {
-              if (order.status !== "delivered") {
-                socketService.emit("update_location", {
-                  orderId: order.order_id,
-                  latitude,
-                  longitude,
-                });
-              }
-            });
+            // 1. Always ping Redis so they stay in the dispatch pool
+            if (isAvailable) {
+              socketService.emit("update_location", {
+                riderId: authrider?.user_id,
+                latitude,
+                longitude,
+              });
+            }
+
+            // 2. Also broadcast to any active assigned orders so Customers can track them
+            if (dashboardData?.assignedOrders?.length > 0) {
+              dashboardData.assignedOrders.forEach((order) => {
+                if (order.status !== "delivered") {
+                  socketService.emit("update_location", {
+                    orderId: order.order_id,
+                    riderId: authrider?.user_id,
+                    latitude,
+                    longitude,
+                  });
+                }
+              });
+            }
           },
           (error) => {
             console.error("Error watching location:", error);
@@ -218,7 +245,7 @@ const HomepageRider = () => {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [dashboardData?.assignedOrders]);
+  }, [dashboardData?.assignedOrders, isAvailable, authrider]);
 
   const handleAvailabilityToggle = async () => {
     try {
