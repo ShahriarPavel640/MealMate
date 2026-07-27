@@ -16,6 +16,13 @@ services:
       - ./food_panda.sql:/docker-entrypoint-initdb.d/1-schema.sql
       - ./populate.sql:/docker-entrypoint-initdb.d/2-seed.sql
 
+  redis:
+    image: redis:alpine
+    container_name: food_panda_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: food_panda_pgadmin

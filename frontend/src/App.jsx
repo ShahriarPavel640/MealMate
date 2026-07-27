@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { Loader } from "lucide-react";
 
@@ -33,22 +33,22 @@ import PaymentFailedPage from "@/features/customer/pages/PaymentFailedPage";
 import PaymentCancelledPage from "@/features/customer/pages/PaymentCancelledPage";
 import { Toaster } from "@/features/restaurant/components/ui/toaster";
 
-import { element } from "prop-types";
 import ChatButton from "@/components/ChatButton";
 import ChatModal from "@/components/ChatModal";
 
 import socketService from "@/services/socketService";
 import { useNotificationStore } from "@/features/customer/store/notificationStore";
 
-const ChatPage = ({ openChat }) => {
+import { useChatStore } from "@/features/customer/store/chatStore";
+
+const ChatPage = () => {
   const { orderId } = useParams();
+  const openChat = useChatStore((state) => state.openChat);
   useEffect(() => {
     openChat(orderId);
   }, [orderId, openChat]);
   return <Navigate to="/order-history" />; // Redirect back to order history
 };
-
-import { useChatStore } from "@/features/customer/store/chatStore";
 
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = userAuthStore();

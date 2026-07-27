@@ -1,9 +1,10 @@
 import pool from "../../db.js";
 import { getIO } from "../../socket.js";
+import redisClient from "../../utils/redisClient.js";
 
 export const getDashboardData = async (req, res) => {
   try {
-    const riderId = req.user.id; // Assuming the rider's ID is available in the request object
+    const riderId = req.user.id; 
 
     if (!riderId) {
       return res
@@ -11,18 +12,37 @@ export const getDashboardData = async (req, res) => {
         .json({ message: "Rider ID not found in request." });
     }
 
-    // Fetch available orders (status = 'pending') and calculate delivery fee, only within 10km radius
-    // For this, you need the rider's current location. Let's assume you fetch it from user_locations table:
-    const riderLocationResult = await pool.query(
-      "SELECT latitude, longitude FROM user_locations WHERE user_id = $1 LIMIT 1",
-      [riderId]
-    );
+    let riderLat = req.query.lat ? parseFloat(req.query.lat) : null;
+    let riderLon = req.query.lon ? parseFloat(req.query.lon) : null;
+
+    // Fallback 1: Check Redis if live location not passed in query
+    if (!riderLat || !riderLon) {
+      try {
+        const geoPos = await redisClient.geoPos("active_riders", riderId.toString());
+        if (geoPos && geoPos[0]) {
+          riderLon = parseFloat(geoPos[0].longitude);
+          riderLat = parseFloat(geoPos[0].latitude);
+        }
+      } catch (err) {
+        console.error("Redis geoPos error:", err);
+      }
+    }
+
+    // Fallback 2: Check PostgreSQL static profile
+    if (!riderLat || !riderLon) {
+      const riderLocationResult = await pool.query(
+        "SELECT latitude, longitude FROM user_locations WHERE user_id = $1 LIMIT 1",
+        [riderId]
+      );
+      if (riderLocationResult.rows.length > 0) {
+        riderLat = riderLocationResult.rows[0].latitude;
+        riderLon = riderLocationResult.rows[0].longitude;
+      }
+    }
+
     let availableOrders = { rows: [] };
 
-    if (riderLocationResult.rows.length > 0) {
-      const riderLat = riderLocationResult.rows[0].latitude;
-      const riderLon = riderLocationResult.rows[0].longitude;
-
+    if (riderLat && riderLon) {
       availableOrders = await pool.query(
         `SELECT
           o.order_id,
@@ -180,6 +200,16 @@ export const updateRiderAvailability = async (req, res) => {
       "UPDATE rider_profiles SET is_available = $1 WHERE user_id = $2",
       [is_available, userId]
     );
+
+    // If the rider manually goes offline, explicitly drop them from Redis dispatch pool
+    if (is_available === false || is_available === "false") {
+      try {
+        const redisClient = (await import("../../utils/redisClient.js")).default;
+        await redisClient.del(`rider_active:${userId}`);
+      } catch (err) {
+        console.error("Error deleting active rider from Redis:", err);
+      }
+    }
 
     res
       .status(200)

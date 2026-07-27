@@ -19,12 +19,16 @@ import chatRoutes from "./shared/chats/chatRoutes.js";
 import restaurantOrder from "./restaurants/order/orderRoutes.js";
 import restaurnatStat from "./restaurants/stats/statsRoutes.js";
 import notificationRoutes from "./shared/notifications/notificationRoutes.js";
+import { connectRedis } from "./utils/redisClient.js";
 
 dotenv.config();const app = express();
 const server = http.createServer(app); // Create an HTTP server
 
 // Initialize Socket.IO
 const io = initSocket(server);
+
+// Connect to Redis
+await connectRedis();
 
 app.use(express.json());
 
@@ -97,10 +101,29 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 const PORT = process.env.PORT || 5001;
+let serverInstance;
 if (process.env.NODE_ENV !== "test") {
-  server.listen(PORT, () => {
+  serverInstance = server.listen(PORT, () => {
     console.log(`Backend HTTP server is running on port: ${PORT}`);
   });
 }
+
+// Graceful shutdown logic for nodemon (SIGUSR2) and manual kill (SIGINT/SIGTERM)
+const gracefulShutdown = async (signal) => {
+  console.log(`Received ${signal}. Shutting down gracefully...`);
+  if (serverInstance) {
+    serverInstance.close(() => console.log('HTTP server closed.'));
+  }
+  const redisClient = (await import("./utils/redisClient.js")).default;
+  if (redisClient && redisClient.isOpen) {
+    await redisClient.quit();
+    console.log('Redis connection closed.');
+  }
+  process.exit(0);
+};
+
+process.once('SIGUSR2', () => gracefulShutdown('SIGUSR2'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 export { app, server, io }; // Export the app, server, and io instance
