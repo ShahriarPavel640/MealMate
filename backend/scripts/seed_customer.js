@@ -128,7 +128,7 @@ async function run() {
     console.log(`  Found menu items for ${Object.keys(menuByRestaurant).length} restaurants`);
 
     // 4. Get a rider for delivered orders
-    const riderRes = await client.query("SELECT user_id FROM users WHERE role_id = 'rider' LIMIT 1");
+    const riderRes = await client.query("SELECT user_id FROM users WHERE email = 'rider1@gmail.com'");
     const riderId = riderRes.rows.length > 0 ? riderRes.rows[0].user_id : null;
 
     // 5. Delete old generated customer data

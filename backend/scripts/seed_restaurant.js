@@ -173,7 +173,7 @@ async function run() {
     console.log('  Cleaned old generated restaurant data (order_id 20000-29999)');
 
     // 6. Resolve a rider for delivered orders
-    const riderRes = await client.query("SELECT user_id FROM users WHERE role_id = 'rider' LIMIT 1");
+    const riderRes = await client.query("SELECT user_id FROM users WHERE email = 'rider1@gmail.com'");
     const riderId = riderRes.rows.length > 0 ? riderRes.rows[0].user_id : null;
 
     // 7. Generate orders
