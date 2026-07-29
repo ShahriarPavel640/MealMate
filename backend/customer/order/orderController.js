@@ -169,6 +169,9 @@ export const createOrder = async (req, res) => {
 
 export const getOrders = async (req, res) => {
   const userId = req.user.id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
 
   try {
     // Fetch all orders for the user
@@ -191,13 +194,18 @@ export const getOrders = async (req, res) => {
       LEFT JOIN users u ON o.rider_id = u.user_id 
       LEFT JOIN deliveries d ON o.order_id = d.order_id
       WHERE o.user_id = $1 
-      ORDER BY o.created_at DESC`,
-      [userId]
+      ORDER BY o.created_at DESC
+      LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
     );
     const orders = ordersResult.rows;
 
+    const countResult = await pool.query(`SELECT COUNT(*) FROM orders WHERE user_id = $1`, [userId]);
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
     if (orders.length === 0) {
-      return res.json([]); // No orders found
+      return res.json({ data: [], pagination: { totalItems, totalPages, currentPage: page, limit } }); // No orders found
     }
 
     // Get all order IDs
@@ -221,7 +229,10 @@ export const getOrders = async (req, res) => {
       return { ...order, items: itemsForThisOrder };
     });
 
-    res.json(ordersWithItems);
+    res.json({
+      data: ordersWithItems,
+      pagination: { totalItems, totalPages, currentPage: page, limit }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");

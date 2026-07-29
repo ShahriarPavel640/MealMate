@@ -8,38 +8,40 @@ export const useRestaurantStore = create((set, get) => ({
   loading: false,
   categories: [],
 
-  getrestaurants: async () => {
+  getrestaurants: async (page = 1, limit = 9) => {
     set({ loading: true });
     try {
       const authUser = userAuthStore.getState().authUser;
       let res;
 
       if (authUser) {
-        res = await axiosInstance.get("customer/nearby_restaurants");
+        res = await axiosInstance.get("customer/nearby_restaurants", { params: { page, limit } });
       } else {
-        res = await axiosInstance.get("customer/getRestaurants");
+        res = await axiosInstance.get("customer/getRestaurants", { params: { page, limit } });
       }
       // console.log("restaurants are: ");
       console.log(res.data);
-      set({ restaurants: res.data });
+      set({ restaurants: res.data.data });
+      return res.data;
     } catch (err) {
       console.error("Error fetching restaurants", err);
       //toast.error(err?.response?.data?.message || "Failed to load restaurants");
       set({ restaurants: [] });
+      return { data: [], pagination: { totalPages: 1 } };
     } finally {
       set({ loading: false });
     }
   },
-  searchRestaurantsByName: async (searchTerm) => {
+  searchRestaurantsByName: async (searchTerm, page = 1, limit = 9) => {
     try {
       const res = await axiosInstance.get("/customer/searchRestaurant", {
-        params: { name: searchTerm },
+        params: { name: searchTerm, page, limit },
       });
-      set({ restaurants: res.data });
+      set({ restaurants: res.data.data });
       return res.data;
     } catch (err) {
       console.error("Search error:", err);
-      return [];
+      return { data: [], pagination: { totalPages: 1 } };
     }
   },
   toggleFavorite: async (restaurantId) => {
