@@ -1,6 +1,6 @@
 # Database Seeding Guide
 
-This guide explains how to properly wipe, recreate, and seed the Food Panda database at any time (e.g., if you come back after a month and want the dashboard charts to show recent, active data).
+This guide explains how to properly wipe, recreate, and seed the MealMate database at any time (e.g., if you come back after a month and want the dashboard charts to show recent, active data).
 
 ## Test Accounts
 

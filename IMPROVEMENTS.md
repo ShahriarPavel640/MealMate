@@ -1,4 +1,4 @@
-# Food Panda — Feature & Architecture Improvement Roadmap
+# MealMate — Feature & Architecture Improvement Roadmap
 
 ---
 

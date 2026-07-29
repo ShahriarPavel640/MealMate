@@ -1,6 +1,6 @@
 itg
 
-# Food Panda App
+# MealMate App
 
 This project consists of a React frontend, a Node.js backend, and a PostgreSQL database (with PostGIS) running via Docker.
 
