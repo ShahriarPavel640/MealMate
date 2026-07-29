@@ -43,6 +43,8 @@ const HomepageRider = () => {
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const notificationRef = useRef();
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [location, setLocation] = useState(null);
   const itemsPerPage = 6; // Display 6 available orders per page
   const availableOrdersRef = useRef(null);
 
@@ -62,15 +64,38 @@ const HomepageRider = () => {
     checkAuthRider(); // Call checkAuthRider once on component mount
   }, []); // Empty dependency array to run only once
 
-  // Effect for fetching initial data
+  // Get location once on mount
   useEffect(() => {
-    const fetchDashboardData = async (lat = null, lon = null) => {
+    if (authrider && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({ lat: position.coords.latitude, lon: position.coords.longitude });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLocation({}); // Empty object signifies failure to get coords, but attempt finished
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    } else if (authrider) {
+      setLocation({});
+    }
+  }, [authrider]);
+
+  // Fetch data when location or page changes
+  useEffect(() => {
+    const fetchDashboardData = async () => {
       try {
-        const query = (lat && lon) ? `?lat=${lat}&lon=${lon}` : "";
+        let query = `?page=${currentPage}&limit=${itemsPerPage}`;
+        if (location && location.lat && location.lon) {
+          query += `&lat=${location.lat}&lon=${location.lon}`;
+        }
         const res = await axiosInstance.get(`/rider/data/dashboard${query}`);
         setDashboardData(res.data);
         setIsAvailable(res.data.isAvailable);
-        console.log(res.data);
+        if (res.data.availablePagination) {
+          setTotalPages(res.data.availablePagination.totalPages);
+        }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         toast.error("Failed to load dashboard data.");
@@ -79,24 +104,10 @@ const HomepageRider = () => {
       }
     };
 
-    if (authrider) {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            fetchDashboardData(position.coords.latitude, position.coords.longitude);
-          },
-          (error) => {
-            console.error("Error getting location for dashboard:", error);
-            // Fallback to fetching without live coordinates
-            fetchDashboardData();
-          },
-          { enableHighAccuracy: true, timeout: 5000 }
-        );
-      } else {
-        fetchDashboardData();
-      }
+    if (location !== null) {
+      fetchDashboardData();
     }
-  }, [authrider]);
+  }, [location, currentPage]);
 
   // Fetch DB notifications on mount
   useEffect(() => {
@@ -290,14 +301,7 @@ const HomepageRider = () => {
     }
   };
 
-  const totalPages = Math.ceil(
-    dashboardData.availableOrders.length / itemsPerPage
-  );
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentAvailableOrders = dashboardData.availableOrders.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const currentAvailableOrders = dashboardData.availableOrders || [];
 
   const handlePageChange = (page) => {
     setCurrentPage(page);

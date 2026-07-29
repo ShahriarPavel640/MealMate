@@ -16,7 +16,7 @@ function HomepageRest() {
   const activeTab = searchParams.get("tab") || "dashboard";
   
   const setActiveTab = (tab) => {
-    setSearchParams({ tab });
+    setSearchParams({ tab }, { replace: true });
   };
   const { authRestaurant } = restaurantAuthStore();
 
