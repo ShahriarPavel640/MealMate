@@ -12,6 +12,10 @@ export const getDashboardData = async (req, res) => {
         .json({ message: "Rider ID not found in request." });
     }
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
+
     let riderLat = req.query.lat ? parseFloat(req.query.lat) : null;
     let riderLon = req.query.lon ? parseFloat(req.query.lon) : null;
 
@@ -41,8 +45,24 @@ export const getDashboardData = async (req, res) => {
     }
 
     let availableOrders = { rows: [] };
+    let totalAvailableItems = 0;
+    let totalAvailablePages = 1;
 
     if (riderLat && riderLon) {
+      const countResult = await pool.query(
+        `SELECT COUNT(*)
+        FROM orders o
+        JOIN restaurants r ON o.restaurant_id = r.restaurant_id
+        JOIN user_locations rl ON r.location_id = rl.location_id
+        JOIN deliveries d ON o.order_id = d.order_id
+        WHERE o.status = 'ready_for_pickup'
+          AND get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) <= 5
+          AND get_distance_km($1, $2, rl.longitude, rl.latitude) <= 5`,
+        [riderLon, riderLat]
+      );
+      totalAvailableItems = parseInt(countResult.rows[0].count);
+      totalAvailablePages = Math.ceil(totalAvailableItems / limit) || 1;
+
       availableOrders = await pool.query(
         `SELECT
           o.order_id,
@@ -66,8 +86,9 @@ export const getDashboardData = async (req, res) => {
         WHERE o.status = 'ready_for_pickup'
           AND get_distance_km($1, $2, d.dropoff_longitude, d.dropoff_latitude) <= 5
           AND get_distance_km($1, $2, rl.longitude, rl.latitude) <= 5
-        ORDER BY o.updated_at DESC NULLS LAST`,
-        [riderLon, riderLat]
+        ORDER BY o.updated_at DESC NULLS LAST
+        LIMIT $3 OFFSET $4`,
+        [riderLon, riderLat, limit, offset]
       );
     }
 
@@ -104,6 +125,12 @@ export const getDashboardData = async (req, res) => {
 
     res.status(200).json({
       availableOrders: availableOrders.rows,
+      availablePagination: {
+        totalItems: totalAvailableItems,
+        totalPages: totalAvailablePages,
+        currentPage: page,
+        limit
+      },
       assignedOrders: assignedOrders,
       isAvailable: riderProfile.rows[0]?.is_available,
     });

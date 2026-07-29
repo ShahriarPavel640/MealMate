@@ -75,10 +75,43 @@ export const getRecentOrders = async (req, res) => {
 
 export const getOrders = async (req, res) => {
   const restaurantId = req.user.id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const offset = (page - 1) * limit;
+  const status = req.query.status || "all";
 
   try {
-    const result = await pool.query(
-      `
+    let countQuery = `SELECT COUNT(*) FROM orders WHERE restaurant_id = $1`;
+    let countParams = [restaurantId];
+    
+    if (status !== "all") {
+      countQuery += ` AND status = $2`;
+      countParams.push(status);
+    }
+    
+    const countResult = await pool.query(countQuery, countParams);
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    let ordersQuery = `
+      WITH PaginatedOrders AS (
+        SELECT order_id, status, created_at, user_id, cart_id
+        FROM orders
+        WHERE restaurant_id = $1
+    `;
+    let ordersParams = [restaurantId];
+
+    if (status !== "all") {
+      ordersQuery += ` AND status = $2`;
+      ordersParams.push(status);
+      ordersQuery += ` ORDER BY order_id DESC LIMIT $3 OFFSET $4 )`;
+      ordersParams.push(limit, offset);
+    } else {
+      ordersQuery += ` ORDER BY order_id DESC LIMIT $2 OFFSET $3 )`;
+      ordersParams.push(limit, offset);
+    }
+
+    ordersQuery += `
       SELECT 
         O.order_id,
         O.status,
@@ -88,16 +121,15 @@ export const getOrders = async (req, res) => {
         MI.name AS menu_item_name,
         MI.price,
         CI.quantity
-      FROM orders O
+      FROM PaginatedOrders O
       JOIN users U ON O.user_id = U.user_id
       JOIN carts C ON O.cart_id = C.cart_id
       JOIN cart_item CI ON CI.cart_id = C.cart_id
       JOIN menu_items MI ON CI.menu_item_id = MI.menu_item_id
-      WHERE O.restaurant_id = $1
       ORDER BY O.order_id DESC
-      `,
-      [restaurantId]
-    );
+    `;
+
+    const result = await pool.query(ordersQuery, ordersParams);
 
     const ordersMap = {};
 
@@ -136,7 +168,15 @@ export const getOrders = async (req, res) => {
       total: parseFloat(order.total.toFixed(2)),
     }));
 
-    res.json(orders);
+    res.json({
+      data: orders,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+      }
+    });
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     res.status(500).json({ message: "Internal server error" });

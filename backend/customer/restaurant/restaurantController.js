@@ -18,6 +18,10 @@ export const getNearbyRestaurants = async (req, res) => {
     const userLat = userLocationResult.rows[0].latitude;
     const userLon = userLocationResult.rows[0].longitude;
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 9;
+    const offset = (page - 1) * limit;
+
     const query = `
       SELECT 
         r.restaurant_id, r.name, r.phone, r.email, r.average_rating, r.image_url,
@@ -36,12 +40,25 @@ export const getNearbyRestaurants = async (req, res) => {
       LEFT JOIN favorite_restaurants fr ON r.restaurant_id = fr.restaurant_id AND fr.user_id = $4
       WHERE get_distance_km(rl.longitude, rl.latitude, $1, $2) <= $3
       ORDER BY is_favorite DESC, distance ASC
-      LIMIT 60
+      LIMIT $5 OFFSET $6
     `;
 
-    let result = await pool.query(query, [userLon, userLat, radius, id]);
+    const countQuery = `
+      SELECT COUNT(*)
+      FROM restaurants r
+      JOIN user_locations rl ON r.location_id = rl.location_id
+      WHERE get_distance_km(rl.longitude, rl.latitude, $1, $2) <= $3
+    `;
 
-    res.status(200).json(result.rows);
+    let result = await pool.query(query, [userLon, userLat, radius, id, limit, offset]);
+    let countResult = await pool.query(countQuery, [userLon, userLat, radius]);
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      data: result.rows,
+      pagination: { totalItems, totalPages, currentPage: page, limit }
+    });
   } catch (err) {
     console.error("Error in getNearbyRestaurants:", err.message);
     res.status(500).json({ message: "Internal server error" });
@@ -75,8 +92,12 @@ export const toggleFavoriteRestaurant = async (req, res) => {
 };
 
 export const getRestaurants = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 9;
+  const offset = (page - 1) * limit;
+
   try {
-    const result = await pool.query(`
+    const query = `
       SELECT r.*,
         (
           EXISTS (
@@ -86,21 +107,33 @@ export const getRestaurants = async (req, res) => {
               AND CURRENT_TIME BETWEEN rh.open_time AND rh.close_time
           )
         ) AS is_open
-      FROM restaurants r LIMIT 30
-    `);
-    res.status(200).json(result.rows);
+      FROM restaurants r LIMIT $1 OFFSET $2
+    `;
+    const countQuery = `SELECT COUNT(*) FROM restaurants`;
+
+    const result = await pool.query(query, [limit, offset]);
+    const countResult = await pool.query(countQuery);
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      data: result.rows,
+      pagination: { totalItems, totalPages, currentPage: page, limit }
+    });
   } catch (err) {
     console.error("Error in get restaurant:", err.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 export const getRestaurantsSearchByName = async (req, res) => {
-  const rest_name = req.query.name;
+  const rest_name = req.query.name || "";
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 9;
+  const offset = (page - 1) * limit;
 
-  //console.log(rest_name);
   try {
-    const result = await pool.query(
-      `SELECT r.*,
+    const query = `
+      SELECT r.*,
         (
           EXISTS (
             SELECT 1 FROM restaurant_hours rh 
@@ -109,10 +142,20 @@ export const getRestaurantsSearchByName = async (req, res) => {
               AND CURRENT_TIME BETWEEN rh.open_time AND rh.close_time
           )
         ) AS is_open
-       FROM restaurants r WHERE name ILIKE $1 LIMIT 30`,
-      [`%${rest_name.trim()}%`]
-    );
-    res.status(200).json(result.rows);
+       FROM restaurants r WHERE name ILIKE $1 
+       LIMIT $2 OFFSET $3
+    `;
+    const countQuery = `SELECT COUNT(*) FROM restaurants r WHERE name ILIKE $1`;
+
+    let result = await pool.query(query, [`%${rest_name.trim()}%`, limit, offset]);
+    let countResult = await pool.query(countQuery, [`%${rest_name.trim()}%`]);
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      data: result.rows,
+      pagination: { totalItems, totalPages, currentPage: page, limit }
+    });
   } catch (err) {
     console.error("Error in get restaurant:", err.message);
     res.status(500).json({ message: "Internal server error" });

@@ -1,4 +1,5 @@
 import React from "react";
+import { useSearchParams } from "react-router-dom";
 import SidebarRest from "@/features/restaurant/components/SidebarRest";
 import HeaderRest from "@/features/restaurant/components/HeaderRest";
 import DashboardRest from "@/features/restaurant/components/DashboardRest";
@@ -11,7 +12,12 @@ import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthS
 import RestaurantReviewsPage from "@/features/restaurant/components/RestaurantReviewDashboard";
 
 function HomepageRest() {
-  const [activeTab, setActiveTab] = React.useState("dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "dashboard";
+  
+  const setActiveTab = (tab) => {
+    setSearchParams({ tab }, { replace: true });
+  };
   const { authRestaurant } = restaurantAuthStore();
 
   const renderContent = () => {

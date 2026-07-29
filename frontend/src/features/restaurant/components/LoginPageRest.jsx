@@ -59,27 +59,27 @@ const LoginPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <ChefHat className="h-8 w-8 text-orange-500" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                RestaurantHub
+              <ChefHat className="h-8 w-8 text-[#e21b70]" />
+              <span className="text-2xl font-bold text-[#e21b70]">
+                MealMate Partner
               </span>
             </div>
             <nav className="hidden md:flex space-x-8">
               <a
                 href="#features"
-                className="text-gray-400 hover:text-orange-500 transition-colors"
+                className="text-gray-400 hover:text-[#e21b70] transition-colors"
               >
                 Features
               </a>
               <a
                 href="#pricing"
-                className="text-gray-400 hover:text-orange-500 transition-colors"
+                className="text-gray-400 hover:text-[#e21b70] transition-colors"
               >
                 Pricing
               </a>
               <a
                 href="#support"
-                className="text-gray-400 hover:text-orange-500 transition-colors"
+                className="text-gray-400 hover:text-[#e21b70] transition-colors"
               >
                 Support
               </a>
@@ -94,9 +94,9 @@ const LoginPage = () => {
             <div className="space-y-4">
               <h1 className="text-4xl lg:text-5xl font-bold leading-tight">
                 Grow Your Restaurant Business with
-                <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                <span className="text-[#e21b70]">
                   {" "}
-                  RestaurantHub
+                  MealMate Partner
                 </span>
               </h1>
               <p className="text-xl text-gray-400 leading-relaxed">
@@ -107,8 +107,8 @@ const LoginPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-6">
               <div className="flex items-center space-x-3">
-                <div className="bg-orange-900 p-2 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-orange-400" />
+                <div className="bg-pink-950/60 p-2 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-[#e21b70]" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Boost Sales</h3>
@@ -228,7 +228,7 @@ const LoginPage = () => {
                       </div>
                       <Button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                        className="w-full bg-[#e21b70] hover:bg-[#c2145d] text-white"
                         disabled={isLoggingIn}
                       >
                         {isLoggingIn ? "Signing in..." : "Sign In"}
@@ -314,7 +314,7 @@ const LoginPage = () => {
                             onClick={() => setLocationModalOpen(true)}
                             className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 flex items-center gap-1.5"
                           >
-                            <MapPin className="h-4 w-4 text-orange-500" />
+                            <MapPin className="h-4 w-4 text-[#e21b70]" />
                             Pick Location
                           </Button>
                           <span className="text-sm text-gray-400">
@@ -326,7 +326,7 @@ const LoginPage = () => {
                       </div>
                       <Button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                        className="w-full bg-[#e21b70] hover:bg-[#c2145d] text-white"
                         disabled={isSigningUp}
                       >
                         {isSigningUp ? "Creating account..." : "Create Account"}
@@ -363,8 +363,8 @@ const LoginPage = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <ChefHat className="h-6 w-6 text-orange-500" />
-                <span className="text-xl font-bold">RestaurantHub</span>
+                <ChefHat className="h-6 w-6 text-[#e21b70]" />
+                <span className="text-xl font-bold">MealMate Partner</span>
               </div>
               <p className="text-gray-400 text-sm">
                 Empowering restaurants to thrive in the digital age.
@@ -447,7 +447,7 @@ const LoginPage = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 RestaurantHub. All rights reserved.</p>
+            <p>&copy; 2024 MealMate. All rights reserved.</p>
           </div>
         </div>
       </footer>

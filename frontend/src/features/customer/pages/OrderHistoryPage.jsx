@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { axiosInstance } from "@/lib/axios";
 import { Button } from "@/features/restaurant/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,12 @@ const OrderHistoryPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // Infinite Scroll State
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerTarget = useRef(null);
+
   // Tracking Modal State
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
   const [trackingOrderData, setTrackingOrderData] = useState(null);
@@ -23,24 +29,60 @@ const OrderHistoryPage = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axiosInstance.get('/customer/order');
-        setOrders(res.data);
+        if (page === 1) setLoading(true);
+        else setIsLoadingMore(true);
+
+        const res = await axiosInstance.get(`/customer/order?page=${page}&limit=10`);
+        const newOrders = res.data.data;
+        const totalPages = res.data.pagination.totalPages;
+
+        if (page === 1) {
+          setOrders(newOrders);
+        } else {
+          setOrders(prev => [...prev, ...newOrders]);
+        }
+
+        if (page >= totalPages || newOrders.length === 0) {
+          setHasMore(false);
+        }
       } catch (error) {
         console.error('Failed to fetch orders:', error);
         setError('Failed to load orders. Please try again later.');
       } finally {
         setLoading(false);
+        setIsLoadingMore(false);
       }
     };
 
     fetchOrders();
-  }, []);
+  }, [page]);
 
-  if (loading) {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading && !isLoadingMore) {
+          setPage(prev => prev + 1);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasMore, loading, isLoadingMore]);
+
+  if (loading && page === 1) {
     return <div className="container mx-auto p-4">Loading...</div>;
   }
 
-  if (error) {
+  if (error && page === 1) {
     return <div className="container mx-auto p-4 text-red-500">Error: {error}</div>;
   }
 
@@ -159,6 +201,16 @@ const OrderHistoryPage = () => {
           <p className="text-gray-600">You have no orders yet.</p>
         )}
       </div>
+
+      {hasMore && orders.length > 0 && (
+        <div ref={observerTarget} className="flex justify-center py-6">
+          {isLoadingMore ? (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+          ) : (
+            <div className="h-8"></div>
+          )}
+        </div>
+      )}
 
       <RatingModal
         isOpen={isRatingModalOpen}

@@ -10,21 +10,33 @@ const RestaurantPage = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9; // Display 6 restaurants per page
+  const [serverTotalPages, setServerTotalPages] = useState(1);
+  const itemsPerPage = 9; // Display 9 restaurants per page
   const restaurantsRef = useRef(null);
 
+  const fetchRestaurants = async (page) => {
+    let res;
+    if (!searchTerm.trim()) {
+      res = await getrestaurants(page, itemsPerPage);
+    } else {
+      res = await searchRestaurantsByName(searchTerm.trim(), page, itemsPerPage);
+    }
+    if (res?.pagination) {
+      setServerTotalPages(res.pagination.totalPages);
+    }
+  };
+
   useEffect(() => {
-    getrestaurants();
-  }, []);
+    fetchRestaurants(currentPage);
+  }, [currentPage]);
 
   const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      getrestaurants();
+    // Reset to first page when searching; useEffect will trigger fetch
+    if (currentPage === 1) {
+      await fetchRestaurants(1);
     } else {
-      await searchRestaurantsByName(searchTerm.trim());
+      setCurrentPage(1);
     }
-    // Reset to first page when searching
-    setCurrentPage(1);
   };
 
   const handleKeyPress = (e) => {
@@ -32,12 +44,8 @@ const RestaurantPage = () => {
   };
 
   // Pagination calculations
-  const totalPages = Math.ceil((restaurants?.length || 0) / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentRestaurants = restaurants?.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const totalPages = serverTotalPages;
+  const currentRestaurants = restaurants; // Backend handles slicing
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -152,9 +160,8 @@ const RestaurantPage = () => {
               {/* Results summary */}
               {restaurants && restaurants.length > 0 && (
                 <p className="text-center text-gray-500 mt-6 font-medium">
-                  Showing <span className="text-white">{startIndex + 1}</span> to{" "}
-                  <span className="text-white">{Math.min(startIndex + itemsPerPage, restaurants.length)}</span> of{" "}
-                  <span className="text-white">{restaurants.length}</span> restaurants
+                  Showing page <span className="text-white">{currentPage}</span> of{" "}
+                  <span className="text-white">{totalPages}</span>
                 </p>
               )}
             </div>

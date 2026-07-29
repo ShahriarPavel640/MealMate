@@ -259,22 +259,28 @@ function PaginationControls({ currentPage, totalPages, onPageChange }) {
 // --- OrderManagement Component ---
 
 function OrderManagement() {
+  const [activeTab, setActiveTab] = useState("all");
   const [orderList, setOrderList] = useState([]);
-  const [currentPages, setCurrentPages] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 5; // Display 5 orders per page
   const ordersRef = useRef(null);
   const { authRestaurant: restaurant } = restaurantAuthStore();
 
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await axios.get("/api/restaurant/orders");
-      setOrderList(response.data);
-      console.log(response.data);
+      const response = await axios.get(
+        `/api/restaurant/orders?status=${activeTab}&page=${currentPage}&limit=${itemsPerPage}`
+      );
+      setOrderList(response.data.data);
+      setTotalPages(response.data.pagination.totalPages);
+      setTotalItems(response.data.pagination.totalItems);
     } catch (error) {
       console.error("Error fetching orders:", error);
       setOrderList([]);
     }
-  }, []);
+  }, [activeTab, currentPage, itemsPerPage]);
 
   const updateOrderStatus = useCallback(
     async (orderId, newStatus) => {
@@ -321,7 +327,12 @@ function OrderManagement() {
   // --- Socket Event Handlers ---
   const handleNewOrder = useCallback(
     (newOrder) => {
-      setOrderList((prevOrders) => [newOrder, ...prevOrders]);
+      if (activeTab === "all" || activeTab === "pending_restaurant_acceptance") {
+        setOrderList((prevOrders) => {
+          const newArray = [newOrder, ...prevOrders];
+          return newArray.slice(0, itemsPerPage);
+        });
+      }
       toast.success(
         `New Order Received! Order #${newOrder.order_id} from ${
           newOrder.customer_name
@@ -329,7 +340,7 @@ function OrderManagement() {
         { duration: 5000, icon: '🍽️' }
       );
     },
-    [updateOrderStatus, rejectOrder]
+    [activeTab, itemsPerPage]
   );
 
   const handleOrderStatusUpdated = useCallback((updatedOrder) => {
@@ -386,29 +397,7 @@ function OrderManagement() {
     handleOrderAccepted,
   ]);
 
-  const filterOrdersByStatus = (status) => {
-    if (status === "all") return orderList;
-    console.log(orderList);
-    return orderList.filter((order) => order.status === status);
-  };
-
-  // Pagination logic
-  const handlePageChange = (tabValue, page) => {
-    setCurrentPages((prev) => ({ ...prev, [tabValue]: page }));
-    if (ordersRef.current) {
-      ordersRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const getPaginatedOrders = (orders, tabValue) => {
-    const currentPage = currentPages[tabValue] || 1;
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return orders.slice(startIndex, startIndex + itemsPerPage);
-  };
-
-  const getTotalPages = (orders) => {
-    return Math.ceil(orders.length / itemsPerPage);
-  };
+  // Pagination logic handled by server
 
   // 'pending', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'
   const statuses = [
@@ -430,17 +419,16 @@ function OrderManagement() {
       </div>
 
       {/* Tabs for Order Filtering */}
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(v) => { 
+          setActiveTab(v); 
+          setCurrentPage(1); 
+        }} 
+        className="w-full"
+      >
         <TabsList className="flex flex-wrap justify-center bg-gray-800 border border-gray-700 h-auto gap-2 p-2">
-          {[
-            "all",
-            "pending_restaurant_acceptance",
-            "preparing",
-            "ready_for_pickup",
-            "out_for_delivery",
-            "delivered",
-            "restaurant_rejected",
-          ].map((tab) => (
+          {statuses.map((tab) => (
             <TabsTrigger
               key={tab}
               value={tab}
@@ -454,65 +442,46 @@ function OrderManagement() {
           ))}
         </TabsList>
 
-        {/* Tab Content for each Order Status */}
-        {[
-          "all",
-          "pending_restaurant_acceptance",
-          "preparing",
-          "ready_for_pickup",
-          "out_for_delivery",
-          "delivered",
-          "restaurant_rejected",
-        ].map((tab) => {
-          const filteredOrders = filterOrdersByStatus(tab);
-          const paginatedOrders = getPaginatedOrders(filteredOrders, tab);
-          const totalPages = getTotalPages(filteredOrders);
-          const currentPage = currentPages[tab] || 1;
-
-          return (
-            <TabsContent key={tab} value={tab} className="space-y-4 mt-4">
-              <div ref={ordersRef}>
-                {paginatedOrders.length > 0 ? (
-                  <>
-                    <div className="space-y-4">
-                      {paginatedOrders.map((order) => (
-                        <OrderCard
-                          key={order.order_id}
-                          order={order}
-                          onUpdateStatus={updateOrderStatus}
-                          onRejectOrder={rejectOrder}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Pagination Controls */}
-                    <PaginationControls
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={(page) => handlePageChange(tab, page)}
+        <TabsContent value={activeTab} className="space-y-4 mt-4">
+          <div ref={ordersRef}>
+            {orderList.length > 0 ? (
+              <>
+                <div className="space-y-4">
+                  {orderList.map((order) => (
+                    <OrderCard
+                      key={order.order_id}
+                      order={order}
+                      onUpdateStatus={updateOrderStatus}
+                      onRejectOrder={rejectOrder}
                     />
+                  ))}
+                </div>
 
-                    {/* Results summary */}
-                    {filteredOrders.length > 0 && (
-                      <div className="mt-6 text-center text-gray-400 text-sm">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                        {Math.min(
-                          currentPage * itemsPerPage,
-                          filteredOrders.length
-                        )}{" "}
-                        of {filteredOrders.length} orders
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-8 text-gray-400">
-                    <p>No orders in this category.</p>
-                  </div>
-                )}
+                {/* Pagination Controls */}
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    if (ordersRef.current) {
+                      ordersRef.current.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                />
+
+                {/* Results summary */}
+                <div className="mt-6 text-center text-gray-400 text-sm">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                  {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} orders
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No orders in this category.</p>
               </div>
-            </TabsContent>
-          );
-        })}
+            )}
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );

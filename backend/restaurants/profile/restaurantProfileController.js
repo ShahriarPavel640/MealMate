@@ -647,9 +647,44 @@ export const editProfile = async (req, res) => {
 
 export const get_orders = async (req, res) => {
   const restaurant_id = req.user.id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const offset = (page - 1) * limit;
+  const status = req.query.status || "all";
+
   try {
-    const orders = await pool.query(
-      `SELECT
+    let countQuery = `SELECT COUNT(*) FROM orders WHERE restaurant_id = $1`;
+    let countParams = [restaurant_id];
+    
+    if (status !== "all") {
+      countQuery += ` AND status = $2`;
+      countParams.push(status);
+    }
+    
+    const countResult = await pool.query(countQuery, countParams);
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    let ordersQuery = `
+      WITH PaginatedOrders AS (
+        SELECT order_id, status, total_amount, created_at, user_id, rider_id
+        FROM orders
+        WHERE restaurant_id = $1
+    `;
+    let ordersParams = [restaurant_id];
+
+    if (status !== "all") {
+      ordersQuery += ` AND status = $2`;
+      ordersParams.push(status);
+      ordersQuery += ` ORDER BY created_at DESC LIMIT $3 OFFSET $4 )`;
+      ordersParams.push(limit, offset);
+    } else {
+      ordersQuery += ` ORDER BY created_at DESC LIMIT $2 OFFSET $3 )`;
+      ordersParams.push(limit, offset);
+    }
+
+    ordersQuery += `
+      SELECT
         o.order_id,
         o.user_id AS customer_id,
         u.name AS customer_name,
@@ -672,19 +707,28 @@ export const get_orders = async (req, res) => {
           'menu_item_image_url',mi.menu_item_image_url
           )
         ) AS items
-      FROM orders o
+      FROM PaginatedOrders o
       JOIN users u ON o.user_id = u.user_id
       LEFT JOIN users r ON o.rider_id = r.user_id
       LEFT JOIN deliveries d ON o.order_id = d.order_id
       LEFT JOIN payments p ON o.order_id = p.order_id
       JOIN order_items oi ON o.order_id = oi.order_id
       JOIN menu_items mi ON mi.menu_item_id = oi.menu_item_id
-      WHERE o.restaurant_id = $1
-      GROUP BY o.order_id, u.name, u.phone_number, r.name, r.phone_number, d.dropoff_addr, p.method_type
-      ORDER BY o.created_at DESC`,
-      [restaurant_id]
-    );
-    res.status(200).json(orders.rows);
+      GROUP BY o.order_id, o.user_id, u.name, u.phone_number, o.total_amount, o.status, o.created_at, o.rider_id, r.name, r.phone_number, d.dropoff_addr, p.method_type
+      ORDER BY o.created_at DESC
+    `;
+
+    const orders = await pool.query(ordersQuery, ordersParams);
+
+    res.status(200).json({
+      data: orders.rows,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+      }
+    });
   } catch (err) {
     console.error("Error in get_orders controller:", err.message);
     res.status(500).json({ message: "Internal server error" });
@@ -835,8 +879,18 @@ export const updateOrderStatus = async (req, res) => {
 
 export const getReviewsAll = async (req, res) => {
   const restaurantId = req.user.id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
 
   try {
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM reviews WHERE restaurant_id = $1`,
+      [restaurantId]
+    );
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+
     const reviews = await pool.query(
       `
       SELECT 
@@ -850,11 +904,20 @@ export const getReviewsAll = async (req, res) => {
       JOIN orders o ON o.order_id = r.order_id
       WHERE r.restaurant_id = $1
       ORDER BY r.created_at DESC
+      LIMIT $2 OFFSET $3
       `,
-      [restaurantId]
+      [restaurantId, limit, offset]
     );
 
-    res.status(200).json(reviews.rows);
+    res.status(200).json({
+      data: reviews.rows,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+      }
+    });
   } catch (error) {
     console.error("Error fetching restaurant reviews:", error);
     res.status(500).json({ message: "Server error" });
