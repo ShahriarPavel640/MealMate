@@ -82,11 +82,13 @@ function RestaurantProfile() {
         days.map((day) => {
           const key = day.toLowerCase();
           if (backendHoursMap[key]) {
+            const openTime = backendHoursMap[key].open_time ? backendHoursMap[key].open_time.slice(0, 5) : "09:00";
+            const closeTime = backendHoursMap[key].close_time ? backendHoursMap[key].close_time.slice(0, 5) : "22:00";
             return {
               day,
               enabled: true,
-              open: backendHoursMap[key].open_time,
-              close: backendHoursMap[key].close_time,
+              open: openTime,
+              close: closeTime,
             };
           } else {
             return {
