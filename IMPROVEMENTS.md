@@ -1,4 +1,4 @@
-# Food Panda — Feature & Architecture Improvement Roadmap
+# MealMate — Feature & Architecture Improvement Roadmap
 
 ---
 
@@ -8,7 +8,7 @@
 | ------------------ | ----------------------------------------------------- | ------------------------------------------------- |
 | **Frontend** | React 19 + Vite + TailwindCSS 4 + Zustand + Socket.IO | `frontend/src/App.jsx`                          |
 | **Backend**  | Express 5 + Node.js (ESM) + Socket.IO                 | `backend/index.js`                              |
-| **Database** | PostgreSQL + PostGIS (Docker)                         | `food_panda.sql`                                |
+| **Database** | PostgreSQL + PostGIS (Docker)                         | `mealmate.sql`                                |
 | **Payment**  | SSLCommerz                                            | `backend/customer/payment/paymentController.js` |
 | **Media**    | Cloudinary                                            | `backend/utils/cloudinary.js`                   |
 | **Auth**     | JWT (cookie + header)                                 | `backend/middleware/authorization.js`           |
@@ -29,7 +29,7 @@
 - `backend/socket.js` — server-side Socket.IO with `join_room`, `leave_room`, `send_message`
 - `backend/socketHandlers/restaurantSocketHandler.js` — handles `accept_order` and `reject_order`
 - `@react-google-maps/api` already installed in frontend
-- PostGIS `get_distance_km()` function already in `food_panda.sql`
+- PostGIS `get_distance_km()` function already in `mealmate.sql`
 
 **What's missing:**
 
@@ -548,7 +548,7 @@ Apply similarly to: restaurant orders, reviews, notifications, menu items.
 
 **The problem:**
 
-`food_panda.sql` creates tables with foreign keys but zero explicit indexes (besides primary keys and unique constraints). PostgreSQL does NOT auto-create indexes for foreign key columns. Common queries do full table scans.
+`mealmate.sql` creates tables with foreign keys but zero explicit indexes (besides primary keys and unique constraints). PostgreSQL does NOT auto-create indexes for foreign key columns. Common queries do full table scans.
 
 **The fix:**
 

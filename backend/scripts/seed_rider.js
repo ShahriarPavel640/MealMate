@@ -62,7 +62,7 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'postgres',
   host: process.env.DB_HOST || '127.0.0.1',
   port: process.env.DB_PORT || 5434,
-  database: process.env.DB_NAME || 'food_panda',
+  database: process.env.DB_NAME || 'mealmate',
   max: 5,
 });
 
@@ -135,13 +135,13 @@ async function run() {
 
     // 6. Delete old generated rider data
     // Delete reviews first (FK), then deliveries, payments, order_items, orders
-    await client.query('DELETE FROM reviews WHERE order_id >= $1 AND rider_id = $2', [ORDER_ID_START, riderId]);
-    await client.query(`DELETE FROM reviews WHERE order_id IN (SELECT order_id FROM orders WHERE order_id >= $1 AND rider_id IS NULL AND status = 'ready_for_pickup')`, [ORDER_ID_START]);
-    await client.query('DELETE FROM deliveries WHERE order_id >= $1', [ORDER_ID_START]);
-    await client.query('DELETE FROM payments WHERE order_id >= $1', [ORDER_ID_START]);
-    await client.query('DELETE FROM order_items WHERE order_id >= $1', [ORDER_ID_START]);
-    await client.query('DELETE FROM orders WHERE order_id >= $1', [ORDER_ID_START]);
-    console.log('  Cleaned old generated data (order_id >= 10000)');
+    await client.query('DELETE FROM reviews WHERE order_id >= $1 AND order_id < $2 AND rider_id = $3', [ORDER_ID_START, ORDER_ID_START + 10000, riderId]);
+    await client.query(`DELETE FROM reviews WHERE order_id IN (SELECT order_id FROM orders WHERE order_id >= $1 AND order_id < $2 AND rider_id IS NULL AND status = 'ready_for_pickup')`, [ORDER_ID_START, ORDER_ID_START + 10000]);
+    await client.query('DELETE FROM deliveries WHERE order_id >= $1 AND order_id < $2', [ORDER_ID_START, ORDER_ID_START + 10000]);
+    await client.query('DELETE FROM payments WHERE order_id >= $1 AND order_id < $2', [ORDER_ID_START, ORDER_ID_START + 10000]);
+    await client.query('DELETE FROM order_items WHERE order_id >= $1 AND order_id < $2', [ORDER_ID_START, ORDER_ID_START + 10000]);
+    await client.query('DELETE FROM orders WHERE order_id >= $1 AND order_id < $2', [ORDER_ID_START, ORDER_ID_START + 10000]);
+    console.log('  Cleaned old generated data (order_id 10000-19999)');
 
     // 7. Generate orders
     const totalOrders = TOTAL_AVAILABLE + TOTAL_OUT_FOR_DELIVERY + TOTAL_DELIVERED;
@@ -270,32 +270,32 @@ async function updatePopulateSql(client, riderId, customerIds) {
   // Export current generated data as SQL
   const ordersRes = await client.query(
     `SELECT order_id, user_id, restaurant_id, rider_id, status, total_amount, tran_id,
-            created_at - CURRENT_TIMESTAMP AS created_offset,
-            delivered_at - CURRENT_TIMESTAMP AS delivered_offset
-     FROM orders WHERE order_id >= $1 ORDER BY order_id`, [ORDER_ID_START]
+            CAST(created_at - CURRENT_TIMESTAMP AS TEXT) AS created_offset,
+            CAST(delivered_at - CURRENT_TIMESTAMP AS TEXT) AS delivered_offset
+     FROM orders WHERE order_id >= $1 AND order_id < $2 ORDER BY order_id`, [ORDER_ID_START, ORDER_ID_START + 10000]
   );
 
   const itemsRes = await client.query(
     `SELECT oi.order_id, oi.menu_item_id, oi.quantity, oi.price
-     FROM order_items oi WHERE oi.order_id >= $1 ORDER BY oi.order_id`, [ORDER_ID_START]
+     FROM order_items oi WHERE oi.order_id >= $1 AND oi.order_id < $2 ORDER BY oi.order_id`, [ORDER_ID_START, ORDER_ID_START + 10000]
   );
 
   const paymentsRes = await client.query(
     `SELECT order_id, user_id, method_type, amount, status, tran_id
-     FROM payments WHERE order_id >= $1 ORDER BY order_id`, [ORDER_ID_START]
+     FROM payments WHERE order_id >= $1 AND order_id < $2 ORDER BY order_id`, [ORDER_ID_START, ORDER_ID_START + 10000]
   );
 
   const deliveriesRes = await client.query(
     `SELECT order_id, rider_id, restaurant_id, dropoff_latitude, dropoff_longitude, dropoff_addr,
-            start_time - CURRENT_TIMESTAMP AS start_offset,
-            end_time - CURRENT_TIMESTAMP AS end_offset
-     FROM deliveries WHERE order_id >= $1 ORDER BY order_id`, [ORDER_ID_START]
+            CAST(start_time - CURRENT_TIMESTAMP AS TEXT) AS start_offset,
+            CAST(end_time - CURRENT_TIMESTAMP AS TEXT) AS end_offset
+     FROM deliveries WHERE order_id >= $1 AND order_id < $2 ORDER BY order_id`, [ORDER_ID_START, ORDER_ID_START + 10000]
   );
 
   const reviewsRes = await client.query(
     `SELECT user_id, restaurant_id, rider_id, order_id, rating, comment,
-            created_at - CURRENT_TIMESTAMP AS created_offset
-     FROM reviews WHERE order_id >= $1 ORDER BY order_id`, [ORDER_ID_START]
+            CAST(created_at - CURRENT_TIMESTAMP AS TEXT) AS created_offset
+     FROM reviews WHERE order_id >= $1 AND order_id < $2 ORDER BY order_id`, [ORDER_ID_START, ORDER_ID_START + 10000]
   );
 
   let newBlock = `\n${MARKER_START}\n`;

@@ -10,7 +10,7 @@ const CTASection = () => (
           Ready to order? Let's get started!
         </h2>
         <p className="text-xl text-gray-400 mb-10 font-medium max-w-2xl mx-auto">
-          Join thousands of satisfied customers who trust FoodPanda for their food
+          Join thousands of satisfied customers who trust MealMate for their food
           delivery needs.
         </p>
         <Link
@@ -113,7 +113,7 @@ const CTASection = () => (
           </a>
         </div>
         <p className="mb-2 font-medium text-white">Serving in: Dhaka, Chattogram, Sylhet & more</p>
-        <p className="text-xs text-white/70 mt-4">© 2026 FoodPanda Bangladesh. All rights reserved.</p>
+        <p className="text-xs text-white/70 mt-4">© 2026 MealMate Bangladesh. All rights reserved.</p>
       </div>
     </div>
   </footer>

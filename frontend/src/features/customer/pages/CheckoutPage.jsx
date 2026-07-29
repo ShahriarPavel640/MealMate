@@ -55,7 +55,7 @@ const CheckoutPage = () => {
     }
 
     // Generate a unique transaction ID for this order
-    const tran_id = `FOODPANDA_${Date.now()}_${Math.floor(
+    const tran_id = `MEALMATE_${Date.now()}_${Math.floor(
       Math.random() * 1000
     )}`;
 

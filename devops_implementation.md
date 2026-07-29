@@ -1,4 +1,4 @@
-# DevOps Implementation Plan for MealMate / Food Panda Clone
+# DevOps Implementation Plan for MealMate / MealMate Clone
 
 This document outlines the roadmap for taking the application from a local development environment to a robust, scalable, and highly observable production system. It covers containerization, CI/CD, infrastructure, and a complete observability stack.
 
