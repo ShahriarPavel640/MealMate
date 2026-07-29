@@ -15,7 +15,7 @@ This project consists of a React frontend, a Node.js backend, and a PostgreSQL d
 
 The project uses an isolated Docker container for the database (running on port `5434`) to prevent conflicts with other local projects.
 
-Open a terminal in the root of the `food_panda` directory and run:
+Open a terminal in the root of the `mealmate` directory and run:
 
 ```bash
 docker compose up -d

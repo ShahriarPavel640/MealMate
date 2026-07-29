@@ -20,7 +20,7 @@ The dummy data generators are specifically configured to create orders and analy
 If you have old data and want to reset the database to a clean slate, run the following command in your terminal. This forces PostgreSQL to drop the old schema and recreate it completely empty.
 
 ```bash
-docker exec -i food_panda_postgres_db psql -U postgres -d food_panda -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+docker exec -i mealmate_postgres_db psql -U postgres -d mealmate -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 ```
 
 ---
@@ -30,7 +30,7 @@ docker exec -i food_panda_postgres_db psql -U postgres -d food_panda -c "DROP SC
 Next, apply the schema blueprint to recreate all tables and triggers:
 
 ```bash
-cat food_panda.sql | docker exec -i food_panda_postgres_db psql -U postgres -d food_panda
+cat mealmate.sql | docker exec -i mealmate_postgres_db psql -U postgres -d mealmate
 ```
 
 ---
@@ -40,7 +40,7 @@ cat food_panda.sql | docker exec -i food_panda_postgres_db psql -U postgres -d f
 Insert the base level data (which now includes your fresh, dynamically generated analytics data!):
 
 ```bash
-cat populate.sql | docker exec -i food_panda_postgres_db psql -U postgres -d food_panda
+cat populate.sql | docker exec -i mealmate_postgres_db psql -U postgres -d mealmate
 ```
 
 ---

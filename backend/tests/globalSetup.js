@@ -23,13 +23,13 @@ export async function setup() {
   await client.query(`
     SELECT pg_terminate_backend(pg_stat_activity.pid)
     FROM pg_stat_activity
-    WHERE pg_stat_activity.datname = 'test_food_panda'
+    WHERE pg_stat_activity.datname = 'test_mealmate'
       AND pid <> pg_backend_pid();
   `);
 
   // Drop and create test database
-  await client.query('DROP DATABASE IF EXISTS test_food_panda');
-  await client.query('CREATE DATABASE test_food_panda');
+  await client.query('DROP DATABASE IF EXISTS test_mealmate');
+  await client.query('CREATE DATABASE test_mealmate');
   await client.end();
 
   // Connect to the new test database to run migrations and seeds
@@ -38,13 +38,13 @@ export async function setup() {
     password: process.env.DB_PASSWORD || 'postgres',
     host: process.env.DB_HOST || '127.0.0.1',
     port: process.env.DB_PORT || 5434,
-    database: 'test_food_panda',
+    database: 'test_mealmate',
   });
 
   await testClient.connect();
 
   const rootDir = path.resolve(__dirname, '../../');
-  const schemaSql = fs.readFileSync(path.join(rootDir, 'food_panda.sql'), 'utf-8');
+  const schemaSql = fs.readFileSync(path.join(rootDir, 'mealmate.sql'), 'utf-8');
   const seedSql = fs.readFileSync(path.join(rootDir, 'populate.sql'), 'utf-8');
 
   try {

@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-process.env.DB_NAME = 'test_food_panda';
+process.env.DB_NAME = 'test_mealmate';
 process.env.NODE_ENV = 'test';
 
 // Set mock values for environment variables checked during initialization
