@@ -11,8 +11,10 @@ import { Input } from "@/features/restaurant/components/ui/input";
 import { Label } from "@/features/restaurant/components/ui/label";
 import { Textarea } from "@/features/restaurant/components/ui/textarea";
 import { Badge } from "@/features/restaurant/components/ui/badge";
-import { ArrowLeft, Upload, Save, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Upload, Save, Eye, EyeOff, Sparkles, Loader2 } from "lucide-react";
 import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthStore";
+import toast from "react-hot-toast";
+import { axiosInstance } from "@/lib/axios";
 
 
 
@@ -32,6 +34,25 @@ const EditMenuItemRest = ({ item, onBack, onSave }) => {
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateDescription = async () => {
+    if (!formData.name) {
+      toast.error("Please enter an item name first to generate a description");
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const res = await axiosInstance.post("/ai/generate-description", { name: formData.name });
+      setFormData((prev) => ({ ...prev, description: res.data.description }));
+      toast.success("Description generated!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to generate description");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     if (item) {
@@ -171,7 +192,24 @@ const EditMenuItemRest = ({ item, onBack, onSave }) => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description">Description *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateDescription}
+                    disabled={isGenerating || !formData.name}
+                    className="h-8 text-xs bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0 hover:from-indigo-600 hover:to-purple-600"
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3 mr-1" />
+                    )}
+                    Generate with AI
+                  </Button>
+                </div>
                 <Textarea
                   id="description"
                   name="description"

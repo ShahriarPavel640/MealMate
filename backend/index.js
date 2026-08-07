@@ -20,6 +20,7 @@ import restaurantOrder from "./restaurants/order/orderRoutes.js";
 import restaurnatStat from "./restaurants/stats/statsRoutes.js";
 import notificationRoutes from "./shared/notifications/notificationRoutes.js";
 import { connectRedis } from "./utils/redisClient.js";
+import aiRoutes from "./shared/ai/aiRoutes.js";
 
 dotenv.config();const app = express();
 const server = http.createServer(app); // Create an HTTP server
@@ -99,6 +100,7 @@ app.use("/api/customer/order", customerOrderRoutes);
 
 app.use("/api/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/ai", aiRoutes);
 
 const PORT = process.env.PORT || 5001;
 let serverInstance;
