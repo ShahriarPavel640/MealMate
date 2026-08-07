@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { axiosInstance } from "@/lib/axios";
-import { Star, ArrowLeft } from "lucide-react";
+import { Star, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/features/restaurant/components/ui/button";
+import ReactMarkdown from 'react-markdown';
 
 const RestaurantReviewsPage = () => {
   const { restaurantId } = useParams();
@@ -11,6 +12,9 @@ const RestaurantReviewsPage = () => {
   const [restaurantName, setRestaurantName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [aiSummary, setAiSummary] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(true);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -22,6 +26,18 @@ const RestaurantReviewsPage = () => {
         // Fetch reviews for the restaurant
         const reviewsRes = await axiosInstance.get(`/customer/review/restaurant/${restaurantId}`);
         setReviews(reviewsRes.data);
+
+        // Fetch AI Summary (don't block the main reviews if this fails)
+        axiosInstance.get(`/ai/summarize-reviews/${restaurantId}`)
+          .then(res => {
+            setAiSummary(res.data.summary);
+            setLoadingSummary(false);
+          })
+          .catch(err => {
+            console.error('Error fetching AI summary:', err);
+            setLoadingSummary(false);
+          });
+
       } catch (err) {
         console.error('Error fetching reviews:', err);
         setError('Failed to load reviews. Please try again later.');
@@ -48,6 +64,26 @@ const RestaurantReviewsPage = () => {
           <ArrowLeft />
         </Button>
         <h1 className="text-3xl font-bold text-gray-900">Reviews for {restaurantName}</h1>
+      </div>
+
+      {/* AI Summary Section */}
+      <div className="mb-8 p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 shadow-sm">
+        <div className="flex items-center mb-4">
+          <div className="p-2 bg-white rounded-full shadow-sm mr-3">
+            <Sparkles className="w-5 h-5 text-indigo-500" />
+          </div>
+          <h2 className="text-xl font-bold text-indigo-900">AI Review Summary</h2>
+        </div>
+        {loadingSummary ? (
+          <div className="flex items-center text-indigo-400">
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Generating summary...
+          </div>
+        ) : (
+          <div className="prose prose-indigo prose-sm max-w-none text-indigo-800">
+             <ReactMarkdown>{aiSummary || "No summary available."}</ReactMarkdown>
+          </div>
+        )}
       </div>
 
       {reviews.length > 0 ? (
