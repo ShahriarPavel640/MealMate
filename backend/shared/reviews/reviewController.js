@@ -1,4 +1,5 @@
 import pool from '../../db.js';
+import redisClient from '../../utils/redisClient.js';
 
 export const submitRestaurantReview = async (req, res) => {
   const { rating, comment, order_id, restaurant_id } = req.body;
@@ -22,6 +23,11 @@ export const submitRestaurantReview = async (req, res) => {
       'UPDATE restaurants SET average_rating = $1 WHERE restaurant_id = $2',
       [newAverageRating, restaurant_id]
     );
+
+    if (redisClient.isOpen) {
+      await redisClient.del(`cache:restaurant:${restaurant_id}`);
+      await redisClient.del(`cache:reviews:${restaurant_id}`);
+    }
 
     res.status(201).json({ message: 'Restaurant review submitted successfully' });
   } catch (error) {
