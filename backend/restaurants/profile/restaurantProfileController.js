@@ -2,7 +2,7 @@ import pool from "../../db.js";
 import { generateToken } from "../../utils/jwtGenerator.js";
 import bcrypt from "bcrypt";
 import { getIO } from "../../socket.js";
-
+import redisClient from "../../utils/redisClient.js";
 import cloudinary from "../../utils/cloudinary.js";
 import fs from "fs";
 
@@ -182,6 +182,7 @@ export const add_menu = async (req, res) => {
       ]
     );
     if (newItem.rows.length > 0) {
+      if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${id}`);
       const item2 = await pool.query(
         "SELECT M.MENU_ITEM_ID,M.CATEGORY_ID,M.NAME,M.DESCRIPTION,M.PRICE,M.IS_AVAILABLE,M.MENU_ITEM_IMAGE_URL,M.DISCOUNT,C.NAME AS CATEGORY_NAME,C.MENU_CATEGORY_IMAGE_URL AS CATEGORY_IMAGE FROM MENU_ITEMS M JOIN MENU_CATEGORIES C ON (M.CATEGORY_ID = C.CATEGORY_ID) WHERE M.menu_item_id = $1",
         [newItem.rows[0].menu_item_id]
@@ -299,6 +300,7 @@ export const edit_menu = async (req, res) => {
       ]
     );
 
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${restaurant_id}`);
     res.status(200).json({
       status: "success",
       message: "Menu item updated successfully",
@@ -330,6 +332,7 @@ export const change_menu_availability = async (req, res) => {
     }
 
     // Update availability status
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${restaurant_id}`);
     const updateRes = await pool.query(
       `UPDATE menu_items SET is_available = $1 WHERE menu_item_id = $2 RETURNING *`,
       [status, menu_item_id]
@@ -366,6 +369,7 @@ export const delete_menu = async (req, res) => {
       "UPDATE menu_items set is_active = false WHERE menu_item_id = $1 returning *",
       [menu_item_id]
     );
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${restaurant_id}`);
     console.log(update.rows);
     res
       .status(200)
@@ -635,6 +639,7 @@ export const editProfile = async (req, res) => {
       }
     }
 
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${restaurant_id}`);
     res.status(200).json({
       message: "Profile updated successfully",
       image_url: imageUrl,

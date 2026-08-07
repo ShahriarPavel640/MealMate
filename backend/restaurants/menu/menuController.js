@@ -8,7 +8,8 @@ import {
   addMenuItem,
   updateMenuItem,
   deleteMenuItem
-} from "./menuModel.js";  // Import functions from the menuModel
+} from "./menuModel.js";
+import redisClient from "../../utils/redisClient.js";
 
 // Add a menu category
 export const createMenuCategory = async (req, res) => {
@@ -17,6 +18,7 @@ export const createMenuCategory = async (req, res) => {
 
   try {
     const newCategory = await addMenuCategory(restaurant_id, category_name);
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${req.user.id}`);
     res.status(201).json({ message: "Category added", category: newCategory });
   } catch (err) {
     console.error(err.message);
@@ -31,6 +33,7 @@ export const updateCategory = async (req, res) => {
 
   try {
     const updatedCategory = await updateMenuCategory(id, category_name);
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${req.user.id}`);
     res.status(200).json({ message: "Category updated", category: updatedCategory });
   } catch (err) {
     console.error(err.message);
@@ -44,6 +47,7 @@ export const deleteCategory = async (req, res) => {
 
   try {
     const deletedCategory = await deleteMenuCategory(id);
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${req.user.id}`);
     res.status(200).json({ message: "Category deleted", category: deletedCategory });
   } catch (err) {
     console.error(err.message);
@@ -58,6 +62,7 @@ export const createMenuItem = async (req, res) => {
 
   try {
     const newItem = await addMenuItem(id, name, description, price);
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${req.user.id}`);
     res.status(201).json({ message: "Menu item added", item: newItem });
   } catch (err) {
     console.error(err.message);
@@ -72,6 +77,7 @@ export const updateMenuItemDetails = async (req, res) => {
 
   try {
     const updatedItem = await updateMenuItem(id, updatedFields);
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${req.user.id}`);
     res.status(200).json({ message: "Menu item updated", item: updatedItem });
   } catch (err) {
     console.error(err.message);
@@ -85,6 +91,7 @@ export const removeMenuItem = async (req, res) => {
 
   try {
     const deletedItem = await deleteMenuItem(id);
+    if (redisClient.isOpen) await redisClient.del(`cache:restaurant:${req.user.id}`);
     res.status(200).json({ message: "Menu item deleted", item: deletedItem });
   } catch (err) {
     console.error(err.message);
