@@ -1,3 +1,5 @@
+import "./instrument.js";
+import * as Sentry from "@sentry/node";
 import express from "express";
 import dotenv from "dotenv";
 import SSLCommerzPayment from "sslcommerz-lts";
@@ -108,6 +110,9 @@ app.use("/api/customer/order", customerOrderRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/ai", aiRoutes);
+
+// Sentry error handler must be registered after all controllers and before any other error middleware
+Sentry.setupExpressErrorHandler(app);
 
 const PORT = process.env.PORT || 5001;
 let serverInstance;

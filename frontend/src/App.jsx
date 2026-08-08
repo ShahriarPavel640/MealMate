@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import * as Sentry from "@sentry/react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { Loader } from "lucide-react";
 
@@ -146,7 +147,7 @@ function App() {
     );
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between">
       <Toaster />
       {/* <Navbar /> */}
       <Routes>
@@ -244,6 +245,18 @@ function App() {
         orderId={chatOrderId}
         currentAuthUser={currentAuthUser}
       />
+      <footer className="w-full py-3 px-6 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+        <span>© MealMate</span>
+        <button
+          onClick={() => {
+            Sentry.captureException(new Error("Test Frontend Sentry Error!"));
+            alert("Frontend Sentry error triggered! Check your Sentry dashboard.");
+          }}
+          className="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded shadow cursor-pointer transition-colors"
+        >
+          🚨 Sentry Test
+        </button>
+      </footer>
     </div>
   );
 }
