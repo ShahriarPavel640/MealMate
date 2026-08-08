@@ -47,9 +47,16 @@ app.use((req, res, next) => {
   next();
 });
 app.use(cookieParser());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5175",
+  "http://192.168.0.101:5173",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.0.101:5173"], // Change this to your frontend's address
+    origin: allowedOrigins,
     credentials: true,
   })
 );
