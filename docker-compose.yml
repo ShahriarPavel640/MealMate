@@ -94,6 +94,22 @@ services:
       - loki
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mealmate_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
   grafana:
     image: grafana/grafana:latest
     container_name: mealmate_grafana
@@ -104,8 +120,12 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/etc/grafana/dashboards
     depends_on:
       - loki
+      - prometheus
     restart: unless-stopped
 
 volumes:
@@ -114,3 +134,4 @@ volumes:
     external: true
   loki-data:
   grafana-data:
+  prometheus-data:
