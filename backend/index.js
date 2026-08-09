@@ -2,6 +2,7 @@ import "./instrument.js";
 import * as Sentry from "@sentry/node";
 import express from "express";
 import dotenv from "dotenv";
+import logger from "./utils/logger.js";
 import SSLCommerzPayment from "sslcommerz-lts";
 import cors from "cors";
 import http from "http"; // Import http module
@@ -39,11 +40,17 @@ app.use(express.json());
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
-    const duration = Date.now() - start;
+    const durationMs = Date.now() - start;
+    const logData = {
+      method: req.method,
+      url: req.originalUrl,
+      status: res.statusCode,
+      durationMs
+    };
     if (res.statusCode >= 400) {
-      console.error(`[ERROR] [${req.method}] ${req.originalUrl} - Status: ${res.statusCode} - ${duration}ms`);
+      logger.error("API Request Failed", logData);
     } else {
-      console.log(`[${req.method}] ${req.originalUrl} - Status: ${res.statusCode} - ${duration}ms`);
+      logger.info("API Request Successful", logData);
     }
   });
   next();
@@ -118,7 +125,7 @@ const PORT = process.env.PORT || 5001;
 let serverInstance;
 if (process.env.NODE_ENV !== "test") {
   serverInstance = server.listen(PORT, () => {
-    console.log(`Backend HTTP server is running on port: ${PORT}`);
+    logger.info(`Backend HTTP server is running on port: ${PORT}`);
   });
 }
 
