@@ -3,10 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   changes:
@@ -131,8 +131,8 @@ jobs:
   cd-deploy:
     name: Continuous Deployment (Coming Soon)
     needs: [backend-checks, frontend-checks, docker-build]
-    # This condition ensures the deployment ONLY runs when pushing/merging into main, NOT during a PR!
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # This condition ensures the deployment ONLY runs when pushing/merging into master, NOT during a PR!
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
