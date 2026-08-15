@@ -36,7 +36,12 @@ export const metricsMiddleware = (req, res, next) => {
   
   res.on('finish', () => {
     const duration = (Date.now() - startEpoch) / 1000;
-    const route = req.route ? req.route.path : req.url;
+    
+    // Construct full route path (e.g., /api/customer/order or /api/customer/order/:id)
+    let route = req.baseUrl ? `${req.baseUrl}${req.route?.path && req.route.path !== '/' ? req.route.path : ''}` : (req.route?.path || req.originalUrl?.split('?')[0]);
+    if (!route || route === '') {
+      route = req.originalUrl?.split('?')[0] || '/';
+    }
     
     // Update histogram
     httpRequestDurationMicroseconds

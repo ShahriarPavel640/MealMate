@@ -40,7 +40,7 @@ services:
     environment:
       - PORT=5000
       - SENTRY_DSN=https://534fe3aadb5ae51c767ee7b9802464fc@o4511875651600384.ingest.de.sentry.io/4511875675062352
-      - FRONTEND_URL=http://localhost:5174
+      - FRONTEND_URL=http://localhost:5173
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_HOST=db
@@ -61,7 +61,7 @@ services:
     container_name: mealmate_frontend
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5174:5173"
+      - "127.0.0.1:5173:5173"
     environment:
       - VITE_API_URL=http://localhost:5000
       - VITE_SENTRY_DSN=https://534fe3aadb5ae51c767ee7b9802464fc@o4511875651600384.ingest.de.sentry.io/4511875675062352
