@@ -1,14 +1,25 @@
 {
   "title": "Full Stack Observability",
   "uid": "full-stack-obs-1",
+  "version": 30,
   "timezone": "browser",
   "refresh": "5s",
   "panels": [
     {
       "title": "Backend CPU Usage",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 15
+          }
+        }
+      },
       "targets": [
         {
           "expr": "rate(process_cpu_user_seconds_total[1m]) * 100",
@@ -19,8 +30,18 @@
     {
       "title": "Backend Memory Usage (Heap Used)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 15
+          }
+        }
+      },
       "targets": [
         {
           "expr": "nodejs_heap_space_size_used_bytes",
@@ -31,23 +52,111 @@
     {
       "title": "HTTP Request Rate",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 0 },
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqpm",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20
+          }
+        }
+      },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[1m])) by (method, route)",
+          "expr": "sum(rate(http_requests_total{route!=\"/metrics\"}[1m])) by (method, route) * 60",
           "legendFormat": "{{method}} {{route}}"
         }
       ]
     },
     {
-      "title": "Live Backend Logs (Loki)",
-      "type": "logs",
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
+      "title": "Log Volume by Level (Summary)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
       "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "fillOpacity": 80
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "info" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "warn" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "error" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+          }
+        ]
+      },
       "targets": [
         {
-          "expr": "{job=\"docker\"}"
+          "expr": "sum by (level) (count_over_time({job=\"docker\"} | json | url != \"/metrics\" | url != \"\" [1m]))",
+          "legendFormat": "{{level}}"
+        }
+      ]
+    },
+    {
+      "title": "Error / Warning Logs Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "logs/s",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 25
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "error" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "warn" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "sum by (level) (rate({job=\"docker\"} | json | level=~\"error|warn\" [1m]))",
+          "legendFormat": "{{level}}"
+        }
+      ]
+    },
+    {
+      "title": "Live Backend Logs Stream",
+      "type": "logs",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 12 },
+      "datasource": "Loki",
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "expr": "{job=\"docker\"} | json | url != \"/metrics\" | url != \"\""
         }
       ]
     }
