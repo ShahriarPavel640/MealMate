@@ -1,0 +1,56 @@
+{
+  "title": "Full Stack Observability",
+  "uid": "full-stack-obs-1",
+  "timezone": "browser",
+  "refresh": "5s",
+  "panels": [
+    {
+      "title": "Backend CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(process_cpu_user_seconds_total[1m]) * 100",
+          "legendFormat": "CPU Usage %"
+        }
+      ]
+    },
+    {
+      "title": "Backend Memory Usage (Heap Used)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "nodejs_heap_space_size_used_bytes",
+          "legendFormat": "{{space}}"
+        }
+      ]
+    },
+    {
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m])) by (method, route)",
+          "legendFormat": "{{method}} {{route}}"
+        }
+      ]
+    },
+    {
+      "title": "Live Backend Logs (Loki)",
+      "type": "logs",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{job=\"docker\"}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38
+}

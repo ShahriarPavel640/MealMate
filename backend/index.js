@@ -24,6 +24,7 @@ import restaurnatStat from "./restaurants/stats/statsRoutes.js";
 import notificationRoutes from "./shared/notifications/notificationRoutes.js";
 import { connectRedis } from "./utils/redisClient.js";
 import aiRoutes from "./shared/ai/aiRoutes.js";
+import { metricsMiddleware, register } from "./utils/metrics.js";
 
 dotenv.config();const app = express();
 const server = http.createServer(app); // Create an HTTP server
@@ -35,6 +36,7 @@ const io = initSocket(server);
 await connectRedis();
 
 app.use(express.json());
+app.use(metricsMiddleware);
 
 // Middleware to log API execution time and status codes
 app.use((req, res, next) => {
@@ -117,6 +119,16 @@ app.use("/api/customer/order", customerOrderRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/ai", aiRoutes);
+
+// Expose metrics endpoint for Prometheus
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    res.status(500).end(err);
+  }
+});
 
 // Sentry error handler must be registered after all controllers and before any other error middleware
 Sentry.setupExpressErrorHandler(app);
