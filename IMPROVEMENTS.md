@@ -1,377 +1,58 @@
-# MealMate — Feature & Architecture Improvement Roadmap
+# MealMate Backend — Industry-Standard Architecture Overhaul
+
+Making the MealMate backend production-grade through security hardening, architectural consistency, and code quality improvements. No new features — purely backend infrastructure.
 
 ---
 
 ## Current Architecture Overview
 
-| Layer              | Tech                                                  | Key Files                                         |
-| ------------------ | ----------------------------------------------------- | ------------------------------------------------- |
-| **Frontend** | React 19 + Vite + TailwindCSS 4 + Zustand + Socket.IO | `frontend/src/App.jsx`                          |
-| **Backend**  | Express 5 + Node.js (ESM) + Socket.IO                 | `backend/index.js`                              |
-| **Database** | PostgreSQL + PostGIS (Docker)                         | `mealmate.sql`                                |
-| **Payment**  | SSLCommerz                                            | `backend/customer/payment/paymentController.js` |
-| **Media**    | Cloudinary                                            | `backend/utils/cloudinary.js`                   |
-| **Auth**     | JWT (cookie + header)                                 | `backend/middleware/authorization.js`           |
+| Layer          | Tech                                          | Key Files                                       |
+| -------------- | --------------------------------------------- | ----------------------------------------------- |
+| **Frontend**   | React 19 + Vite + TailwindCSS 4 + Zustand     | `frontend/src/App.jsx`                          |
+| **Backend**    | Express 5 + Node.js (ESM) + Socket.IO          | `backend/index.js`                              |
+| **Database**   | PostgreSQL + PostGIS (Docker)                   | `prisma/schema.prisma`                          |
+| **ORM**        | Prisma (schema exists, migration in progress)   | `backend/prismaClient.js`                       |
+| **Payment**    | SSLCommerz                                      | `backend/customer/payment/paymentController.js` |
+| **Media**      | Cloudinary                                      | `backend/utils/cloudinary.js`                   |
+| **Auth**       | JWT (cookie + header)                           | `backend/middleware/authorization.js`           |
+| **Cache**      | Redis                                           | `backend/utils/redisClient.js`                  |
+| **Monitoring** | Prometheus + Grafana + Loki + Sentry            | `backend/utils/metrics.js`                      |
+| **Logging**    | Winston (partially adopted)                     | `backend/utils/logger.js`                       |
 
 **3 User Roles:** Customer, Restaurant (Partner), Rider
 
 ---
 
-## 🚀 Part 1: Features to Integrate
-
----
-
-### Feature 1: Real-Time Order Tracking with Live Map
-
-**What exists today:**
-
-- `frontend/src/services/socketService.js` — Socket.IO client with room management and queuing
-- `backend/socket.js` — server-side Socket.IO with `join_room`, `leave_room`, `send_message`
-- `backend/socketHandlers/restaurantSocketHandler.js` — handles `accept_order` and `reject_order`
-- `@react-google-maps/api` already installed in frontend
-- PostGIS `get_distance_km()` function already in `mealmate.sql`
-
-**What's missing:**
-
-1. **Rider location broadcasting** — Riders don't emit their GPS coordinates. No `update_location` socket event.
-2. **Tracking page on customer side** — No page/component showing a map with the rider's live position.
-3. **Rider-side GPS capture** — `HomepageRider.jsx` doesn't use `navigator.geolocation.watchPosition()`.
-
-**What to build:**
-
-| Component                                               | What                                                                             |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `backend/socketHandlers/riderSocketHandler.js`        | Listen for`rider_location_update` events, broadcast to the customer's room     |
-| `rider_profiles.current_latitude / current_longitude` | Replace string`current_location` with numeric lat/lng columns                  |
-| `HomepageRider.jsx`                                   | Add`navigator.geolocation.watchPosition()` that emits location every 10s       |
-| `OrderTrackingPage.jsx` (new)                         | Google Maps component showing rider marker + restaurant marker + customer marker |
-| Socket event:`rider_location_update`                  | Rider → Server → Customer (via`customer_<userId>` room)                      |
-
-**Complexity:** High (2–3 days) — mostly frontend map integration + GPS permissions.
-
----
-
-### Feature 2: Promo Codes & Coupon System
-
-**What exists today:**
-
-- Nothing. No promo/coupon logic anywhere in the codebase.
-- `CheckoutPage.jsx` calculates `grandTotal` purely from cart items + delivery fee. No discount applied.
-
-**What to build:**
-
-```sql
--- New tables
-CREATE TABLE promo_codes (
-  promo_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-  code VARCHAR(20) UNIQUE NOT NULL,
-  discount_type VARCHAR(10) CHECK (discount_type IN ('flat', 'percent')),
-  discount_value DECIMAL(10,2) NOT NULL,
-  min_order_amount DECIMAL(10,2) DEFAULT 0,
-  max_discount DECIMAL(10,2),           -- cap for percentage discounts
-  max_uses INT,
-  current_uses INT DEFAULT 0,
-  valid_from TIMESTAMP NOT NULL,
-  valid_until TIMESTAMP NOT NULL,
-  restaurant_id INT REFERENCES restaurants(restaurant_id), -- NULL = platform-wide
-  is_active BOOLEAN DEFAULT true
-);
-
-CREATE TABLE promo_usage (
-  user_id INT REFERENCES users(user_id),
-  promo_id INT REFERENCES promo_codes(promo_id),
-  used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (user_id, promo_id)
-);
-```
-
-| Component                             | What                                                                            |
-| ------------------------------------- | ------------------------------------------------------------------------------- |
-| `POST /api/customer/promo/validate` | Accept code + cart total → return discount amount or error                     |
-| `CheckoutPage.jsx`                  | Add promo code input field + "Apply" button. Deduct discount from`grandTotal` |
-| `orderController.js`                | Store`promo_id` on the order, decrement `current_uses`                      |
-| Restaurant dashboard                  | Let restaurants create their own promos                                         |
-
-**Complexity:** Medium (1–2 days)
-
----
-
-### Feature 3: Web Push Notifications
-
-**What exists today:**
-
-- `notifications` table stores notifications in DB
-- They're read via polling (customer/restaurant fetches their notifications via API)
-- Socket events like `new_order` and `order_status_updated` exist but only work when the tab is open
-
-**What's missing:**
-
-- No Service Worker registered
-- No Web Push API (VAPID keys, subscription endpoint, `web-push` npm package)
-- Users get zero notifications when the browser tab is closed
-
-**What to build:**
-
-| Component                             | What                                                                                                                   |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `frontend/public/sw.js`             | Service worker that listens for push events and shows native OS notifications                                          |
-| `backend/utils/webpush.js`          | Configure`web-push` library with VAPID keys                                                                          |
-| `push_subscriptions` table          | Store user's push subscription endpoint + keys                                                                         |
-| `POST /api/notifications/subscribe` | Save the user's push subscription                                                                                      |
-| Trigger points                        | When order status changes (accept, reject, rider assigned, delivered) — send push alongside the existing socket event |
-
-**Complexity:** Medium (1–2 days). Hardest part is the service worker lifecycle.
-
----
-
-### Feature 4: Estimated Delivery Time (ETA)
-
-**What exists today:**
-
-- PostGIS `get_distance_km()` function — can calculate distance between any two points
-- Restaurant locations stored in `user_locations` table
-- Customer locations stored with `is_primary = true`
-- No prep time column on restaurants
-- No ETA shown anywhere in the UI
-
-**What to build:**
-
-```sql
-ALTER TABLE restaurants ADD COLUMN avg_prep_time_min INT DEFAULT 20;
-```
-
-**ETA Formula:**
-
-```
-ETA = restaurant.avg_prep_time_min + (distance_km / avg_rider_speed_kmh * 60)
--- avg_rider_speed_kmh ≈ 25 (motorbike in Dhaka traffic)
-```
-
-| Component                                | What                                                               |
-| ---------------------------------------- | ------------------------------------------------------------------ |
-| `GET /api/customer/nearby_restaurants` | Return ETA alongside each restaurant (already returns`distance`) |
-| Restaurant listing cards                 | Show "~35 min" badge                                               |
-| Order tracking page                      | Show live countdown ETA after rider is assigned                    |
-| Restaurant dashboard                     | Let partner set their avg prep time                                |
-
-**Complexity:** Low-Medium (half a day). PostGIS does the heavy lifting.
-
----
-
-### Feature 5: Reorder / Repeat Order
-
-**What exists today:**
-
-- `OrderHistoryPage.jsx` shows past orders with items
-- `getOrders` controller returns full order details including `menu_item_id`, `quantity`, `price`
-- `cartStore.js` has `addToCart()` and `clearCart()`
-
-**What to build:**
-
-| Component                                     | What                                                                          |
-| --------------------------------------------- | ----------------------------------------------------------------------------- |
-| `OrderHistoryPage.jsx`                      | Add "Reorder" button per order                                                |
-| `POST /api/customer/order/reorder/:orderId` | Validate item availability (`is_available = true`), return cart-ready items |
-| `cartStore.js`                              | Add a`setCart(items)` action to bulk-set items                              |
-
-Just a "Reorder" button that checks item availability → adds to cart → navigates to `/checkout`.
-
-**Complexity:** Low (few hours). Mostly frontend work.
-
----
-
-### Feature 6: Advanced Search & Filters
-
-**What exists today:**
-
-- `useRestaurantStore.js` has `searchRestaurantsByName` — searches by restaurant name only
-- No menu item search
-- No filters (cuisine, rating, price, open/closed)
-- No sorting options
-
-**What to build:**
-
-```sql
-ALTER TABLE restaurants ADD COLUMN cuisine_type VARCHAR(50);
-
--- Full text search
-ALTER TABLE restaurants ADD COLUMN search_vector tsvector;
-CREATE INDEX idx_restaurant_search ON restaurants USING GIN(search_vector);
-
-CREATE OR REPLACE FUNCTION update_search_vector() RETURNS TRIGGER AS $$
-BEGIN
-  NEW.search_vector := to_tsvector('english',
-    COALESCE(NEW.name, '') || ' ' ||
-    COALESCE(NEW.descriptions, '') || ' ' ||
-    COALESCE(NEW.cuisine_type, '')
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_search_vector
-BEFORE INSERT OR UPDATE ON restaurants
-FOR EACH ROW EXECUTE FUNCTION update_search_vector();
-```
-
-| Component                    | What                                                                          |
-| ---------------------------- | ----------------------------------------------------------------------------- |
-| `GET /api/customer/search` | Full-text search across restaurants + menu items                              |
-| `RestaurantPage.jsx`       | Filter sidebar/drawer: cuisine type, min rating, price range, open now toggle |
-| Sorting dropdown             | Distance, rating, delivery time, popularity                                   |
-| Menu item search             | Search inside a restaurant's menu for specific dishes                         |
-
-**Complexity:** Medium (1–2 days)
-
----
-
-### Feature 7: Enforce Restaurant Hours (Open/Closed Status)
-
-**What exists today:**
-
-- `restaurant_hours` table stores open/close times per weekday
-- `populate_hours.js` seeds hours data
-- **But:** The frontend never checks hours. Closed restaurants appear exactly like open ones. Customers can add items from closed restaurants to cart.
-
-**What to build:**
-
-| Component                                         | What                                                           |
-| ------------------------------------------------- | -------------------------------------------------------------- |
-| Backend utility`isRestaurantOpen(restaurantId)` | Query`restaurant_hours` for current day/time, return boolean |
-| `GET /api/customer/nearby_restaurants`          | Add`is_open`, `opens_at`, `closes_at` fields to response |
-| Restaurant cards                                  | Grey out closed restaurants, show "Opens at 10:00 AM" badge    |
-| Cart validation                                   | Block adding items from closed restaurants                     |
-| Restaurant profile page                           | Show today's hours prominently                                 |
-
-**Complexity:** Low (half a day). DB query is straightforward.
-
----
-
-### Feature 8: Automatic Rider Assignment
-
-**What exists today:**
-
-- `rider_profiles` has `is_available` and `current_location` (string, not coordinates)
-- Orders go through: `pending_restaurant_acceptance` → `preparing` → `ready_for_pickup`
-- No logic assigns a rider when restaurant marks order as `ready_for_pickup`
-- No rider assignment flow at all
-
-**What to build:**
-
-```sql
--- Fix rider location to be numeric (currently VARCHAR)
-ALTER TABLE rider_profiles ADD COLUMN current_latitude DECIMAL(10,8);
-ALTER TABLE rider_profiles ADD COLUMN current_longitude DECIMAL(11,8);
-```
-
-| Component                         | What                                                                              |
-| --------------------------------- | --------------------------------------------------------------------------------- |
-| `assignNearestRider(orderId)`   | Query available riders, use`get_distance_km()` to find nearest, assign to order |
-| Socket event:`rider_assigned`   | Notify restaurant + customer when rider is assigned                               |
-| Socket event:`delivery_request` | Send to rider for acceptance (with timeout)                                       |
-| `HomepageRider.jsx`             | Show incoming delivery request popup with Accept/Decline                          |
-| Fallback logic                    | If rider declines or times out, assign next nearest                               |
-
-**Complexity:** High (2–3 days). Core operational feature.
-
----
-
-### Feature 9: Item-Level Reviews
-
-**What exists today:**
-
-- `reviews` table has `restaurant_id` and `rider_id` but no `menu_item_id`
-- `reviewRoutes.js` has `POST /restaurant` and `POST /rider` — no item review
-- `feature.md` (fix-9) already notes this gap
-
-**What to build:**
-
-```sql
-ALTER TABLE reviews ADD COLUMN menu_item_id INT REFERENCES menu_items(menu_item_id);
-ALTER TABLE menu_items ADD COLUMN average_rating DECIMAL(3,2) DEFAULT 0.0;
-
--- Trigger to auto-update item average rating
-CREATE OR REPLACE FUNCTION update_menu_item_average_rating()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.menu_item_id IS NOT NULL THEN
-    UPDATE menu_items
-    SET average_rating = (
-      SELECT COALESCE(AVG(rating), 0.0) FROM reviews WHERE menu_item_id = NEW.menu_item_id
-    )
-    WHERE menu_item_id = NEW.menu_item_id;
-  END IF;
-  RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_update_item_rating
-AFTER INSERT OR UPDATE OR DELETE ON reviews
-FOR EACH ROW EXECUTE FUNCTION update_menu_item_average_rating();
-```
-
-| Component                          | What                                             |
-| ---------------------------------- | ------------------------------------------------ |
-| `POST /api/customer/review/item` | Submit rating + comment for a specific menu item |
-| `GET /api/menu/:itemId/reviews`  | Get reviews for a menu item                      |
-| Menu item cards                    | Show average item rating (⭐ 4.3)                |
-| Order history                      | After delivery, show "Rate this item" per item   |
-
-**Complexity:** Low-Medium (1 day)
-
----
-
-### Feature 10: Loyalty / Reward Points
-
-**What exists today:**
-
-- Nothing. No points, rewards, or gamification.
-
-**What to build:**
-
-```sql
-CREATE TABLE user_rewards (
-  user_id INT PRIMARY KEY REFERENCES users(user_id),
-  points_balance INT DEFAULT 0,
-  lifetime_points INT DEFAULT 0
-);
-
-CREATE TABLE reward_transactions (
-  id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-  user_id INT REFERENCES users(user_id),
-  order_id INT REFERENCES orders(order_id),
-  points INT NOT NULL,           -- positive = earned, negative = redeemed
-  description VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-**Rules example:** Earn 1 point per Tk 10 spent. Redeem 100 points = Tk 50 discount.
-
-| Component              | What                                               |
-| ---------------------- | -------------------------------------------------- |
-| Order completion hook  | After`delivered`, credit points to user          |
-| Checkout               | "Use X points (Tk Y discount)" toggle              |
-| Profile page           | Show points balance + transaction history          |
-| Tier system (optional) | Bronze / Silver / Gold based on`lifetime_points` |
-
-**Complexity:** High (2–3 days) — needs careful balance logic and edge case handling.
+## Decisions Made
+
+| Decision        | Choice                                                              |
+| --------------- | ------------------------------------------------------------------- |
+| ORM             | Prisma (full migration from raw `pg`)                               |
+| Validation      | Zod on all mutation endpoints                                       |
+| Rate Limiting   | `express-rate-limit` with in-memory store                           |
+| Error Handling  | Full refactor — `AppError` + global middleware                      |
+| Architecture    | Service layer for all modules                                       |
+| Logging         | Winston everywhere (replace all `console.log`)                      |
+| Pagination      | Offset-based for all endpoints                                      |
+| JWT             | Keep 1-day token, strengthen secret (no refresh tokens for now)     |
+| CORS            | Shared `CORS_ORIGINS` env var                                       |
+| Migrations      | Prisma Migrate + `prisma/seed.js`                                   |
 
 ---
 
 ---
 
-## 🏗️ Part 2: Architecture Fixes
+## 🔴 Phase 1: Critical Security Fixes
 
 ---
 
-### Fix 1: No Input Validation / Sanitization on Backend (🔴 Critical)
+### Fix 1: Input Validation with Zod (🔴 Critical)
 
 **The problem:**
 
-The only validation middleware is `backend/middleware/validinfo.js` which only checks if email/name/password exist for signup/login. Every other endpoint accepts raw `req.body` without validation.
+No real validation exists. The only middleware is `backend/middleware/validinfo.js` which only checks if email/name/password exist. Every other endpoint accepts raw `req.body`.
 
-**Critical security issue:** `total_amount` in `paymentController.js` is taken directly from the frontend request body. A malicious user can modify this via browser DevTools to pay Tk 1 for any order.
+**Critical vulnerability:** `total_amount` in `paymentController.js` (line 10) is taken directly from the frontend request body. A malicious user can modify this via browser DevTools to pay Tk 1 for any order:
 
 ```js
 // paymentController.js line 10 — DANGEROUS
@@ -379,9 +60,11 @@ const { cartItems, customerInfo, total_amount, paymentMethod, specialInstruction
 // total_amount comes from the CLIENT with zero server-side verification
 ```
 
+Additionally, `orderController.js` (lines 28-29) calculates `totalAmount` from client-sent `item.price` — another manipulation vector.
+
 **The fix:**
 
-Install Zod and create a validation middleware:
+Install `zod` and create a centralized validation middleware:
 
 ```js
 // backend/middleware/validate.js
@@ -398,29 +81,32 @@ export const validate = (schema) => (req, res, next) => {
   req.body = result.data;
   next();
 };
-
-// Example schema
-export const initiatePaymentSchema = z.object({
-  cartItems: z.array(z.object({
-    menu_item_id: z.number().int().positive(),
-    restaurant_id: z.number().int().positive(),
-    quantity: z.number().int().min(1).max(50),
-  })).min(1),
-  paymentMethod: z.enum(['cod', 'sslcommerz']),
-  specialInstructions: z.record(z.string()).optional(),
-  // REMOVE total_amount — recalculate server-side from DB prices
-});
 ```
 
-**And recalculate `total_amount` server-side** by querying actual menu item prices from DB.
+Create Zod schemas for **all mutation endpoints** (POST, PUT, PATCH, DELETE):
+- Auth: signup, login, change password, update profile
+- Orders: create order (COD)
+- Payment: initiate payment — **remove `total_amount` from client input, recalculate server-side from DB prices**
+- Cart: add to cart, delete cart item
+- Reviews: submit restaurant review, submit rider review
+- Menu: create/update category, create/update/delete menu item
+- Restaurant: update order status
+
+**Files affected:**
+
+| Action   | File                                |
+| -------- | ----------------------------------- |
+| [NEW]    | `backend/middleware/validate.js`    |
+| [NEW]    | `backend/schemas/` (per module)     |
+| [MODIFY] | All route files                     |
 
 ---
 
-### Fix 2: No Rate Limiting (🔴 Critical)
+### Fix 2: Rate Limiting (🔴 Critical)
 
 **The problem:**
 
-`backend/index.js` has zero rate limiting. Auth routes (`/api/customer/login`, `/api/rider/login`) can be hit thousands of times per second for brute-force password attacks.
+`backend/index.js` has zero rate limiting. Auth routes (`/api/customer/login`, `/api/rider/login`) can be brute-forced.
 
 **The fix:**
 
@@ -445,9 +131,239 @@ app.use('/api/customer/register', authLimiter);
 app.use('/api/rider/login', authLimiter);
 ```
 
+Using in-memory store (simple, fine for single-server). Can swap to Redis store later if scaling horizontally.
+
+**Files affected:**
+
+| Action   | File               |
+| -------- | ------------------ |
+| [MODIFY] | `backend/index.js` |
+
 ---
 
-### Fix 3: No Centralized Error Handling (🟡 Medium)
+### Fix 3: Security Headers with Helmet (🔴 Critical)
+
+**The problem:**
+
+No security headers middleware. Missing `X-Content-Type-Options`, `X-Frame-Options`, HSTS, CSP, etc.
+
+**The fix:**
+
+```js
+import helmet from 'helmet';
+app.use(helmet());
+```
+
+Single line, significant security improvement.
+
+**Files affected:**
+
+| Action   | File               |
+| -------- | ------------------ |
+| [MODIFY] | `backend/index.js` |
+
+---
+
+### Fix 4: IDOR Vulnerability Fixes (🔴 Critical)
+
+**The problem:**
+
+Several endpoints have **Insecure Direct Object Reference** vulnerabilities — they don't verify that the resource belongs to the requesting user:
+
+1. **`deleteCartItem`** (`cartController.js` L60-72) — deletes any cart item by ID without verifying it belongs to the requesting user
+2. **`getOrderDetails`** (`orderController.js` L242-255) — any authenticated user can view any order's details by guessing the `orderId`
+3. **Payment callbacks** (`/success`, `/fail`, `/cancel`) use `router.all()` with no auth — anyone can call these with a crafted `tran_id`
+
+**The fix:**
+
+- Add ownership verification queries before performing cart/order operations
+- Verify `tran_id` belongs to an actual order before processing callbacks
+
+**Files affected:**
+
+| Action   | File                                          |
+| -------- | --------------------------------------------- |
+| [MODIFY] | `backend/customer/cart/cartController.js`     |
+| [MODIFY] | `backend/customer/order/orderController.js`   |
+
+---
+
+### Fix 5: Socket.IO Authentication (🔴 Critical)
+
+**The problem:**
+
+`socket.js` has no authentication. Any client can:
+1. Connect without any authentication
+2. Join **any room** (e.g., `restaurant_5`) by simply emitting `join_room`
+3. Listen to all order events for any restaurant or customer
+
+A malicious user could join `restaurant_*` rooms and see all incoming orders for any restaurant.
+
+**The fix:**
+
+- Add JWT verification middleware on Socket.IO `connection` event
+- Validate room access: users can only join their own rooms (`customer_<id>`, `restaurant_<id>`, `rider_<id>`)
+- Reject unauthorized connections
+
+```js
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token || socket.handshake.headers.cookie;
+  // verify JWT, attach user to socket
+  // reject if invalid
+});
+
+socket.on('join_room', (room) => {
+  // verify socket.user is authorized for this room
+});
+```
+
+**Files affected:**
+
+| Action   | File                |
+| -------- | ------------------- |
+| [MODIFY] | `backend/socket.js` |
+
+---
+
+### Fix 6: Secret Hardening & Password Logging (🔴 Critical)
+
+**The problem:**
+
+1. `JWT_SECRET=riyo` — only 4 characters, trivially guessable. Must be 32+ random characters.
+2. Sentry DSN hardcoded in `instrument.js` instead of coming from `.env`
+3. **`validinfo.js` line 3: `console.log(email, name, password)`** — logs raw passwords to stdout!
+4. `authController.js` line 74: `console.log(req.body)` — logs full request body including password
+5. `paymentController.js` line 12: `console.log(req.body)` — logs full payment data
+
+**The fix:**
+
+- Remove all password/sensitive data logging
+- Move Sentry DSN to `.env`
+- Create `.env.example` with strong `JWT_SECRET` guidance
+
+**Files affected:**
+
+| Action   | File                                          |
+| -------- | --------------------------------------------- |
+| [MODIFY] | `backend/instrument.js`                       |
+| [MODIFY] | `backend/middleware/validinfo.js`              |
+| [MODIFY] | `backend/customer/auth/authController.js`     |
+| [MODIFY] | `backend/customer/payment/paymentController.js` |
+| [NEW]    | `backend/.env.example`                        |
+
+---
+
+---
+
+## 🟡 Phase 2: Architecture Standardization
+
+---
+
+### Fix 7: Full Prisma Migration (🟡 High Priority)
+
+**The problem:**
+
+Both raw `pg` (Pool) queries and Prisma are installed. Every controller uses raw SQL via `pool.query()` while Prisma sits unused except for the schema file. This is inconsistent and error-prone.
+
+**The fix:**
+
+Migrate all `pool.query()` calls to Prisma Client. PostGIS queries use `prisma.$queryRaw`.
+
+**Migration order (dependency-aware):**
+
+1. `db.js` → remove (replaced by `prismaClient.js`)
+2. Auth controllers (customer, rider, restaurant)
+3. Cart controller
+4. Order controllers (customer + restaurant)
+5. Payment controller
+6. Review controller
+7. Notification controller
+8. Chat controller
+9. Menu model + controller
+10. Restaurant profile controller
+11. Stats controller
+12. Socket handlers
+13. AI controller
+
+**Files affected:**
+
+| Action   | File                              |
+| -------- | --------------------------------- |
+| [MODIFY] | All controller files (~15 files)  |
+| [DELETE] | `backend/db.js` (after migration) |
+| [MODIFY] | `backend/prismaClient.js`         |
+
+---
+
+### Fix 8: Service Layer Pattern (🟡 High Priority)
+
+**The problem:**
+
+Controllers have business logic and database queries mixed together. `paymentController.js` handles HTTP parsing, business logic, database queries, socket events, and notification creation in a single 100+ line function. Only `menuModel.js` has any separation.
+
+**The fix:**
+
+Introduce service layer for **all modules** for consistency:
+
+```
+Controller  →  parses request, validates, calls service, sends response
+Service     →  business logic, orchestrates Prisma calls, socket events
+Prisma      →  data access (replaces model files)
+```
+
+**Target structure:**
+
+```
+backend/
+├── customer/
+│   ├── auth/
+│   │   ├── authRoutes.js
+│   │   ├── authController.js
+│   │   └── authService.js
+│   ├── cart/
+│   │   ├── cartRoutes.js
+│   │   ├── cartController.js
+│   │   └── cartService.js
+│   ├── order/
+│   │   ├── orderRoutes.js
+│   │   ├── orderController.js
+│   │   └── orderService.js
+│   ├── payment/
+│   │   ├── paymentRoutes.js
+│   │   ├── paymentController.js
+│   │   └── paymentService.js
+│   └── restaurant/
+│       ├── restaurantRoutes.js
+│       ├── restaurantController.js
+│       └── restaurantService.js
+├── restaurants/
+│   ├── menu/
+│   │   ├── menuRoutes.js
+│   │   ├── menuController.js
+│   │   └── menuService.js          ← replaces menuModel.js
+│   ├── order/ ...
+│   ├── profile/ ...
+│   └── stats/ ...
+├── rider/
+│   ├── auth/ ...
+│   └── profile/ ...
+├── shared/
+│   ├── reviews/  → reviewService.js
+│   ├── notifications/ → notificationService.js
+│   ├── chats/ → chatService.js
+│   └── ai/ → aiService.js
+```
+
+**Files affected:**
+
+| Action   | File                                              |
+| -------- | ------------------------------------------------- |
+| [NEW]    | ~15 service files                                 |
+| [DELETE] | `backend/restaurants/menu/menuModel.js`           |
+
+---
+
+### Fix 9: Centralized Error Handling (🟡 High Priority)
 
 **The problem:**
 
@@ -464,8 +380,6 @@ res.status(500).json({ message: "server error" }); // object
 res.status(500).json({ message: "Internal server error", error: error.message }); // leaks stack
 ```
 
-Errors logged with `console.log()` instead of `console.error()`. Stack traces sometimes leaked to client.
-
 **The fix:**
 
 ```js
@@ -479,7 +393,7 @@ export class AppError extends Error {
 }
 
 export const errorHandler = (err, req, res, next) => {
-  console.error(`[ERROR] ${req.method} ${req.originalUrl}:`, err.stack);
+  logger.error(`[ERROR] ${req.method} ${req.originalUrl}:`, { stack: err.stack });
 
   if (err.isOperational) {
     return res.status(err.statusCode).json({
@@ -496,235 +410,214 @@ export const errorHandler = (err, req, res, next) => {
 };
 ```
 
-Add as the **last middleware** in `index.js` before `server.listen()`.
+Register as the **last middleware** in `index.js` before `server.listen()`. Refactor all controllers to use `next(new AppError(...))` or wrap with async error catcher.
+
+**Files affected:**
+
+| Action   | File                                 |
+| -------- | ------------------------------------ |
+| [NEW]    | `backend/middleware/errorHandler.js`  |
+| [MODIFY] | `backend/index.js`                   |
+| [MODIFY] | All controller files                 |
 
 ---
 
-### Fix 4: No Pagination (🟡 Medium)
+### Fix 10: Standardize Logging with Winston (🟡 Medium)
 
 **The problem:**
 
-`getOrders` in `backend/customer/order/orderController.js` fetches ALL orders for a user with no limit:
-
-```sql
-SELECT ... FROM orders o WHERE o.user_id = $1 ORDER BY o.created_at DESC
--- A user with 500+ orders? All fetched in one query.
-```
-
-Same issue in restaurant order management, reviews, and notifications.
+Winston is set up (`utils/logger.js`) with structured JSON logging for Promtail/Loki, but it's only used in the request timing middleware in `index.js` (lines 42-59). Every controller uses raw `console.log()` / `console.error()` producing unstructured output that Grafana/Loki can't parse properly.
 
 **The fix:**
 
-```js
-export const getOrders = async (req, res) => {
-  const userId = req.user.id;
-  const page = parseInt(req.query.page) || 1;
-  const limit = Math.min(parseInt(req.query.limit) || 10, 50);
-  const offset = (page - 1) * limit;
+Replace all `console.log()` / `console.error()` with `logger.info()` / `logger.error()` / `logger.warn()` across every file (~25 files).
 
-  const countResult = await pool.query(
-    'SELECT COUNT(*) FROM orders WHERE user_id = $1', [userId]
-  );
-  const total = parseInt(countResult.rows[0].count);
+**Files affected:**
 
-  const ordersResult = await pool.query(
-    `SELECT ... FROM orders o WHERE o.user_id = $1
-     ORDER BY o.created_at DESC LIMIT $2 OFFSET $3`,
-    [userId, limit, offset]
-  );
-
-  res.json({
-    data: ordersWithItems,
-    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
-  });
-};
-```
-
-Apply similarly to: restaurant orders, reviews, notifications, menu items.
+| Action   | File                                       |
+| -------- | ------------------------------------------ |
+| [MODIFY] | All controller, middleware, utility files   |
 
 ---
 
-### Fix 5: Missing Database Indexes (🟡 Medium)
+---
 
-**The problem:**
-
-`mealmate.sql` creates tables with foreign keys but zero explicit indexes (besides primary keys and unique constraints). PostgreSQL does NOT auto-create indexes for foreign key columns. Common queries do full table scans.
-
-**The fix:**
-
-```sql
--- Orders (most critical)
-CREATE INDEX idx_orders_user_id ON orders(user_id);
-CREATE INDEX idx_orders_restaurant_id ON orders(restaurant_id);
-CREATE INDEX idx_orders_rider_id ON orders(rider_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_tran_id ON orders(tran_id);
-
--- Cart
-CREATE INDEX idx_cart_item_cart_id ON cart_item(cart_id);
-CREATE INDEX idx_carts_user_id ON carts(user_id);
-
--- Reviews
-CREATE INDEX idx_reviews_restaurant_id ON reviews(restaurant_id);
-CREATE INDEX idx_reviews_rider_id ON reviews(rider_id);
-
--- Menu
-CREATE INDEX idx_menu_items_category_id ON menu_items(category_id);
-CREATE INDEX idx_menu_categories_restaurant_id ON menu_categories(restaurant_id);
-
--- Notifications
-CREATE INDEX idx_notifications_target ON notifications(target_type, target_id);
-CREATE INDEX idx_notifications_user_id ON notifications(user_id);
-
--- Deliveries
-CREATE INDEX idx_deliveries_order_id ON deliveries(order_id);
-CREATE INDEX idx_deliveries_rider_id ON deliveries(rider_id);
-
--- Locations
-CREATE INDEX idx_user_locations_user_id ON user_locations(user_id);
-```
+## 🟢 Phase 3: Code Quality & Cleanup
 
 ---
 
-### Fix 6: JWT — No Refresh Token, No Expiry Handling (🟡 Medium)
+### Fix 11: Dead Code Removal (🟢 Low)
 
 **The problem:**
 
-- There's no refresh token mechanism
-- When the JWT expires, the user is silently logged out (`checkAuth()` catches the error and sets `authUser = null`)
-- No token rotation or blacklisting for security
+- `paymentController.js` lines 119-248: **130 lines** of commented-out old implementation
+- `cartController.js` lines 19-57: `addItemToCart` function is dead code — never imported by any route (only `addToCart` is used in `cartRoutes.js`)
+- Scattered commented-out `console.log` lines throughout controllers
 
 **The fix:**
 
-- Issue a short-lived access token (15 min) + a long-lived refresh token (7 days)
-- Store refresh token in DB (allows revocation)
-- Add `POST /api/auth/refresh` endpoint
-- Frontend axios interceptor: on 401, call refresh endpoint, retry original request
-
-```sql
-CREATE TABLE refresh_tokens (
-  id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-  user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
-  token VARCHAR(500) NOT NULL,
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+Remove all dead/commented-out code. Git history preserves it if ever needed.
 
 ---
 
-### Fix 7: Hardcoded CORS & Socket Origins (🟡 Medium)
+### Fix 12: Dependency Cleanup (🟢 Low)
 
 **The problem:**
 
-```js
-// backend/index.js line 42
-origin: ["http://localhost:5173", "http://192.168.0.101:5173"]
+`package.json` has duplicate and unused packages:
 
-// backend/socket.js line 9
-origin: 'http://localhost:5173'
-
-// frontend/src/services/socketService.js line 3
-const SOCKET_URL = 'http://localhost:5001';
-```
-
-If deployed, nothing works. Socket.IO CORS is different from Express CORS and they'll get out of sync.
+| Package                  | Issue                                    |
+| ------------------------ | ---------------------------------------- |
+| `pg`                     | Replaced by Prisma after migration       |
+| `postgres`               | Second PG driver — never used            |
+| `sslcommerz`             | Duplicate — `sslcommerz-lts` is used     |
+| `@supabase/supabase-js`  | Unused — no Supabase code in codebase    |
+| `nodemon`                | In `dependencies` instead of `devDeps`   |
 
 **The fix:**
+
+| Action           | Package                  |
+| ---------------- | ------------------------ |
+| Remove           | `pg`                     |
+| Remove           | `postgres`               |
+| Remove           | `sslcommerz`             |
+| Remove           | `@supabase/supabase-js`  |
+| Move to devDeps  | `nodemon`                |
+| Add              | `zod`                    |
+| Add              | `express-rate-limit`     |
+| Add              | `helmet`                 |
+
+---
+
+### Fix 13: CORS Configuration (🟢 Low)
+
+**The problem:**
+
+CORS origins are duplicated between `index.js` (lines 61-66) and `socket.js` (lines 7-12) with overlapping but not identical hardcoded arrays.
+
+**The fix:**
+
+- Create shared `CORS_ORIGINS` env var
+- Use in both Express and Socket.IO from a single config source
+- Remove hardcoded localhost URLs
 
 ```env
 # backend/.env
-CORS_ORIGINS=http://localhost:5173,http://192.168.0.101:5173
-
-# frontend/.env
-VITE_SOCKET_URL=http://localhost:5001
-VITE_API_URL=http://localhost:5001
+CORS_ORIGINS=http://localhost:5173,http://localhost:5175
 ```
 
 ```js
-// backend — single source of truth
+// shared config
 const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'];
-// Use in both Express CORS and Socket.IO CORS config
-
-// frontend
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 ```
+
+**Files affected:**
+
+| Action   | File                |
+| -------- | ------------------- |
+| [MODIFY] | `backend/index.js`  |
+| [MODIFY] | `backend/socket.js` |
 
 ---
 
-### Fix 8: Duplicate Cart Logic — Frontend + Backend (🟡 Medium)
+### Fix 14: Review Pagination (🟢 Low)
 
 **The problem:**
 
-Cart is managed in two separate places with different state:
-
-1. **Frontend** `cartStore.js` — Zustand store persisted to `localStorage`
-2. **Backend** `cartController.js` — DB-backed `carts` + `cart_item` tables
-
-The frontend cart and backend cart can get out of sync. The `localStorage` cart survives even after logout (security + UX issue — next user sees previous user's cart).
+`getRestaurantReviews` and `getRiderReviews` in `reviewController.js` fetch ALL reviews with no limit. A restaurant with thousands of reviews returns everything in one query.
 
 **The fix:**
 
-Pick one source of truth:
-
-- **Option A:** Backend-only cart (better for multi-device, but requires API call for every add/remove)
-- **Option B:** Frontend-only cart (simpler, but no multi-device sync)
-- **Option C:** Hybrid — frontend cart syncs to backend periodically or on checkout
-
-At minimum: **clear the localStorage cart on logout**. Currently `userAuthStore.js` logout calls `getrestaurants()` and `getcategories()` but never `clearCart()`.
+Add offset-based pagination (same pattern as `getOrders` and `getNotifications`):
 
 ```js
-// userAuthStore.js — fix logout
-logout: async () => {
-  // ...existing code...
-  const clearCart = useCartStore.getState().clearCart;
-  clearCart(); // <-- ADD THIS
-}
+const page = parseInt(req.query.page) || 1;
+const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+const offset = (page - 1) * limit;
+// ... LIMIT $X OFFSET $Y
 ```
+
+**Files affected:**
+
+| Action   | File                                         |
+| -------- | -------------------------------------------- |
+| [MODIFY] | `backend/shared/reviews/reviewController.js` |
 
 ---
 
-### Fix 9: Loose Utility/Debug Scripts in Backend Root (🟢 Low)
+### Fix 15: Typo Fixes (🟢 Low)
+
+| File                              | Typo                                        | Fix                                       |
+| --------------------------------- | ------------------------------------------- | ----------------------------------------- |
+| `middleware/authorization.js` L11 | `"not athorize. no token provided"`         | `"Not authorized. No token provided."`    |
+| `customer/auth/authController.js` L203 | `"varified user"`                      | `"Verified user"`                         |
+| `index.js` L23                    | Variable: `restaurnatStat`                  | `restaurantStat`                          |
+
+---
+
+### Fix 16: Prisma Migrate + Seeding (🟢 Low)
 
 **The problem:**
 
-The `backend/` directory has 15+ standalone scripts sitting alongside application code:
-
-- `fix_db.js`, `fix_email.js` — one-off DB fixes
-- `check_user.js`, `check_location.js`, `check_restaurants.js` — debug queries
-- `populate_demo.js`, `populate_more.js`, `populate_analytics.js`, `populate_hours.js`, `populate_reviews.js`, `populate_nearby_restaurants.js`, `populate_more_orders.js` — seed scripts
-- `dump_demo_to_sql.js`, `update_populate.js` — data migration
-- `add_column.js`, `add_special_instructions.js`, `drop_cuisine.js` — schema changes
-- `debug_restaurants.js`, `get_rest.js`, `verify_closed.js` — debug
-- `test_supabase.js` — test connection
+Schema is managed via raw `.sql` files. No versioned migrations.
 
 **The fix:**
 
-```
-backend/
-├── scripts/
-│   ├── seed/          → populate_*.js, dump_demo_to_sql.js
-│   ├── migrations/    → add_column.js, drop_cuisine.js
-│   ├── debug/         → check_*.js, debug_*.js, verify_*.js
-│   └── one-off/       → fix_db.js, fix_email.js, test_supabase.js
-├── customer/
-├── restaurants/
-├── rider/
-├── ...
-```
+- Adopt Prisma Migrate for schema versioning
+- Create `prisma/seed.js` that reuses existing `populate.sql` seed data via `prisma.$executeRawUnsafe()`
+- Add `prisma.seed` config to `package.json`
+
+**Files affected:**
+
+| Action   | File                  |
+| -------- | --------------------- |
+| [NEW]    | `prisma/seed.js`      |
+| [MODIFY] | `backend/package.json` |
 
 ---
 
-### Fix 10: Typos in Production Code (🟢 Low)
+### Fix 17: `.env.example` (🟢 Low)
 
-| File                                                      | Typo                                  | Fix                                      |
-| --------------------------------------------------------- | ------------------------------------- | ---------------------------------------- |
-| `backend/middleware/athorizeRoles.js`                   | Filename:`athorizeRoles`            | Rename to`authorizeRoles.js`           |
-| `backend/middleware/authorization.js`                   | `"not athorize. no token provided"` | `"Not authorized. No token provided."` |
-| `backend/customer/auth/authController.js`               | `"varified user"`                   | `"Verified user"`                      |
-| `backend/restaurants/stats/statsRoutes.js`              | Variable:`restaurnatStat`           | Rename to`restaurantStat`              |
-| `frontend/src/hooks/use-mobie.jsx`                      | Filename:`use-mobie`                | Rename to`use-mobile.jsx`              |
-| `frontend/src/features/customer/pages/CheckoutPage.jsx` | `"Orderes placed successfully!"`    | `"Orders placed successfully!"`        |
+Create environment template with all required variables and placeholder values for developer onboarding.
+
+```env
+# backend/.env.example
+JWT_SECRET=your-secret-key-min-32-chars-here
+PORT=5000
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5434/mealmate?schema=public"
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# SSLCommerz
+SSL_COMMERZ_STORE_ID=your_store_id
+SSL_COMMERZ_STORE_PASSWORD=your_store_password
+SSL_COMMERZ_IS_LIVE=false
+
+# Google
+GOOGLE_API_KEY=your_google_api_key
+
+# Sentry
+SENTRY_DSN=your_sentry_dsn
+
+# URLs
+FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:5000
+
+# CORS
+CORS_ORIGINS=http://localhost:5173,http://localhost:5175
+
+# Redis
+REDIS_URL=redis://127.0.0.1:6379
+```
+
+**Files affected:**
+
+| Action | File                    |
+| ------ | ----------------------- |
+| [NEW]  | `backend/.env.example`  |
 
 ---
 
@@ -732,38 +625,35 @@ backend/
 
 ## 📊 Priority Matrix
 
-| Priority | Item                                                                | Type        | Effort  | Impact          |
-| -------- | ------------------------------------------------------------------- | ----------- | ------- | --------------- |
-| 🔴 P0    | Fix 1 — Input validation + recalculate`total_amount` server-side | Security    | Medium  | Critical        |
-| 🔴 P0    | Fix 2 — Rate limiting on auth routes                               | Security    | Low     | Critical        |
-| 🔴 P0    | Fix 3 — Centralized error handling                                 | Stability   | Low     | High            |
-| 🟡 P1    | Fix 5 — Add DB indexes                                             | Performance | Low     | High            |
-| 🟡 P1    | Fix 4 — Pagination                                                 | Performance | Medium  | High            |
-| 🟡 P1    | Feature 1 — Real-time order tracking (GPS)                         | Feature     | High    | Differentiator  |
-| 🟡 P1    | Feature 2 — Promo code system                                      | Feature     | Medium  | Revenue         |
-| 🟡 P1    | Feature 8 — Auto rider assignment                                  | Feature     | Medium  | Operational     |
-| 🟢 P2    | Feature 5 — Reorder                                                | Feature     | Low     | UX              |
-| 🟢 P2    | Feature 7 — Enforce restaurant hours                               | Feature     | Low     | UX              |
-| 🟢 P2    | Feature 4 — ETA calculation                                        | Feature     | Low-Med | UX              |
-| 🟢 P2    | Fix 7 — Environment-based CORS                                     | DevOps      | Low     | Deployability   |
-| 🟢 P2    | Fix 8 — Cart sync / clear on logout                                | Bug         | Low     | UX              |
-| 🟢 P2    | Feature 3 — Push notifications                                     | Feature     | Medium  | Engagement      |
-| 🟢 P2    | Feature 6 — Advanced search & filters                              | Feature     | Medium  | Discoverability |
-| 🟢 P3    | Feature 9 — Item-level reviews                                     | Feature     | Low-Med | UX              |
-| 🟢 P3    | Feature 10 — Loyalty points                                        | Feature     | High    | Retention       |
-| 🟢 P3    | Fix 6 — Refresh token rotation                                     | Security    | Medium  | UX              |
-| 🟢 P3    | Fix 9 — Cleanup scripts folder                                     | Maintenance | Low     | Tidiness        |
-| 🟢 P3    | Fix 10 — Typos                                                     | Quality     | Low     | Polish          |
+| Priority | Item                                            | Type        | Effort  | Impact          |
+| -------- | ----------------------------------------------- | ----------- | ------- | --------------- |
+| 🔴 P0    | Fix 1 — Zod validation + server-side pricing    | Security    | Medium  | Critical        |
+| 🔴 P0    | Fix 2 — Rate limiting                           | Security    | Low     | Critical        |
+| 🔴 P0    | Fix 3 — Helmet security headers                 | Security    | Low     | Critical        |
+| 🔴 P0    | Fix 4 — IDOR vulnerability fixes                | Security    | Low     | Critical        |
+| 🔴 P0    | Fix 5 — Socket.IO authentication                | Security    | Medium  | Critical        |
+| 🔴 P0    | Fix 6 — Secret hardening + password logging     | Security    | Low     | Critical        |
+| 🟡 P1    | Fix 7 — Full Prisma migration                   | Architecture| High    | High            |
+| 🟡 P1    | Fix 8 — Service layer pattern                   | Architecture| High    | High            |
+| 🟡 P1    | Fix 9 — Centralized error handling              | Stability   | Medium  | High            |
+| 🟡 P1    | Fix 10 — Winston logging standardization        | Observability| Medium | Medium          |
+| 🟢 P2    | Fix 11 — Dead code removal                      | Quality     | Low     | Low             |
+| 🟢 P2    | Fix 12 — Dependency cleanup                     | Maintenance | Low     | Low             |
+| 🟢 P2    | Fix 13 — CORS configuration                     | DevOps      | Low     | Deployability   |
+| 🟢 P2    | Fix 14 — Review pagination                      | Performance | Low     | Medium          |
+| 🟢 P2    | Fix 15 — Typo fixes                             | Quality     | Low     | Polish          |
+| 🟢 P2    | Fix 16 — Prisma Migrate + seeding               | DevOps      | Medium  | Maintainability |
+| 🟢 P2    | Fix 17 — `.env.example`                         | DX          | Low     | Onboarding      |
 
 ---
 
 ## Suggested Implementation Phases
 
-| Phase                              | Items                                                                                                       | Time Estimate |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------- |
-| **Phase 1 — Security**      | Fix 1 (validation + total_amount) + Fix 2 (rate limiting)                                                   | 1–2 days     |
-| **Phase 2 — Stability**     | Fix 3 (error handler) + Fix 4 (pagination) + Fix 5 (indexes)                                                | 1 day         |
-| **Phase 3 — Quick Wins**    | Feature 5 (reorder) + Feature 7 (restaurant hours) + Fix 8 (cart logout) + Fix 9 (scripts) + Fix 10 (typos) | 1 day         |
-| **Phase 4 — Core Features** | Feature 1 (live tracking) + Feature 2 (promos) + Feature 8 (rider assignment)                               | 3–5 days     |
-| **Phase 5 — Engagement**    | Feature 3 (push notifs) + Feature 4 (ETA) + Feature 6 (search)                                              | 3–5 days     |
-| **Phase 6 — Polish**        | Feature 9 (item reviews) + Feature 10 (loyalty) + Fix 6 (refresh tokens) + Fix 7 (CORS)                     | 3–5 days     |
+| Phase                            | Items                                                                     | Time Estimate |
+| -------------------------------- | ------------------------------------------------------------------------- | ------------- |
+| **Phase 1 — Security**          | Fix 1-6 (validation, rate limit, helmet, IDOR, socket auth, secrets)      | 2–3 days      |
+| **Phase 2 — Architecture**      | Fix 7-10 (Prisma, services, error handler, logging)                       | 4–5 days      |
+| **Phase 3 — Cleanup & Polish**  | Fix 11-17 (dead code, deps, CORS, pagination, typos, migrations, .env)    | 1–2 days      |
+| **Total**                        |                                                                           | **7–10 days** |
+
+> **Note:** Phase 2 (Prisma migration + service layer) is the most labor-intensive. The incremental approach means the app stays functional throughout — old `pool.query()` code works alongside Prisma during transition.
