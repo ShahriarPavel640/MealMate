@@ -98,13 +98,13 @@ describe('Customer API E2E', () => {
       .set('Cookie', customerCookies);
 
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 
   it('should get all restaurants', async () => {
     const res = await request(app).get('/api/customer/getRestaurants');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 
   it('should get categories', async () => {
@@ -143,7 +143,7 @@ describe('Customer API E2E', () => {
   it('should search restaurants by name', async () => {
     const res = await request(app).get('/api/customer/searchRestaurant?name=Black');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 
   // --- Cart Management ---
@@ -200,9 +200,10 @@ describe('Customer API E2E', () => {
       .set('Cookie', customerCookies);
 
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBeGreaterThan(0);
-    createdOrderId = res.body[0].order_id;
+    const orders = Array.isArray(res.body) ? res.body : res.body.data;
+    expect(Array.isArray(orders)).toBe(true);
+    expect(orders.length).toBeGreaterThan(0);
+    createdOrderId = orders[0].order_id;
   });
 
   it('should fetch order details', async () => {
