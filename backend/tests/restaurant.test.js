@@ -107,7 +107,7 @@ describe('Restaurant API E2E', () => {
     const loginRes = await request(app)
       .post('/api/restaurant/login')
       .send({
-        email: testRestaurant.email,
+        email: 'new_email@example.com',
         password: 'newpassword123'
       });
     expect(loginRes.statusCode).toBe(200);

@@ -102,7 +102,7 @@ describe('Rider API E2E', () => {
       .set('Cookie', riderCookies);
 
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.history)).toBe(true);
   });
 
   it('should fetch rider earnings', async () => {
@@ -118,7 +118,6 @@ describe('Rider API E2E', () => {
   it('should accept an order and update its status', async () => {
     // 1. Manually transition order 2 to 'ready_for_pickup' in the database first
     await pool.query("UPDATE orders SET status = 'ready_for_pickup' WHERE order_id = 2");
-    await pool.query("UPDATE deliveries SET status = 'pending' WHERE order_id = 2");
 
     // 2. Accept the order
     const acceptRes = await request(app)
