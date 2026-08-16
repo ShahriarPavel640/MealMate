@@ -102,7 +102,7 @@ describe('Rider API E2E', () => {
       .set('Cookie', riderCookies);
 
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body.data || res.body)).toBe(true);
+    expect(Array.isArray(res.body.history || res.body.data || res.body)).toBe(true);
   });
 
   it('should fetch rider earnings', async () => {
