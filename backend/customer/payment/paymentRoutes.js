@@ -8,11 +8,11 @@ export default (store_id, store_passwd) => {
   const role = "customer";
 
   router.post("/initiate", authorization, authorizeRoles(role), (req, res) => initiatePayment(req, res, store_id, store_passwd));
-  router.post("/ipn", express.urlencoded({ extended: true }), (req, res) => handleIPN(req, res, store_id, store_passwd));
+  router.all("/ipn", express.urlencoded({ extended: true }), (req, res) => handleIPN(req, res, store_id, store_passwd));
   
-  router.post("/success", handleSuccess);
-  router.post("/fail", handleFail);
-  router.post("/cancel", handleCancel);
+  router.all("/success", express.urlencoded({ extended: true }), handleSuccess);
+  router.all("/fail", express.urlencoded({ extended: true }), handleFail);
+  router.all("/cancel", express.urlencoded({ extended: true }), handleCancel);
 
   return router;
 };

@@ -19,6 +19,8 @@ services:
     image: redis:alpine
     container_name: mealmate_redis
     restart: unless-stopped
+    ports:
+      - "6379:6379"
 
   pgadmin:
     image: dpage/pgadmin4
@@ -41,6 +43,7 @@ services:
       - PORT=5000
       - SENTRY_DSN=https://534fe3aadb5ae51c767ee7b9802464fc@o4511875651600384.ingest.de.sentry.io/4511875675062352
       - FRONTEND_URL=http://localhost:5173
+      - BACKEND_URL=http://localhost:5000
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_HOST=db

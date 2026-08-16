@@ -133,7 +133,7 @@ app.get('/metrics', async (req, res) => {
 // Sentry error handler must be registered after all controllers and before any other error middleware
 Sentry.setupExpressErrorHandler(app);
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 let serverInstance;
 if (process.env.NODE_ENV !== "test") {
   serverInstance = server.listen(PORT, () => {

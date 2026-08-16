@@ -1,0 +1,360 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model archived_menu_items {
+  menu_item_id        Int?
+  category_id         Int?
+  name                String?   @db.VarChar(100)
+  description         String?
+  price               Decimal?  @db.Decimal(10, 2)
+  discount            Decimal?  @db.Decimal(10, 2)
+  is_available        Boolean?
+  is_active           Boolean?
+  menu_item_image_url String?   @db.VarChar(255)
+  created_at          DateTime? @db.Timestamp(6)
+
+  @@ignore
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cart_item {
+  cart_item_id  Int          @id @default(autoincrement())
+  cart_id       Int?
+  menu_item_id  Int?
+  restaurant_id Int?
+  quantity      Int?
+  carts         carts?       @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade, onUpdate: NoAction)
+  menu_items    menu_items?  @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: NoAction, onUpdate: NoAction)
+  restaurants   restaurants? @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model carts {
+  cart_id   Int          @id @default(autoincrement())
+  user_id   Int?
+  status    cart_status?
+  cart_item cart_item[]
+  users     users?       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  orders    orders[]
+}
+
+model chat_messages {
+  message_id Int             @id @default(autoincrement())
+  chat_id    Int?
+  sender_id  Int?
+  message    String?
+  sent_at    DateTime?       @default(now()) @db.Timestamp(6)
+  status     message_status? @default(sent)
+  chats      chats?          @relation(fields: [chat_id], references: [chat_id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?          @relation(fields: [sender_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model chat_participants {
+  chat_id      Int
+  user_id      Int
+  role         participant_role?
+  unread_count Int?              @default(0)
+  chats        chats             @relation(fields: [chat_id], references: [chat_id], onDelete: Cascade, onUpdate: NoAction)
+  users        users             @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([chat_id, user_id])
+}
+
+model chats {
+  chat_id           Int                 @id @default(autoincrement())
+  order_id          Int?
+  created_at        DateTime?           @default(now()) @db.Timestamp(6)
+  closed_at         DateTime?           @db.Timestamp(6)
+  status            String?             @db.VarChar(20)
+  chat_type         chat_type?
+  chat_messages     chat_messages[]
+  chat_participants chat_participants[]
+  orders            orders?             @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model deliveries {
+  delivery_id       Int          @id @default(autoincrement())
+  order_id          Int?
+  rider_id          Int?
+  restaurant_id     Int?
+  dropoff_latitude  Decimal?     @db.Decimal(10, 8)
+  dropoff_longitude Decimal?     @db.Decimal(11, 8)
+  dropoff_addr      String?      @db.VarChar(250)
+  start_time        DateTime?    @db.Timestamp(6)
+  end_time          DateTime?    @db.Timestamp(6)
+  orders            orders?      @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+  restaurants       restaurants? @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: NoAction, onUpdate: NoAction)
+  users             users?       @relation(fields: [rider_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model favorite_restaurants {
+  id            Int          @id @default(autoincrement())
+  user_id       Int?
+  restaurant_id Int?
+  created_at    DateTime?    @default(now()) @db.Timestamp(6)
+  restaurants   restaurants? @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade, onUpdate: NoAction)
+  users         users?       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, restaurant_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model menu_categories {
+  category_id             Int          @id @default(autoincrement())
+  restaurant_id           Int?
+  name                    String?      @db.VarChar(100)
+  menu_category_image_url String?      @db.VarChar(250)
+  restaurants             restaurants? @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade, onUpdate: NoAction)
+  menu_items              menu_items[]
+}
+
+model menu_items {
+  menu_item_id        Int              @id @default(autoincrement())
+  category_id         Int?
+  name                String?          @db.VarChar(100)
+  description         String?
+  price               Decimal          @db.Decimal(10, 2)
+  discount            Decimal?         @db.Decimal(10, 2)
+  is_available        Boolean?         @default(true)
+  is_active           Boolean?         @default(true)
+  menu_item_image_url String?          @db.VarChar(255)
+  created_at          DateTime?        @default(now()) @db.Timestamp(6)
+  cart_item           cart_item[]
+  menu_categories     menu_categories? @relation(fields: [category_id], references: [category_id], onDelete: Cascade, onUpdate: NoAction)
+  order_items         order_items[]
+}
+
+model notifications {
+  notification_id Int                 @id @default(autoincrement())
+  user_id         Int?
+  target_type     notification_target
+  target_id       Int
+  order_id        Int?
+  type            notification_type?
+  message         String?
+  created_at      DateTime?           @default(now()) @db.Timestamp(6)
+  is_read         Boolean?            @default(false)
+  orders          orders?             @relation(fields: [order_id], references: [order_id], onDelete: NoAction, onUpdate: NoAction)
+  users           users?              @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  order_id     Int
+  menu_item_id Int
+  quantity     Int?
+  price        Decimal    @db.Decimal(10, 2)
+  menu_items   menu_items @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: NoAction, onUpdate: NoAction)
+  orders       orders     @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([order_id, menu_item_id])
+}
+
+model orders {
+  order_id                     Int             @id @default(autoincrement())
+  user_id                      Int?
+  restaurant_id                Int?
+  rider_id                     Int?
+  status                       order_status?
+  created_at                   DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at                   DateTime?       @db.Timestamp(6)
+  delivered_at                 DateTime?       @db.Timestamp(6)
+  total_amount                 Decimal?        @db.Decimal(10, 2)
+  cart_id                      Int?
+  tran_id                      String?         @unique @db.VarChar(255)
+  special_instructions         String?
+  chats                        chats[]
+  deliveries                   deliveries[]
+  notifications                notifications[]
+  order_items                  order_items[]
+  carts                        carts?          @relation(fields: [cart_id], references: [cart_id], onDelete: NoAction, onUpdate: NoAction)
+  restaurants                  restaurants?    @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: NoAction, onUpdate: NoAction)
+  users_orders_rider_idTousers users?          @relation("orders_rider_idTousers", fields: [rider_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  users_orders_user_idTousers  users?          @relation("orders_user_idTousers", fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  payments                     payments?
+  reviews                      reviews[]
+}
+
+model payments {
+  payment_id     Int             @id @default(autoincrement())
+  order_id       Int?            @unique
+  user_id        Int?
+  method_type    payment_method?
+  amount         Decimal?        @db.Decimal(10, 2)
+  status         String?         @db.VarChar(20)
+  transaction_id String?         @db.VarChar(255)
+  tran_id        String?         @unique @db.VarChar(255)
+  paid_at        DateTime?       @db.Timestamp(6)
+  orders         orders?         @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+  users          users?          @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model restaurant_hours {
+  restaurant_id Int
+  day_of_week   weekday
+  open_time     DateTime?   @db.Time(6)
+  close_time    DateTime?   @db.Time(6)
+  restaurants   restaurants @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([restaurant_id, day_of_week])
+}
+
+model restaurants {
+  restaurant_id                                            Int                    @id @default(autoincrement())
+  name                                                     String                 @db.VarChar(100)
+  password                                                 String                 @db.VarChar(255)
+  phone                                                    String?                @db.VarChar(15)
+  email                                                    String?                @db.VarChar(100)
+  location_id                                              Int?
+  average_rating                                           Decimal?               @default(0.0) @db.Decimal(3, 2)
+  image_url                                                String?                @db.VarChar(255)
+  descriptions                                             String?                @db.VarChar(255)
+  created_at                                               DateTime?              @default(now()) @db.Timestamp(6)
+  cart_item                                                cart_item[]
+  deliveries                                               deliveries[]
+  favorite_restaurants                                     favorite_restaurants[]
+  menu_categories                                          menu_categories[]
+  orders                                                   orders[]
+  restaurant_hours                                         restaurant_hours[]
+  user_locations_restaurants_location_idTouser_locations   user_locations?        @relation("restaurants_location_idTouser_locations", fields: [location_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_location_id")
+  reviews                                                  reviews[]
+  user_locations_user_locations_restaurant_idTorestaurants user_locations[]       @relation("user_locations_restaurant_idTorestaurants")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews {
+  review_id      Int             @id @default(autoincrement())
+  user_id        Int?
+  restaurant_id  Int?
+  rider_id       Int?
+  order_id       Int?
+  rating         Decimal?        @db.Decimal(2, 1)
+  comment        String?
+  created_at     DateTime?       @default(now()) @db.Timestamp(6)
+  orders         orders?         @relation(fields: [order_id], references: [order_id], onDelete: NoAction, onUpdate: NoAction)
+  restaurants    restaurants?    @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: NoAction, onUpdate: NoAction)
+  rider_profiles rider_profiles? @relation(fields: [rider_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  users          users?          @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model rider_profiles {
+  user_id          Int       @id
+  vehicle_type     String?   @db.VarChar(50)
+  current_location String?   @db.VarChar(250)
+  is_available     Boolean?  @default(true)
+  reviews          reviews[]
+  users            users     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+}
+
+model user_locations {
+  location_id                                           Int           @id @default(autoincrement())
+  user_id                                               Int?
+  restaurant_id                                         Int?
+  street                                                String?       @db.VarChar(255)
+  city                                                  String?       @db.VarChar(100)
+  postal_code                                           String?       @db.VarChar(10)
+  latitude                                              Decimal?      @db.Decimal(10, 8)
+  longitude                                             Decimal?      @db.Decimal(11, 8)
+  addr_link                                             String?       @db.VarChar(250)
+  is_primary                                            Boolean?
+  restaurants_restaurants_location_idTouser_locations   restaurants[] @relation("restaurants_location_idTouser_locations")
+  restaurants_user_locations_restaurant_idTorestaurants restaurants?  @relation("user_locations_restaurant_idTorestaurants", fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade, onUpdate: NoAction)
+  users                                                 users?        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  user_id                       Int                    @id @default(autoincrement())
+  name                          String                 @db.VarChar(100)
+  email                         String                 @unique @db.VarChar(100)
+  password                      String                 @db.VarChar(255)
+  phone_number                  String?                @db.VarChar(15)
+  role_id                       String                 @db.VarChar(100)
+  carts                         carts[]
+  chat_messages                 chat_messages[]
+  chat_participants             chat_participants[]
+  deliveries                    deliveries[]
+  favorite_restaurants          favorite_restaurants[]
+  notifications                 notifications[]
+  orders_orders_rider_idTousers orders[]               @relation("orders_rider_idTousers")
+  orders_orders_user_idTousers  orders[]               @relation("orders_user_idTousers")
+  payments                      payments[]
+  reviews                       reviews[]
+  rider_profiles                rider_profiles?
+  user_locations                user_locations[]
+}
+
+enum cart_status {
+  active
+  abandoned
+  completed
+}
+
+enum chat_type {
+  order
+  support
+}
+
+enum message_status {
+  sent
+  delivered
+  read
+}
+
+enum notification_target {
+  user
+  rider
+  restaurant
+}
+
+enum notification_type {
+  order_update
+  promotion
+  delivery_status
+}
+
+enum order_status {
+  pending_payment
+  pending_restaurant_acceptance
+  restaurant_rejected
+  preparing
+  ready_for_pickup
+  out_for_delivery
+  delivered
+  cancelled
+}
+
+enum participant_role {
+  customer
+  rider
+  restaurant
+}
+
+enum payment_method {
+  cod
+  sslcommerz
+}
+
+enum weekday {
+  Sun
+  Mon
+  Tue
+  Wed
+  Thu
+  Fri
+  Sat
+}
