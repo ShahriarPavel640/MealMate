@@ -45,7 +45,7 @@ export const initiatePayment = async (req, res, store_id, store_passwd) => {
     }
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:5001";
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
 
     console.log("DEBUG: process.env.FRONTEND_URL =", process.env.FRONTEND_URL);
     console.log("DEBUG: frontendUrl (resolved) =", frontendUrl);
@@ -151,7 +151,7 @@ export const initiatePayment = async (req, res, store_id, store_passwd) => {
 //     }
 
 //     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-//     const backendUrl = process.env.BACKEND_URL || "http://localhost:5001";
+//     const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
 
 //     console.log("DEBUG: process.env.FRONTEND_URL =", process.env.FRONTEND_URL);
 //     console.log("DEBUG: frontendUrl (resolved) =", frontendUrl);
@@ -250,7 +250,7 @@ export const initiatePayment = async (req, res, store_id, store_passwd) => {
 // --- CLEANED: TESTING-ONLY REDIRECT HANDLERS (ONE DEFINITION EACH) ---
 
 export const handleSuccess = async (req, res) => {
-  const { tran_id } = req.query;
+  const tran_id = req.query?.tran_id || req.body?.tran_id;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -350,7 +350,7 @@ export const handleSuccess = async (req, res) => {
 };
 
 export const handleFail = async (req, res) => {
-  const { tran_id } = req.query;
+  const tran_id = req.query?.tran_id || req.body?.tran_id;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -374,7 +374,7 @@ export const handleFail = async (req, res) => {
 };
 
 export const handleCancel = async (req, res) => {
-  const { tran_id } = req.query;
+  const tran_id = req.query?.tran_id || req.body?.tran_id;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
