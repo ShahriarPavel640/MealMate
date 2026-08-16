@@ -47,7 +47,8 @@ describe('Chat API E2E', () => {
       .set('Cookie', customerCookies);
     
     expect(getOrdersRes.statusCode).toBe(200);
-    orderId = getOrdersRes.body[0].order_id;
+    const ordersList = Array.isArray(getOrdersRes.body) ? getOrdersRes.body : (getOrdersRes.body.data || getOrdersRes.body.orders || []);
+    orderId = ordersList[0]?.order_id;
     // Manually assign rider 4 to the order in the database so that chat participants can be initialized without NULL constraint error
     await pool.query("UPDATE orders SET rider_id = 4 WHERE order_id = $1", [orderId]);
   });

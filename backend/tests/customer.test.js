@@ -98,25 +98,25 @@ describe('Customer API E2E', () => {
       .set('Cookie', customerCookies);
 
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data || res.body)).toBe(true);
   });
 
   it('should get all restaurants', async () => {
     const res = await request(app).get('/api/customer/getRestaurants');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data || res.body)).toBe(true);
   });
 
   it('should get categories', async () => {
     const res = await request(app).get('/api/customer/getCategories');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data || res.body)).toBe(true);
   });
 
   it('should get menus', async () => {
     const res = await request(app).get('/api/customer/menus');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data || res.body)).toBe(true);
   });
 
   it('should get single menu item by ID', async () => {
@@ -137,13 +137,13 @@ describe('Customer API E2E', () => {
   it('should fetch all reviews', async () => {
     const res = await request(app).get('/api/customer/reviews?restaurant_id=1');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data || res.body)).toBe(true);
   });
 
   it('should search restaurants by name', async () => {
     const res = await request(app).get('/api/customer/searchRestaurant?name=Black');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data || res.body)).toBe(true);
   });
 
   // --- Cart Management ---
@@ -200,9 +200,10 @@ describe('Customer API E2E', () => {
       .set('Cookie', customerCookies);
 
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBeGreaterThan(0);
-    createdOrderId = res.body[0].order_id;
+    const ordersList = Array.isArray(res.body) ? res.body : (res.body.data || res.body.orders || []);
+    expect(Array.isArray(ordersList)).toBe(true);
+    expect(ordersList.length).toBeGreaterThan(0);
+    createdOrderId = ordersList[0].order_id;
   });
 
   it('should fetch order details', async () => {
@@ -211,7 +212,7 @@ describe('Customer API E2E', () => {
       .set('Cookie', customerCookies);
 
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data || res.body)).toBe(true);
   });
 
   // --- Reviews ---

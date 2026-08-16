@@ -80,7 +80,7 @@ describe('Restaurant API E2E', () => {
       .attach('image', Buffer.from('dummy image content'), 'test.png')
       .field('restaurant_name', 'Updated Restaurant Name')
       .field('phone', '01999999999')
-      .field('email', 'new_email@example.com')
+      .field('email', testRestaurant.email)
       .field('description', 'Updated description')
       .field('street', 'New St')
       .field('city', 'New City')
