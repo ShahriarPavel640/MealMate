@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - master
+      - main
   pull_request:
     branches:
       - master
+      - main
 
 permissions:
   contents: read
@@ -42,7 +44,7 @@ jobs:
     
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgis/postgis:15-3.4-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -135,8 +137,8 @@ jobs:
   cd-deploy:
     name: Continuous Deployment (Coming Soon)
     needs: [backend-checks, frontend-checks, docker-build]
-    # This condition ensures the deployment ONLY runs when pushing/merging into master, NOT during a PR!
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # This condition ensures the deployment ONLY runs when pushing/merging into master or main, NOT during a PR!
+    if: always() && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -167,4 +169,4 @@ jobs:
       # ---------------------------------------------------------
       
       - name: CD Placeholder
-        run: echo "CD Pipeline triggered because this is a Push to main! Real deployment steps are currently commented out."
+        run: echo "CD Pipeline triggered because this is a Push to main or master! Real deployment steps are currently commented out."
