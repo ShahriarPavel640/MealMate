@@ -59,11 +59,10 @@ export const addItemToCart = async (req, res) => {
 
 export const deleteCartItem = async (req, res) => {
   const { cart_item_id } = req.params;
+    const userId = req.user.id;
 
   try {
-    await pool.query("DELETE FROM cart_item WHERE cart_item_id = $1", [
-      cart_item_id,
-    ]);
+    await pool.query("DELETE FROM cart_item USING carts WHERE cart_item.cart_id = carts.cart_id AND carts.user_id = $2 AND cart_item.cart_item_id = $1", [cart_item_id, userId]);
     res.status(200).json({ message: "Item deleted from cart." });
   } catch (err) {
     console.error("Error in deleteCartItem:", err.message);

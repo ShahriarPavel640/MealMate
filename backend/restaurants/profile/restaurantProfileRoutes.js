@@ -1,5 +1,6 @@
 import express from "express";
-import validinfo from "../../middleware/validinfo.js";
+import { validate } from "../../middleware/validate.js";
+import { restaurantAuthSchema } from "../../schemas/extra.js";
 import authorization from "../../middleware/authorization.js";
 import authorizeRoles from "../../middleware/authorizeRoles.js";
 import upload from "../../middleware/upload.js";
@@ -27,8 +28,8 @@ import {
 const router = express.Router();
 const role = "restaurant";
 
-router.post("/register", validinfo, resturant_signup);
-router.post("/login", validinfo, restaurant_login);
+router.post("/register", validate(restaurantAuthSchema), resturant_signup);
+router.post("/login", restaurant_login);
 router.get("/logout", logout);
 router.post(
   "/add_menu",
@@ -100,3 +101,4 @@ router.get(
 );
 
 export { router };
+

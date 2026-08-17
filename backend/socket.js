@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 import { handleRestaurantSocketEvents } from './socketHandlers/restaurantSocketHandler.js';
 import redisClient from "./utils/redisClient.js";
 
@@ -20,10 +21,25 @@ export const initSocket = (server) => {
     },
   });
 
+  io.use((socket, next) => {
+    const token = socket.handshake.auth.token || (socket.handshake.headers.cookie && socket.handshake.headers.cookie.split('jwt=')[1]?.split(';')[0]);
+    if (!token) return next(new Error('Authentication error'));
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      socket.user = decoded;
+      next();
+    } catch (err) {
+      next(new Error('Authentication error'));
+    }
+  });
+
   io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
     socket.on('join_room', (room) => {
+      if (room.startsWith('restaurant_') && (socket.user.role !== 'restaurant' || room !== `restaurant_${socket.user.id}`)) return;
+      if (room.startsWith('customer_') && (socket.user.role !== 'customer' || room !== `customer_${socket.user.id}`)) return;
+      if (room.startsWith('rider_') && (socket.user.role !== 'rider' || room !== `rider_${socket.user.id}`)) return;
       socket.join(room);
       console.log(`Socket ${socket.id} joined room ${room}.`);
     });

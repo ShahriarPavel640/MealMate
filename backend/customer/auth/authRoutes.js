@@ -1,5 +1,6 @@
 import express from "express";
-import validinfo from "../../middleware/validinfo.js";
+import { validate } from "../../middleware/validate.js";
+import { signupSchema, loginSchema, changePasswordSchema, updateProfileSchema } from "../../schemas/auth.js";
 import authorization from "../../middleware/authorization.js";
 import authorizeRoles from "../../middleware/authorizeRoles.js";
 
@@ -16,22 +17,13 @@ import {
 const router = express.Router();
 const role = "customer";
 
-router.post("/register", validinfo, customer_signup);
-router.post("/login", validinfo, customer_login);
+router.post("/register", validate(signupSchema), customer_signup);
+router.post("/login", customer_login);
 router.get("/logout", logout);
 router.get("/is-verify", authorization, authorizeRoles(role), verifyUser);
-router.put(
-  "/change_password",
-  authorization,
-  authorizeRoles(role),
-  changePassword
-);
+router.put("/change_password", authorization, authorizeRoles(role), validate(changePasswordSchema), changePassword);
 router.get("/profile", authorization, authorizeRoles(role), getProfile);
-router.put(
-  "/update_profile",
-  authorization,
-  authorizeRoles(role),
-  updateProfile
-);
+router.put("/update_profile", authorization, authorizeRoles(role), validate(updateProfileSchema), updateProfile);
 
 export default router;
+

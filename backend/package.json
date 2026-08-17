@@ -25,6 +25,8 @@
     "dayjs": "^1.11.13",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
     "nodemon": "^3.1.10",
@@ -36,7 +38,8 @@
     "sslcommerz": "^1.7.0",
     "sslcommerz-lts": "^1.1.0",
     "uuid": "^11.1.0",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "prisma": "^6.19.3",

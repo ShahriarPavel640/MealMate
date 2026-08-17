@@ -11,7 +11,7 @@ describe('Restaurant API E2E', () => {
   const testRestaurant = {
     name: 'Test Restaurant',
     email: 'restaurant@test.com',
-    password: 'password123',
+    password: 'Password123!',
     phone_number: '0987654321',
     street: '123 Test St',
     city: 'Test City',
@@ -97,8 +97,8 @@ describe('Restaurant API E2E', () => {
       .put('/api/restaurant/change_password')
       .set('Cookie', restaurantCookies)
       .send({
-        prevPassword: 'password123',
-        newPassword: 'newpassword123'
+        prevPassword: 'Password123!',
+        newPassword: 'NewPassword123!'
       });
 
     expect(res.statusCode).toBe(200);
@@ -108,7 +108,7 @@ describe('Restaurant API E2E', () => {
       .post('/api/restaurant/login')
       .send({
         email: testRestaurant.email,
-        password: 'newpassword123'
+        password: 'NewPassword123!'
       });
     expect(loginRes.statusCode).toBe(200);
     restaurantCookies = loginRes.headers['set-cookie'];
@@ -278,3 +278,4 @@ describe('Restaurant API E2E', () => {
     expect(res.statusCode).toBe(200);
   });
 });
+

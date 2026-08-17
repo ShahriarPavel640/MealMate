@@ -1,4 +1,6 @@
 import express from 'express';
+import { validate } from '../../middleware/validate.js';
+import { reviewSchema } from '../../schemas/extra.js';
 import * as reviewController from './reviewController.js';
 import authorization from '../../middleware/authorization.js';
 import authorizeRoles from '../../middleware/authorizeRoles.js';
@@ -8,10 +10,10 @@ const customerRole = "customer";
 const riderRole = "rider";
 
 // Route to submit a restaurant review
-router.post('/restaurant', authorization, authorizeRoles(customerRole), reviewController.submitRestaurantReview);
+router.post('/restaurant', authorization, authorizeRoles(customerRole), validate(reviewSchema), reviewController.submitRestaurantReview);
 
 // Route to submit a rider review
-router.post('/rider', authorization, authorizeRoles(customerRole), reviewController.submitRiderReview);
+router.post('/rider', authorization, authorizeRoles(customerRole), validate(reviewSchema), reviewController.submitRiderReview);
 
 // Route to get all reviews for a specific restaurant
 router.get('/restaurant/:restaurantId', reviewController.getRestaurantReviews);
@@ -20,3 +22,5 @@ router.get('/restaurant/:restaurantId', reviewController.getRestaurantReviews);
 router.get('/my-reviews', authorization, authorizeRoles(riderRole), reviewController.getRiderReviews);
 
 export default router;
+
+

@@ -1,6 +1,5 @@
 const validinfo = (req, res, next) => {
   const { email, name, password } = req.body;
-  console.log(email, name, password);
   function validEmail(email) {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);

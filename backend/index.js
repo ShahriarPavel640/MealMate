@@ -1,6 +1,9 @@
+console.log('INDEX.JS STARTED');
 import "./instrument.js";
 import * as Sentry from "@sentry/node";
 import express from "express";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 import dotenv from "dotenv";
 import logger from "./utils/logger.js";
 import SSLCommerzPayment from "sslcommerz-lts";
@@ -35,7 +38,22 @@ const io = initSocket(server);
 // Connect to Redis
 await connectRedis();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5175",
+  "http://192.168.0.101:5173",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
+app.use(helmet());
 app.use(metricsMiddleware);
 
 // Middleware to log API execution time and status codes
@@ -57,20 +75,25 @@ app.use((req, res, next) => {
   });
   next();
 });
-app.use(cookieParser());
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5175",
-  "http://192.168.0.101:5173",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: { success: false, message: 'Too many requests' }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Too many login attempts. Try again later.' }
+});
+
+app.use(globalLimiter);
+app.use('/api/customer/login', authLimiter);
+app.use('/api/customer/register', authLimiter);
+app.use('/api/rider/login', authLimiter);
+app.use('/api/restaurant/register', authLimiter);
+app.use('/api/restaurant/login', authLimiter);
 
 // Register routes
 

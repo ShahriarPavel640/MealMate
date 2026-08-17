@@ -12,6 +12,12 @@ export const createOrderFromCart = async (
   status = "pending_restaurant_acceptance",
   specialInstructions = {}
 ) => {
+  for (let item of cartItems) {
+    const itemQuery = await client.query("SELECT price FROM menu_items WHERE menu_item_id = $1", [item.menu_item_id]);
+    if (itemQuery.rows.length === 0) throw new Error("Menu item not found: " + item.menu_item_id);
+    item.price = itemQuery.rows[0].price;
+  }
+
   const ordersByRestaurant = cartItems.reduce((acc, item) => {
     const { restaurant_id } = item;
     if (!acc[restaurant_id]) {
@@ -241,11 +247,11 @@ export const getOrders = async (req, res) => {
 
 export const getOrderDetails = async (req, res) => {
   const { orderId } = req.params;
+    const userId = req.user.id;
 
   try {
     const result = await pool.query(
-      "SELECT oi.quantity, oi.price, mi.name as menu_item_name FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.menu_item_id WHERE oi.order_id = $1",
-      [orderId]
+      "SELECT oi.quantity, oi.price, mi.name as menu_item_name FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.menu_item_id JOIN orders o ON oi.order_id = o.order_id WHERE oi.order_id = $1 AND o.user_id = $2", [orderId, userId]
     );
     res.json(result.rows);
   } catch (error) {
@@ -253,3 +259,4 @@ export const getOrderDetails = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+

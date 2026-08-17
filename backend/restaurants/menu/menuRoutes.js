@@ -1,6 +1,8 @@
 // menu-management/menuRoutes.js
 
 import express from "express";
+import { validate } from "../../middleware/validate.js";
+import { menuSchema } from "../../schemas/extra.js";
 //import { checkRestaurant } from "../../middleware/checkRestaurant.js"; // Import checkRestaurant middleware
 import {
   createMenuCategory,
@@ -26,12 +28,13 @@ router.put("/categories/:id",authorization,authorizeRoles("restaurant"),  update
 router.delete("/categories/:id",authorization,authorizeRoles("restaurant"),  deleteCategory);
 
 // Add menu item
-router.post("/categories/:id/items",authorization,authorizeRoles("restaurant"),  createMenuItem);
+router.post("/categories/:id/items",authorization,authorizeRoles("restaurant"), validate(menuSchema), createMenuItem);
 
 // Update menu item
-router.put("/menu-items/:id",authorization,authorizeRoles("restaurant"),  updateMenuItemDetails);
+router.put("/menu-items/:id",authorization,authorizeRoles("restaurant"), validate(menuSchema), updateMenuItemDetails);
 
 // Delete menu item
 router.delete("/menu-items/:id",authorization,authorizeRoles("restaurant"),  removeMenuItem);
 
 export default router;
+

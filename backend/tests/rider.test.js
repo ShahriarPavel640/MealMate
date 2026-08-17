@@ -9,7 +9,7 @@ describe('Rider API E2E', () => {
   const testRider = {
     name: 'Test Rider',
     email: 'rider@test.com',
-    password: 'password123',
+    password: 'Password123!',
     phone_number: '1122334455',
     latitude: 23.8,
     longitude: 90.4
@@ -163,3 +163,4 @@ describe('Rider API E2E', () => {
     expect(res.statusCode).toBe(200);
   });
 });
+

@@ -71,7 +71,6 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
-  console.log(req.body);
 
   try {
     //2. check if user dosen't exist

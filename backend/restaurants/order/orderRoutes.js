@@ -1,4 +1,6 @@
 import express from "express";
+import { validate } from "../../middleware/validate.js";
+import { orderStatusSchema } from "../../schemas/extra.js";
 import authorization from "../../middleware/authorization.js";
 import authorizeRoles from "../../middleware/authorizeRoles.js";
 import {
@@ -25,12 +27,7 @@ restaurantOrder.get(
   getOrders
 );
 
-restaurantOrder.put(
-  "/update_order_status",
-  authorization,
-  authorizeRoles(role),
-  updateStatus
-);
+restaurantOrder.put("/update_order_status", authorization, authorizeRoles(role), validate(orderStatusSchema), updateStatus);
 restaurantOrder.get(
   "/today_stat",
   authorization,
@@ -39,3 +36,7 @@ restaurantOrder.get(
 );
 
 export default restaurantOrder;
+
+
+
+

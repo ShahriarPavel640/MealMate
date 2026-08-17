@@ -1,5 +1,6 @@
 import express from "express";
-import validinfo from "../../middleware/validinfo.js";
+import { validate } from "../../middleware/validate.js";
+import { riderAuthSchema } from "../../schemas/extra.js";
 import authorization from "../../middleware/authorization.js";
 import authorizeRoles from "../../middleware/authorizeRoles.js";
 
@@ -12,8 +13,8 @@ import {
 
 const router = express.Router();
 
-router.post("/signup", validinfo, rider_signup);
-router.post("/login", validinfo, rider_login);
+router.post("/signup", validate(riderAuthSchema), rider_signup);
+router.post("/login", rider_login);
 router.post("/logout", logout);
 
 const role = "rider";
@@ -26,3 +27,4 @@ router.get(
 );
 
 export default router;
+
