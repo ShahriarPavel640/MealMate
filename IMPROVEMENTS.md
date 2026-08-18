@@ -6,18 +6,18 @@ Making the MealMate backend production-grade through security hardening, archite
 
 ## Current Architecture Overview
 
-| Layer          | Tech                                          | Key Files                                       |
-| -------------- | --------------------------------------------- | ----------------------------------------------- |
+| Layer                | Tech                                          | Key Files                                         |
+| -------------------- | --------------------------------------------- | ------------------------------------------------- |
 | **Frontend**   | React 19 + Vite + TailwindCSS 4 + Zustand     | `frontend/src/App.jsx`                          |
-| **Backend**    | Express 5 + Node.js (ESM) + Socket.IO          | `backend/index.js`                              |
-| **Database**   | PostgreSQL + PostGIS (Docker)                   | `prisma/schema.prisma`                          |
-| **ORM**        | Prisma (schema exists, migration in progress)   | `backend/prismaClient.js`                       |
-| **Payment**    | SSLCommerz                                      | `backend/customer/payment/paymentController.js` |
-| **Media**      | Cloudinary                                      | `backend/utils/cloudinary.js`                   |
-| **Auth**       | JWT (cookie + header)                           | `backend/middleware/authorization.js`           |
-| **Cache**      | Redis                                           | `backend/utils/redisClient.js`                  |
-| **Monitoring** | Prometheus + Grafana + Loki + Sentry            | `backend/utils/metrics.js`                      |
-| **Logging**    | Winston (partially adopted)                     | `backend/utils/logger.js`                       |
+| **Backend**    | Express 5 + Node.js (ESM) + Socket.IO         | `backend/index.js`                              |
+| **Database**   | PostgreSQL + PostGIS (Docker)                 | `prisma/schema.prisma`                          |
+| **ORM**        | Prisma (schema exists, migration in progress) | `backend/prismaClient.js`                       |
+| **Payment**    | SSLCommerz                                    | `backend/customer/payment/paymentController.js` |
+| **Media**      | Cloudinary                                    | `backend/utils/cloudinary.js`                   |
+| **Auth**       | JWT (cookie + header)                         | `backend/middleware/authorization.js`           |
+| **Cache**      | Redis                                         | `backend/utils/redisClient.js`                  |
+| **Monitoring** | Prometheus + Grafana + Loki + Sentry          | `backend/utils/metrics.js`                      |
+| **Logging**    | Winston (partially adopted)                   | `backend/utils/logger.js`                       |
 
 **3 User Roles:** Customer, Restaurant (Partner), Rider
 
@@ -25,18 +25,18 @@ Making the MealMate backend production-grade through security hardening, archite
 
 ## Decisions Made
 
-| Decision        | Choice                                                              |
-| --------------- | ------------------------------------------------------------------- |
-| ORM             | Prisma (full migration from raw `pg`)                               |
-| Validation      | Zod on all mutation endpoints                                       |
-| Rate Limiting   | `express-rate-limit` with in-memory store                           |
-| Error Handling  | Full refactor — `AppError` + global middleware                      |
-| Architecture    | Service layer for all modules                                       |
-| Logging         | Winston everywhere (replace all `console.log`)                      |
-| Pagination      | Offset-based for all endpoints                                      |
-| JWT             | Keep 1-day token, strengthen secret (no refresh tokens for now)     |
-| CORS            | Shared `CORS_ORIGINS` env var                                       |
-| Migrations      | Prisma Migrate + `prisma/seed.js`                                   |
+| Decision       | Choice                                                          |
+| -------------- | --------------------------------------------------------------- |
+| ORM            | Prisma (full migration from raw`pg`)                          |
+| Validation     | Zod on all mutation endpoints                                   |
+| Rate Limiting  | `express-rate-limit` with in-memory store                     |
+| Error Handling | Full refactor —`AppError` + global middleware                |
+| Architecture   | Service layer for all modules                                   |
+| Logging        | Winston everywhere (replace all`console.log`)                 |
+| Pagination     | Offset-based for all endpoints                                  |
+| JWT            | Keep 1-day token, strengthen secret (no refresh tokens for now) |
+| CORS           | Shared`CORS_ORIGINS` env var                                  |
+| Migrations     | Prisma Migrate +`prisma/seed.js`                              |
 
 ---
 
@@ -84,6 +84,7 @@ export const validate = (schema) => (req, res, next) => {
 ```
 
 Create Zod schemas for **all mutation endpoints** (POST, PUT, PATCH, DELETE):
+
 - Auth: signup, login, change password, update profile
 - Orders: create order (COD)
 - Payment: initiate payment — **remove `total_amount` from client input, recalculate server-side from DB prices**
@@ -94,11 +95,11 @@ Create Zod schemas for **all mutation endpoints** (POST, PUT, PATCH, DELETE):
 
 **Files affected:**
 
-| Action   | File                                |
-| -------- | ----------------------------------- |
-| [NEW]    | `backend/middleware/validate.js`    |
-| [NEW]    | `backend/schemas/` (per module)     |
-| [MODIFY] | All route files                     |
+| Action   | File                               |
+| -------- | ---------------------------------- |
+| [NEW]    | `backend/middleware/validate.js` |
+| [NEW]    | `backend/schemas/` (per module)  |
+| [MODIFY] | All route files                    |
 
 ---
 
@@ -135,8 +136,8 @@ Using in-memory store (simple, fine for single-server). Can swap to Redis store 
 
 **Files affected:**
 
-| Action   | File               |
-| -------- | ------------------ |
+| Action   | File                 |
+| -------- | -------------------- |
 | [MODIFY] | `backend/index.js` |
 
 ---
@@ -158,8 +159,8 @@ Single line, significant security improvement.
 
 **Files affected:**
 
-| Action   | File               |
-| -------- | ------------------ |
+| Action   | File                 |
+| -------- | -------------------- |
 | [MODIFY] | `backend/index.js` |
 
 ---
@@ -183,8 +184,8 @@ Several endpoints have **Insecure Direct Object Reference** vulnerabilities — 
 
 | Action   | File                                          |
 | -------- | --------------------------------------------- |
-| [MODIFY] | `backend/customer/cart/cartController.js`     |
-| [MODIFY] | `backend/customer/order/orderController.js`   |
+| [MODIFY] | `backend/customer/cart/cartController.js`   |
+| [MODIFY] | `backend/customer/order/orderController.js` |
 
 ---
 
@@ -193,6 +194,7 @@ Several endpoints have **Insecure Direct Object Reference** vulnerabilities — 
 **The problem:**
 
 `socket.js` has no authentication. Any client can:
+
 1. Connect without any authentication
 2. Join **any room** (e.g., `restaurant_5`) by simply emitting `join_room`
 3. Listen to all order events for any restaurant or customer
@@ -219,8 +221,8 @@ socket.on('join_room', (room) => {
 
 **Files affected:**
 
-| Action   | File                |
-| -------- | ------------------- |
+| Action   | File                  |
+| -------- | --------------------- |
 | [MODIFY] | `backend/socket.js` |
 
 ---
@@ -243,13 +245,13 @@ socket.on('join_room', (room) => {
 
 **Files affected:**
 
-| Action   | File                                          |
-| -------- | --------------------------------------------- |
-| [MODIFY] | `backend/instrument.js`                       |
-| [MODIFY] | `backend/middleware/validinfo.js`              |
-| [MODIFY] | `backend/customer/auth/authController.js`     |
+| Action   | File                                              |
+| -------- | ------------------------------------------------- |
+| [MODIFY] | `backend/instrument.js`                         |
+| [MODIFY] | `backend/middleware/validinfo.js`               |
+| [MODIFY] | `backend/customer/auth/authController.js`       |
 | [MODIFY] | `backend/customer/payment/paymentController.js` |
-| [NEW]    | `backend/.env.example`                        |
+| [NEW]    | `backend/.env.example`                          |
 
 ---
 
@@ -287,9 +289,9 @@ Migrate all `pool.query()` calls to Prisma Client. PostGIS queries use `prisma.$
 
 **Files affected:**
 
-| Action   | File                              |
-| -------- | --------------------------------- |
-| [MODIFY] | All controller files (~15 files)  |
+| Action   | File                                |
+| -------- | ----------------------------------- |
+| [MODIFY] | All controller files (~15 files)    |
 | [DELETE] | `backend/db.js` (after migration) |
 | [MODIFY] | `backend/prismaClient.js`         |
 
@@ -356,10 +358,10 @@ backend/
 
 **Files affected:**
 
-| Action   | File                                              |
-| -------- | ------------------------------------------------- |
-| [NEW]    | ~15 service files                                 |
-| [DELETE] | `backend/restaurants/menu/menuModel.js`           |
+| Action   | File                                      |
+| -------- | ----------------------------------------- |
+| [NEW]    | ~15 service files                         |
+| [DELETE] | `backend/restaurants/menu/menuModel.js` |
 
 ---
 
@@ -414,11 +416,11 @@ Register as the **last middleware** in `index.js` before `server.listen()`. Refa
 
 **Files affected:**
 
-| Action   | File                                 |
-| -------- | ------------------------------------ |
-| [NEW]    | `backend/middleware/errorHandler.js`  |
+| Action   | File                                   |
+| -------- | -------------------------------------- |
+| [NEW]    | `backend/middleware/errorHandler.js` |
 | [MODIFY] | `backend/index.js`                   |
-| [MODIFY] | All controller files                 |
+| [MODIFY] | All controller files                   |
 
 ---
 
@@ -434,9 +436,9 @@ Replace all `console.log()` / `console.error()` with `logger.info()` / `logger.e
 
 **Files affected:**
 
-| Action   | File                                       |
-| -------- | ------------------------------------------ |
-| [MODIFY] | All controller, middleware, utility files   |
+| Action   | File                                      |
+| -------- | ----------------------------------------- |
+| [MODIFY] | All controller, middleware, utility files |
 
 ---
 
@@ -466,26 +468,26 @@ Remove all dead/commented-out code. Git history preserves it if ever needed.
 
 `package.json` has duplicate and unused packages:
 
-| Package                  | Issue                                    |
-| ------------------------ | ---------------------------------------- |
-| `pg`                     | Replaced by Prisma after migration       |
-| `postgres`               | Second PG driver — never used            |
-| `sslcommerz`             | Duplicate — `sslcommerz-lts` is used     |
-| `@supabase/supabase-js`  | Unused — no Supabase code in codebase    |
-| `nodemon`                | In `dependencies` instead of `devDeps`   |
+| Package                   | Issue                                     |
+| ------------------------- | ----------------------------------------- |
+| `pg`                    | Replaced by Prisma after migration        |
+| `postgres`              | Second PG driver — never used            |
+| `sslcommerz`            | Duplicate —`sslcommerz-lts` is used    |
+| `@supabase/supabase-js` | Unused — no Supabase code in codebase    |
+| `nodemon`               | In`dependencies` instead of `devDeps` |
 
 **The fix:**
 
-| Action           | Package                  |
-| ---------------- | ------------------------ |
-| Remove           | `pg`                     |
-| Remove           | `postgres`               |
-| Remove           | `sslcommerz`             |
-| Remove           | `@supabase/supabase-js`  |
-| Move to devDeps  | `nodemon`                |
-| Add              | `zod`                    |
-| Add              | `express-rate-limit`     |
-| Add              | `helmet`                 |
+| Action          | Package                   |
+| --------------- | ------------------------- |
+| Remove          | `pg`                    |
+| Remove          | `postgres`              |
+| Remove          | `sslcommerz`            |
+| Remove          | `@supabase/supabase-js` |
+| Move to devDeps | `nodemon`               |
+| Add             | `zod`                   |
+| Add             | `express-rate-limit`    |
+| Add             | `helmet`                |
 
 ---
 
@@ -513,8 +515,8 @@ const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhos
 
 **Files affected:**
 
-| Action   | File                |
-| -------- | ------------------- |
+| Action   | File                  |
+| -------- | --------------------- |
 | [MODIFY] | `backend/index.js`  |
 | [MODIFY] | `backend/socket.js` |
 
@@ -539,19 +541,19 @@ const offset = (page - 1) * limit;
 
 **Files affected:**
 
-| Action   | File                                         |
-| -------- | -------------------------------------------- |
+| Action   | File                                           |
+| -------- | ---------------------------------------------- |
 | [MODIFY] | `backend/shared/reviews/reviewController.js` |
 
 ---
 
 ### Fix 15: Typo Fixes (🟢 Low)
 
-| File                              | Typo                                        | Fix                                       |
-| --------------------------------- | ------------------------------------------- | ----------------------------------------- |
-| `middleware/authorization.js` L11 | `"not athorize. no token provided"`         | `"Not authorized. No token provided."`    |
-| `customer/auth/authController.js` L203 | `"varified user"`                      | `"Verified user"`                         |
-| `index.js` L23                    | Variable: `restaurnatStat`                  | `restaurantStat`                          |
+| File                                     | Typo                                  | Fix                                      |
+| ---------------------------------------- | ------------------------------------- | ---------------------------------------- |
+| `middleware/authorization.js` L11      | `"not athorize. no token provided"` | `"Not authorized. No token provided."` |
+| `customer/auth/authController.js` L203 | `"varified user"`                   | `"Verified user"`                      |
+| `index.js` L23                         | Variable:`restaurnatStat`           | `restaurantStat`                       |
 
 ---
 
@@ -569,9 +571,9 @@ Schema is managed via raw `.sql` files. No versioned migrations.
 
 **Files affected:**
 
-| Action   | File                  |
-| -------- | --------------------- |
-| [NEW]    | `prisma/seed.js`      |
+| Action   | File                     |
+| -------- | ------------------------ |
+| [NEW]    | `prisma/seed.js`       |
 | [MODIFY] | `backend/package.json` |
 
 ---
@@ -615,9 +617,9 @@ REDIS_URL=redis://127.0.0.1:6379
 
 **Files affected:**
 
-| Action | File                    |
-| ------ | ----------------------- |
-| [NEW]  | `backend/.env.example`  |
+| Action | File                     |
+| ------ | ------------------------ |
+| [NEW]  | `backend/.env.example` |
 
 ---
 
@@ -625,35 +627,35 @@ REDIS_URL=redis://127.0.0.1:6379
 
 ## 📊 Priority Matrix
 
-| Priority | Item                                            | Type        | Effort  | Impact          |
-| -------- | ----------------------------------------------- | ----------- | ------- | --------------- |
-| 🔴 P0    | Fix 1 — Zod validation + server-side pricing    | Security    | Medium  | Critical        |
-| 🔴 P0    | Fix 2 — Rate limiting                           | Security    | Low     | Critical        |
-| 🔴 P0    | Fix 3 — Helmet security headers                 | Security    | Low     | Critical        |
-| 🔴 P0    | Fix 4 — IDOR vulnerability fixes                | Security    | Low     | Critical        |
-| 🔴 P0    | Fix 5 — Socket.IO authentication                | Security    | Medium  | Critical        |
-| 🔴 P0    | Fix 6 — Secret hardening + password logging     | Security    | Low     | Critical        |
-| 🟡 P1    | Fix 7 — Full Prisma migration                   | Architecture| High    | High            |
-| 🟡 P1    | Fix 8 — Service layer pattern                   | Architecture| High    | High            |
-| 🟡 P1    | Fix 9 — Centralized error handling              | Stability   | Medium  | High            |
-| 🟡 P1    | Fix 10 — Winston logging standardization        | Observability| Medium | Medium          |
-| 🟢 P2    | Fix 11 — Dead code removal                      | Quality     | Low     | Low             |
-| 🟢 P2    | Fix 12 — Dependency cleanup                     | Maintenance | Low     | Low             |
-| 🟢 P2    | Fix 13 — CORS configuration                     | DevOps      | Low     | Deployability   |
-| 🟢 P2    | Fix 14 — Review pagination                      | Performance | Low     | Medium          |
-| 🟢 P2    | Fix 15 — Typo fixes                             | Quality     | Low     | Polish          |
-| 🟢 P2    | Fix 16 — Prisma Migrate + seeding               | DevOps      | Medium  | Maintainability |
-| 🟢 P2    | Fix 17 — `.env.example`                         | DX          | Low     | Onboarding      |
+| Priority | Item                                          | Type          | Effort | Impact          |
+| -------- | --------------------------------------------- | ------------- | ------ | --------------- |
+| 🔴 P0    | Fix 1 — Zod validation + server-side pricing | Security      | Medium | Critical        |
+| 🔴 P0    | Fix 2 — Rate limiting                        | Security      | Low    | Critical        |
+| 🔴 P0    | Fix 3 — Helmet security headers              | Security      | Low    | Critical        |
+| 🔴 P0    | Fix 4 — IDOR vulnerability fixes             | Security      | Low    | Critical        |
+| 🔴 P0    | Fix 5 — Socket.IO authentication             | Security      | Medium | Critical        |
+| 🔴 P0    | Fix 6 — Secret hardening + password logging  | Security      | Low    | Critical        |
+| 🟡 P1    | Fix 7 — Full Prisma migration                | Architecture  | High   | High            |
+| 🟡 P1    | Fix 8 — Service layer pattern                | Architecture  | High   | High            |
+| 🟡 P1    | Fix 9 — Centralized error handling           | Stability     | Medium | High            |
+| 🟡 P1    | Fix 10 — Winston logging standardization     | Observability | Medium | Medium          |
+| 🟢 P2    | Fix 11 — Dead code removal                   | Quality       | Low    | Low             |
+| 🟢 P2    | Fix 12 — Dependency cleanup                  | Maintenance   | Low    | Low             |
+| 🟢 P2    | Fix 13 — CORS configuration                  | DevOps        | Low    | Deployability   |
+| 🟢 P2    | Fix 14 — Review pagination                   | Performance   | Low    | Medium          |
+| 🟢 P2    | Fix 15 — Typo fixes                          | Quality       | Low    | Polish          |
+| 🟢 P2    | Fix 16 — Prisma Migrate + seeding            | DevOps        | Medium | Maintainability |
+| 🟢 P2    | Fix 17 —`.env.example`                     | DX            | Low    | Onboarding      |
 
 ---
 
 ## Suggested Implementation Phases
 
-| Phase                            | Items                                                                     | Time Estimate |
-| -------------------------------- | ------------------------------------------------------------------------- | ------------- |
-| **Phase 1 — Security**          | Fix 1-6 (validation, rate limit, helmet, IDOR, socket auth, secrets)      | 2–3 days      |
-| **Phase 2 — Architecture**      | Fix 7-10 (Prisma, services, error handler, logging)                       | 4–5 days      |
-| **Phase 3 — Cleanup & Polish**  | Fix 11-17 (dead code, deps, CORS, pagination, typos, migrations, .env)    | 1–2 days      |
-| **Total**                        |                                                                           | **7–10 days** |
+| Phase                                 | Items                                                                  | Time Estimate        |
+| ------------------------------------- | ---------------------------------------------------------------------- | -------------------- |
+| **Phase 1 — Security**         | Fix 1-6 (validation, rate limit, helmet, IDOR, socket auth, secrets)   | 2–3 days            |
+| **Phase 2 — Architecture**     | Fix 7-10 (Prisma, services, error handler, logging)                    | 4–5 days            |
+| **Phase 3 — Cleanup & Polish** | Fix 11-17 (dead code, deps, CORS, pagination, typos, migrations, .env) | 1–2 days            |
+| **Total**                       |                                                                        | **7–10 days** |
 
 > **Note:** Phase 2 (Prisma migration + service layer) is the most labor-intensive. The incremental approach means the app stays functional throughout — old `pool.query()` code works alongside Prisma during transition.
