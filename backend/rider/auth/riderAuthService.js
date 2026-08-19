@@ -1,4 +1,4 @@
-import prisma from "../../prismaClient.js";
+﻿import prisma from "../../prismaClient.js";
 import bcrypt from "bcrypt";
 import { AppError } from "../../middleware/errorHandler.js";
 
@@ -8,12 +8,15 @@ export const signup = async (data) => {
     email,
     password,
     phone_number,
+    phone,
     vehicle_type,
     current_location,
     latitude,
     longitude,
     is_available = true,
   } = data;
+
+  const phoneNumber = phone_number || phone || null;
 
   const existingUser = await prisma.users.findUnique({
     where: { email },
@@ -34,7 +37,7 @@ export const signup = async (data) => {
         name,
         email,
         password: hashedPassword,
-        phone_number,
+        phone_number: phoneNumber,
         role_id: "rider",
       },
     });
@@ -43,9 +46,9 @@ export const signup = async (data) => {
     const profile = await tx.rider_profiles.create({
       data: {
         user_id: user.user_id,
-        vehicle_type,
-        current_location,
-        is_available,
+        vehicle_type: vehicle_type || null,
+        current_location: current_location || null,
+        is_available: Boolean(is_available),
       },
     });
 
@@ -54,8 +57,8 @@ export const signup = async (data) => {
       await tx.user_locations.create({
         data: {
           user_id: user.user_id,
-          latitude,
-          longitude,
+          latitude: Number(latitude),
+          longitude: Number(longitude),
           is_primary: true,
         },
       });

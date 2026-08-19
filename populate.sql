@@ -118,7 +118,7 @@ INSERT INTO menu_items (menu_item_id, category_id, name, description, price, is_
 -- Carts
 INSERT INTO carts (cart_id, user_id, status) VALUES 
 (1, 4, 'completed'),
-(2, 4, 'completed'),
+(2, 6, 'completed'),
 (3, 3, 'abandoned'),
 (4, 3, 'active'),
 (5, 1, 'abandoned');

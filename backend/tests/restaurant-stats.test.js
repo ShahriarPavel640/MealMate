@@ -1,7 +1,14 @@
 ﻿import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index.js';
-import pool from '../db.js';
+import prisma from '../prismaClient.js';
+const pool = {
+  query: async (text, params) => {
+    if (params) return prisma.$executeRawUnsafe(text, ...params);
+    return prisma.$executeRawUnsafe(text);
+  },
+  end: async () => { await prisma.$disconnect(); }
+};
 
 describe('Restaurant API E2E - Stats', () => {
   let restaurantCookies;
@@ -31,7 +38,9 @@ describe('Restaurant API E2E - Stats', () => {
   });
 
   afterAll(async () => {
-    if (restaurantId) await pool.query('DELETE FROM users WHERE user_id = $1', [restaurantId]);
+    if (restaurantId) {
+      await pool.query('DELETE FROM restaurants WHERE restaurant_id = $1', [restaurantId]);
+    }
   });
 
   it('should fetch today_stat', async () => {

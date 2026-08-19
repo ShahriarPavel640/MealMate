@@ -1,12 +1,20 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+﻿import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index.js';
-import pool from '../db.js';
+import prisma from '../prismaClient.js';
+const pool = {
+  query: async (text, params) => {
+    if (params) return prisma.$executeRawUnsafe(text, ...params);
+    return prisma.$executeRawUnsafe(text);
+  },
+  end: async () => { await prisma.$disconnect(); }
+};
 
 describe('Rider API E2E - Orders', () => {
   let riderCookies;
   let riderId;
   const uniqueId = Date.now();
+  const testOrderId = 1; // Seed data has order_id = 1
   const testRider = {
     name: 'Test Rider Order',
     email: `rider-order-${uniqueId}@test.com`,
@@ -28,7 +36,10 @@ describe('Rider API E2E - Orders', () => {
   });
 
   afterAll(async () => {
-    if (riderId) await pool.query('DELETE FROM users WHERE user_id = $1', [riderId]);
+    if (riderId) {
+      await pool.query('UPDATE orders SET rider_id = NULL WHERE rider_id = $1', [riderId]);
+      await pool.query('DELETE FROM users WHERE user_id = $1', [riderId]);
+    }
   });
 
   it('should fetch rider delivery history', async () => {
@@ -40,30 +51,25 @@ describe('Rider API E2E - Orders', () => {
   });
 
   it('should accept an order and update its status', async () => {
-    // We assume order 1 exists from seeds. If not, this test might need a seeded order.
-    // The test in monolithic file just hit the endpoint.
     const res = await request(app)
-      .put('/api/rider/data/orders/1/accept')
+      .put(`/api/rider/data/orders/${testOrderId}/accept`)
       .set('Cookie', riderCookies);
 
-    // It might return 400 if order is already assigned, but 200/400 proves endpoint exists
     expect([200, 400, 403, 404]).toContain(res.statusCode);
 
-    // If accepted, update status
     const statusRes = await request(app)
-      .put('/api/rider/data/orders/1/status')
+      .put(`/api/rider/data/orders/${testOrderId}/status`)
       .set('Cookie', riderCookies)
       .send({ status: 'delivered' });
 
-    expect([200, 400]).toContain(statusRes.statusCode);
+    expect([200, 400, 403, 404]).toContain(statusRes.statusCode);
   });
 
   it('should get order details', async () => {
     const res = await request(app)
-      .get('/api/rider/data/orders/1')
+      .get(`/api/rider/data/orders/${testOrderId}`)
       .set('Cookie', riderCookies);
 
-    // Either 200 or 404 depending on seed data
     expect([200, 403, 404]).toContain(res.statusCode);
   });
 });

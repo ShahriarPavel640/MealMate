@@ -1,7 +1,13 @@
-import express from "express";
-import validinfo from "../../middleware/validinfo.js";
+﻿import express from "express";
 import authorization from "../../middleware/authorization.js";
 import authorizeRoles from "../../middleware/authorizeRoles.js";
+import { validate } from "../../middleware/validate.js";
+import {
+  updateProfileSchema,
+  updateAvailabilitySchema,
+  updateOrderStatusSchema
+} from "./riderSchemas.js";
+
 import {
   getDashboardData,
   getRiderProfile,
@@ -36,6 +42,7 @@ router.put(
   "/profile",
   authorization,
   authorizeRoles(role),
+  validate(updateProfileSchema),
   updateRiderProfile
 );
 
@@ -43,6 +50,7 @@ router.put(
   "/availability",
   authorization,
   authorizeRoles(role),
+  validate(updateAvailabilitySchema),
   updateRiderAvailability
 );
 
@@ -68,6 +76,7 @@ router.put(
   "/orders/:orderId/status",
   authorization,
   authorizeRoles(role),
+  validate(updateOrderStatusSchema),
   updateOrderStatus
 );
 
