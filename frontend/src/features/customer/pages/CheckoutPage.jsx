@@ -73,7 +73,7 @@ const CheckoutPage = () => {
         //   title: 'Orders placed successfully!',
         //   variant: 'success'
         // });
-        toast.success("Orderes placed successfully!");
+        toast.success("Orders placed successfully!");
 
         clearCart();
         setTimeout(() => {

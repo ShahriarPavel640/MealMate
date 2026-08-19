@@ -25,6 +25,7 @@ import notificationRoutes from "./shared/notifications/notificationRoutes.js";
 import { connectRedis } from "./utils/redisClient.js";
 import aiRoutes from "./shared/ai/aiRoutes.js";
 import { metricsMiddleware, register } from "./utils/metrics.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();const app = express();
 const server = http.createServer(app); // Create an HTTP server
@@ -132,6 +133,9 @@ app.get('/metrics', async (req, res) => {
 
 // Sentry error handler must be registered after all controllers and before any other error middleware
 Sentry.setupExpressErrorHandler(app);
+
+// Global Error Handler
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 let serverInstance;

@@ -1,73 +1,49 @@
-import pool from "../db.js";
+﻿import prisma from "../prismaClient.js";
 import { getIO } from "../socket.js";
+import logger from "../utils/logger.js";
 
 export const handleRestaurantSocketEvents = (socket) => {
   socket.on("accept_order", async ({ orderId, restaurantId }) => {
-    console.log(`Backend received accept_order for Order ID: ${orderId}, Restaurant ID: ${restaurantId}`);
+    logger.info(`Socket accept_order: Order ID: ${orderId}, Restaurant ID: ${restaurantId}`);
     const io = getIO();
-    const client = await pool.connect();
     try {
-      await client.query("BEGIN");
+      const order = await prisma.orders.update({
+        where: {
+          order_id: parseInt(orderId, 10),
+          restaurant_id: parseInt(restaurantId, 10),
+        },
+        data: { status: "preparing" },
+      });
 
-      const orderResult = await client.query(
-        "UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *",
-        ["preparing", orderId]
-      );
-
-      if (orderResult.rows.length === 0) {
-        await client.query("ROLLBACK");
-        console.error(`Order ${orderId} not found for acceptance.`);
-        return;
-      }
-
-      const order = orderResult.rows[0];
-
-      // Emit order status updated event to the restaurant
+      // Emit order status updated event to the restaurant & customer
       io.to(`restaurant_${restaurantId}`).emit("order_status_updated", order);
-      // Also emit to the customer
-      io.to(`customer_${order.customer_id}`).emit("order_status_updated", order);
+      io.to(`customer_${order.user_id}`).emit("order_status_updated", order);
 
-      await client.query("COMMIT");
-      console.log(`Order ${orderId} accepted by restaurant ${restaurantId}.`);
+      logger.info(`Order ${orderId} accepted by restaurant ${restaurantId}.`);
     } catch (error) {
-      await client.query("ROLLBACK");
-      console.error("Error accepting order:", error);
-    } finally {
-      client.release();
+      logger.error(`Error accepting order via socket: ${error.message}`);
     }
   });
 
   socket.on("reject_order", async ({ orderId, restaurantId }) => {
+    logger.info(`Socket reject_order: Order ID: ${orderId}, Restaurant ID: ${restaurantId}`);
     const io = getIO();
-    const client = await pool.connect();
     try {
-      await client.query("BEGIN");
+      const order = await prisma.orders.update({
+        where: {
+          order_id: parseInt(orderId, 10),
+          restaurant_id: parseInt(restaurantId, 10),
+        },
+        data: { status: "restaurant_rejected" },
+      });
 
-      const orderResult = await client.query(
-        "UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *",
-        ["restaurant_rejected", orderId]
-      );
-
-      if (orderResult.rows.length === 0) {
-        await client.query("ROLLBACK");
-        console.error(`Order ${orderId} not found for rejection.`);
-        return;
-      }
-
-      const order = orderResult.rows[0];
-
-      // Emit order status updated event to the restaurant
+      // Emit order status updated event to the restaurant & customer
       io.to(`restaurant_${restaurantId}`).emit("order_status_updated", order);
-      // Also emit to the customer
-      io.to(`customer_${order.customer_id}`).emit("order_status_updated", order);
+      io.to(`customer_${order.user_id}`).emit("order_status_updated", order);
 
-      await client.query("COMMIT");
-      console.log(`Order ${orderId} rejected by restaurant ${restaurantId}.`);
+      logger.info(`Order ${orderId} rejected by restaurant ${restaurantId}.`);
     } catch (error) {
-      await client.query("ROLLBACK");
-      console.error("Error rejecting order:", error);
-    } finally {
-      client.release();
+      logger.error(`Error rejecting order via socket: ${error.message}`);
     }
   });
 };

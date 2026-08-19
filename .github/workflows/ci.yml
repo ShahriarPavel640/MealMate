@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+﻿name: CI/CD Pipeline
 
 on:
   push:
@@ -93,6 +93,7 @@ jobs:
           DB_PORT: 5434
           DB_USER: postgres
           DB_PASSWORD: postgres
+          DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5434/test_mealmate?schema=public"
           REDIS_URL: redis://127.0.0.1:6379
           JWT_SECRET: test_secret
           FRONTEND_URL: http://localhost:5173
@@ -148,29 +149,5 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         
-      # ---------------------------------------------------------
-      # TODO (Future CD Implementation):
-      # 1. Log in to Docker Hub using GitHub Secrets
-      #    uses: docker/login-action@v3
-      #    with:
-      #      username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #      password: ${{ secrets.DOCKERHUB_TOKEN }}
-      #
-      # 2. Build and Push frontend & backend Docker images to Docker Hub
-      #    run: docker compose build && docker compose push
-      #
-      # 3. SSH into VPS and trigger update using Appleboy SSH Action
-      #    uses: appleboy/ssh-action@master
-      #    with:
-      #      host: ${{ secrets.VPS_HOST }}
-      #      username: ${{ secrets.VPS_USERNAME }}
-      #      key: ${{ secrets.VPS_SSH_KEY }}
-      #      script: |
-      #        cd /path/to/food_panda
-      #        git pull origin main
-      #        docker compose pull
-      #        docker compose up -d --remove-orphans
-      # ---------------------------------------------------------
-      
       - name: CD Placeholder
         run: echo "CD Pipeline triggered because this is a Push to main or master! Real deployment steps are currently commented out."

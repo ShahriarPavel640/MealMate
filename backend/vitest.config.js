@@ -12,6 +12,11 @@ export default defineConfig({
     maxWorkers: 1,
     forks: {
       singleFork: true,
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['customer/**/*.js']
     }
   },
 });

@@ -1,7 +1,4 @@
-// menu-management/menuRoutes.js
-
-import express from "express";
-//import { checkRestaurant } from "../../middleware/checkRestaurant.js"; // Import checkRestaurant middleware
+﻿import express from "express";
 import {
   createMenuCategory,
   updateCategory,
@@ -9,29 +6,29 @@ import {
   createMenuItem,
   updateMenuItemDetails,
   removeMenuItem
-} from "./menuController.js"; // Import controller functions
+} from "./menuController.js";
 import authorization from "../../middleware/authorization.js";
-//import { checkRestaurant } from "../../middleware/checkRestaurant.js";
 import authorizeRoles from "../../middleware/authorizeRoles.js";
+import { validate } from "../../middleware/validate.js";
+import {
+  createMenuCategorySchema,
+  updateMenuCategorySchema,
+  createMenuItemSchema,
+  updateMenuItemSchema
+} from "./menuSchemas.js";
 
 const router = express.Router();
 
-// Add menu category
-router.post("/restaurants/:id/categories",authorization,authorizeRoles("restaurant"),  createMenuCategory);
+router.post("/restaurants/:id/categories", authorization, authorizeRoles("restaurant"), validate(createMenuCategorySchema), createMenuCategory);
 
-// Edit menu category
-router.put("/categories/:id",authorization,authorizeRoles("restaurant"),  updateCategory);
+router.put("/categories/:id", authorization, authorizeRoles("restaurant"), validate(updateMenuCategorySchema), updateCategory);
 
-// Delete menu category
-router.delete("/categories/:id",authorization,authorizeRoles("restaurant"),  deleteCategory);
+router.delete("/categories/:id", authorization, authorizeRoles("restaurant"), deleteCategory);
 
-// Add menu item
-router.post("/categories/:id/items",authorization,authorizeRoles("restaurant"),  createMenuItem);
+router.post("/categories/:id/items", authorization, authorizeRoles("restaurant"), validate(createMenuItemSchema), createMenuItem);
 
-// Update menu item
-router.put("/menu-items/:id",authorization,authorizeRoles("restaurant"),  updateMenuItemDetails);
+router.put("/menu-items/:id", authorization, authorizeRoles("restaurant"), validate(updateMenuItemSchema), updateMenuItemDetails);
 
-// Delete menu item
-router.delete("/menu-items/:id",authorization,authorizeRoles("restaurant"),  removeMenuItem);
+router.delete("/menu-items/:id", authorization, authorizeRoles("restaurant"), removeMenuItem);
 
 export default router;

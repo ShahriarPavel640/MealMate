@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node --import ./instrument.js index.js",
+    "start": "npx prisma generate && node --import ./instrument.js index.js",
     "dev": "nodemon --import ./instrument.js index.js",
     "test": "vitest"
   },
@@ -28,7 +28,6 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
     "nodemon": "^3.1.10",
-    "pg": "^8.16.0",
     "postgres": "^3.4.7",
     "prom-client": "^15.1.3",
     "redis": "^6.1.0",
@@ -36,9 +35,11 @@
     "sslcommerz": "^1.7.0",
     "sslcommerz-lts": "^1.1.0",
     "uuid": "^11.1.0",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
     "prisma": "^6.19.3",
     "supertest": "^7.2.2",
     "vitest": "^4.1.10"
