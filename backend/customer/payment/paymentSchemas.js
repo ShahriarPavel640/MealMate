@@ -15,14 +15,13 @@ export const initiatePaymentSchema = z.object({
     .min(1, "Cart items must contain at least one item"),
   customerInfo: z
     .object({
-      name: z.string().optional(),
-      email: z.string().optional(),
-      phone: z.string().optional(),
-      address: z.any().optional(),
+      name: z.string(),
+      email: z.string().email(),
+      phone: z.string(),
+      address: z.any(),
     })
-    .passthrough()
-    .optional(),
-  total_amount: z.union([z.number(), z.string()]).optional(),
+    .passthrough(),
+  total_amount: z.coerce.number().positive().optional(),
   tran_id: z.string().optional(),
   paymentMethod: z.string().optional().default("sslcommerz"),
   specialInstructions: z.any().optional(),

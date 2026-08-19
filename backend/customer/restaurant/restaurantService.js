@@ -284,7 +284,9 @@ export const getMenus = async () => {
 };
 
 export const getMenuItem = async (id) => {
-  return await prisma.menu_items.findMany({
+  const items = await prisma.menu_items.findMany({
     where: { menu_item_id: parseInt(id) }
   });
+  if (!items || items.length === 0) throw new AppError("Menu item not found", 404);
+  return items[0];
 };

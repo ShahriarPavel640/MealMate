@@ -62,7 +62,7 @@ export const addToCart = async (userId, data) => {
         cart_item_id: existingItem.cart_item_id,
       },
       data: {
-        quantity: parseInt(quantity),
+        quantity: existingItem.quantity + parseInt(quantity),
       },
     });
     return { message: "Item quantity updated", item: updatedItem };
