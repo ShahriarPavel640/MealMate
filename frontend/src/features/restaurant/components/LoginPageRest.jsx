@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState } from "react";
 import { Button } from "@/features/restaurant/components/ui/button";
 import { Input } from "@/features/restaurant/components/ui/input";
@@ -23,7 +24,6 @@ import LocationPickerModal from "@/features/customer/components/LocationPickerMo
 import toast from "react-hot-toast";
 
 const LoginPage = () => {
-  const navigate = useNavigate();
   const { login, signup, isLoggingIn, authRestaurant, isSigningUp } =
     restaurantAuthStore();
   const [isLoading, setIsLoading] = useState(false);

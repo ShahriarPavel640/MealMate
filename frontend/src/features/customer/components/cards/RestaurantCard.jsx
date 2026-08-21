@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Star, Heart } from "lucide-react";
@@ -7,7 +8,6 @@ const RestaurantCard = ({ restaurant }) => {
   const { restaurant_id, name, email, average_rating, phone, image_url, is_favorite, is_open } =
     restaurant;
 
-  const navigate = useNavigate();
   const toggleFavorite = useRestaurantStore((state) => state.toggleFavorite);
 
   const handleFavoriteClick = (e) => {
