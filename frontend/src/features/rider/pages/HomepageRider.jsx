@@ -24,7 +24,7 @@ import {
   Eye,
   Info,
 } from "lucide-react";
-import ChatModal from "@/components/ChatModal";
+import ChatModal from "@/Components/ChatModal";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
 import socketService from "@/services/socketService";
