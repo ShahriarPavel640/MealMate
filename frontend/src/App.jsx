@@ -34,8 +34,8 @@ import PaymentFailedPage from "@/features/customer/pages/PaymentFailedPage";
 import PaymentCancelledPage from "@/features/customer/pages/PaymentCancelledPage";
 import { Toaster } from "@/features/restaurant/components/ui/toaster";
 
-import ChatButton from "@/components/ChatButton";
-import ChatModal from "@/components/ChatModal";
+import ChatButton from "@/Components/ChatButton";
+import ChatModal from "@/Components/ChatModal";
 
 import socketService from "@/services/socketService";
 import { useNotificationStore } from "@/features/customer/store/notificationStore";
