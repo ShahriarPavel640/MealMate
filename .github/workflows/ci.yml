@@ -121,6 +121,8 @@ jobs:
         run: npm ci
 
       - name: Run API E2E Tests
+        env:
+          VITE_API_URL: http://127.0.0.1:5000
         working-directory: ./frontend
         run: npx playwright test e2e/api-*.spec.js
 
