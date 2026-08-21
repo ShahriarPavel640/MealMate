@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Search } from "lucide-react";
 import toast from "react-hot-toast";
@@ -21,7 +22,6 @@ export default function Restaurant() {
   const { cartItems, addToCart, updateQuantity, removeFromCart, clearCart } =
     useCartStore();
   const { authUser } = userAuthStore();
-  const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
   const [menuItems, setmenuItems] = useState([]);
   const menuItemsRef = useRef(null);

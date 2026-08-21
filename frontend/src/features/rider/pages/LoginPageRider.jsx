@@ -6,7 +6,6 @@ import Navbar from "@/features/customer/components/skeleton/Navbar";
 import { Link } from "react-router-dom";
 
 function LoginPageRider() {
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",

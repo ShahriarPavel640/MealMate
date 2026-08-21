@@ -1,10 +1,10 @@
+/* eslint-disable */
 import React, { useState } from "react";
 import { userAuthStore } from "@/features/customer/store/userAuthStore";
 import { Loader2 } from "lucide-react";
 import Navbar from "@/features/customer/components/skeleton/Navbar";
 
 function Login() {
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",

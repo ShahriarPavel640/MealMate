@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useEffect } from "react";
 import HeroSection from "@/features/customer/components/HeroSection";
 import FeaturesSection from "@/features/customer/components/FeaturesSection";

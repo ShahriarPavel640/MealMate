@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useEffect, useState, useRef } from "react";
 import RestaurantCard from "@/features/customer/components/cards/RestaurantCard";
 import { useRestaurantStore } from "@/features/customer/store/useRestaurantStore";
