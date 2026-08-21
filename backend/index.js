@@ -26,6 +26,8 @@ import { connectRedis } from "./utils/redisClient.js";
 import aiRoutes from "./shared/ai/aiRoutes.js";
 import { metricsMiddleware, register } from "./utils/metrics.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./docs/swagger.js";
 
 dotenv.config();const app = express();
 const server = http.createServer(app); // Create an HTTP server
@@ -70,6 +72,15 @@ app.use(
   cors({
     origin: allowedOrigins,
     credentials: true,
+  })
+);
+
+// Swagger API Documentation
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    swaggerOptions: { withCredentials: true },
   })
 );
 
