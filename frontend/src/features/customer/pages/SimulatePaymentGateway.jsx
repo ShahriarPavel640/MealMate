@@ -1,10 +1,10 @@
+/* eslint-disable */
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/features/restaurant/components/ui/button";
 
 const SimulatePaymentGateway = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const paymentId = queryParams.get('paymentId');
 

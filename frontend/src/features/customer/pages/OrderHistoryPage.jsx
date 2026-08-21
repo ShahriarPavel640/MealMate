@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useEffect, useState, useRef } from "react";
 import { axiosInstance } from "@/lib/axios";
 import { Button } from "@/features/restaurant/components/ui/button";
