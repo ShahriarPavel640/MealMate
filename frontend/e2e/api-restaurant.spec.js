@@ -31,7 +31,7 @@ test.describe('Restaurant API E2E', () => {
     const restaurantId = restData.restaurant_id;
 
     // 4. Update Profile
-    const profileRes = await request.post('/api/restaurant/edit_profile', {
+    await request.post('/api/restaurant/edit_profile', {
       data: { name: 'API Restaurant Updated', delivery_time: '30' }
     });
     // Ignore profile edit failure due to multer image requirement
@@ -68,3 +68,4 @@ test.describe('Restaurant API E2E', () => {
     expect(recentRes.ok()).toBeTruthy();
   });
 });
+

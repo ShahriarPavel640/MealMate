@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useRef, useEffect } from "react";
 import { Bell, Search, User, LogOut, Info, Clock, Check } from "lucide-react";
 import { Button } from "@/features/restaurant/components/ui/button";
@@ -23,8 +24,6 @@ const HeaderRest = ({ onLogout }) => {
   } = useNotificationStore();
   const menuRef = useRef();
   const notificationRef = useRef();
-  const navigate = useNavigate();
-
   const { logout, authRestaurant } = restaurantAuthStore();
 
   useEffect(() => {

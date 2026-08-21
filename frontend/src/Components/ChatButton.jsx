@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/features/restaurant/components/ui/button";

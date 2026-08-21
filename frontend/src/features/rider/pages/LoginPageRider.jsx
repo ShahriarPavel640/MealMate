@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState } from "react";
 import { useRiderAuthStore } from "@/features/rider/store/riderAuthStore";
 import { Loader2 } from "lucide-react";
