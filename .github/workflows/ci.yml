@@ -49,6 +49,7 @@ jobs:
       REDIS_URL: redis://127.0.0.1:6379
       JWT_SECRET: test_secret
       FRONTEND_URL: http://localhost:5173
+      VITE_API_URL: http://127.0.0.1:5000
     
     services:
       postgres:
@@ -141,6 +142,7 @@ jobs:
       REDIS_URL: redis://127.0.0.1:6379
       JWT_SECRET: test_secret
       FRONTEND_URL: http://localhost:5173
+      VITE_API_URL: http://127.0.0.1:5000
       
     services:
       postgres:
@@ -242,4 +244,7 @@ jobs:
         
       - name: CD Placeholder
         run: echo "CD Pipeline triggered because this is a Push to main or master! Real deployment steps are currently commented out."
+
+
+
 
