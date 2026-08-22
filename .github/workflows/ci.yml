@@ -176,6 +176,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
       - name: Install Backend Dependencies
         working-directory: ./backend
@@ -239,3 +242,4 @@ jobs:
         
       - name: CD Placeholder
         run: echo "CD Pipeline triggered because this is a Push to main or master! Real deployment steps are currently commented out."
+
