@@ -8,7 +8,7 @@ const authorization = async (req, res, next) => {
     //console.log("jwtToken", jwtToken);
 
     if (!token) {
-      return res.status(403).json("not athorize. no token provided");
+      return res.status(403).json("Not authorized. No token provided.");
     }
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.user = payload.user || payload;

@@ -2,6 +2,7 @@
 import request from 'supertest';
 import { app } from '../index.js';
 import prisma from '../prismaClient.js';
+
 const pool = {
   query: async (text, params) => {
     if (params) return prisma.$executeRawUnsafe(text, ...params);
@@ -9,7 +10,6 @@ const pool = {
   },
   end: async () => { await prisma.$disconnect(); }
 };
-
 describe('Restaurant API E2E - Auth & Profile', () => {
   let restaurantCookies;
   let restaurantId;

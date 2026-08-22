@@ -20,7 +20,7 @@ import createCustomerPaymentRoutes from "./customer/payment/paymentRoutes.js";
 import reviewRoutes from "./shared/reviews/reviewRoutes.js";
 import chatRoutes from "./shared/chats/chatRoutes.js";
 import restaurantOrder from "./restaurants/order/orderRoutes.js";
-import restaurnatStat from "./restaurants/stats/statsRoutes.js";
+import restaurantStat from "./restaurants/stats/statsRoutes.js";
 import notificationRoutes from "./shared/notifications/notificationRoutes.js";
 import { connectRedis } from "./utils/redisClient.js";
 import aiRoutes from "./shared/ai/aiRoutes.js";
@@ -59,12 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(cookieParser());
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5175",
-  "http://192.168.0.101:5173",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
+const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [process.env.FRONTEND_URL || "http://localhost:5173"];
 
 app.use(
   cors({
@@ -82,7 +77,7 @@ app.use("/api/rider/data", router);
 //console.log("Registering restaurant routes...");
 app.use("/api/restaurant", restaurantRoute);
 app.use("/api/restaurant", restaurantOrder); //restaurant order management
-app.use("/api/restaurant/stats", restaurnatStat); // for fetching restaurnant statistics
+app.use("/api/restaurant/stats", restaurantStat); // for fetching restaurnant statistics
 console.log("Registering menu routes...");
 app.use("/api/menu", menuRoutes); // Register the menu routes
 
@@ -164,3 +159,4 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 export { app, server, io }; // Export the app, server, and io instance
+

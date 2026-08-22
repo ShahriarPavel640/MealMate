@@ -23,7 +23,11 @@ export const submitRiderReview = async (req, res, next) => {
 export const getRestaurantReviews = async (req, res, next) => {
   try {
     const { restaurantId } = req.params;
-    const result = await reviewService.getRestaurantReviewsService(restaurantId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    const skip = (page - 1) * limit;
+
+    const result = await reviewService.getRestaurantReviewsService(restaurantId, skip, limit, page);
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -33,7 +37,11 @@ export const getRestaurantReviews = async (req, res, next) => {
 export const getRiderReviews = async (req, res, next) => {
   try {
     const riderId = req.user.id;
-    const result = await reviewService.getRiderReviewsService(riderId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    const skip = (page - 1) * limit;
+
+    const result = await reviewService.getRiderReviewsService(riderId, skip, limit, page);
     res.status(200).json(result);
   } catch (error) {
     next(error);
