@@ -38,9 +38,20 @@ jobs:
   backend-checks:
     name: Backend Tests
     needs: changes
-    # Only run this job if backend files changed
     if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5434
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5434/test_mealmate?schema=public"
+      REDIS_URL: redis://127.0.0.1:6379
+      JWT_SECRET: test_secret
+      SSL_COMMERZ_STORE_ID: test_store_id
+      SSL_COMMERZ_STORE_PASSWORD: test_store_password
+      FRONTEND_URL: http://localhost:5173
+      VITE_API_URL: http://127.0.0.1:5000
     
     services:
       postgres:
@@ -88,46 +99,11 @@ jobs:
 
       - name: Run Backend Tests
         working-directory: ./backend
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5434
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5434/test_mealmate?schema=public"
-          REDIS_URL: redis://127.0.0.1:6379
-          JWT_SECRET: test_secret
-          FRONTEND_URL: http://localhost:5173
         run: npm test
-
-      - name: Start Backend Server for E2E
-        working-directory: ./backend
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5434
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5434/test_mealmate?schema=public"
-          REDIS_URL: redis://127.0.0.1:6379
-          JWT_SECRET: test_secret
-          FRONTEND_URL: http://localhost:5173
-        run: |
-          npm start &
-          sleep 5
-
-      - name: Install Frontend Test Deps
-        working-directory: ./frontend
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1 
-        run: npm ci
-
-      - name: Run API E2E Tests
-        working-directory: ./frontend
-        run: npx playwright test e2e/api-*.spec.js
 
   frontend-checks:
     name: Frontend Lint & Build
     needs: changes
-    # Only run this job if frontend files changed
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
 
@@ -154,6 +130,103 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
+  e2e-ui-tests:
+    name: E2E UI Tests
+    needs: [backend-checks, frontend-checks, changes]
+    if: ${{ always() && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true') && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5434
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5434/test_mealmate?schema=public"
+      REDIS_URL: redis://127.0.0.1:6379
+      JWT_SECRET: test_secret
+      SSL_COMMERZ_STORE_ID: test_store_id
+      SSL_COMMERZ_STORE_PASSWORD: test_store_password
+      FRONTEND_URL: http://localhost:5173
+      VITE_API_URL: http://127.0.0.1:5000
+      
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma Client & Setup DB
+        working-directory: ./backend
+        run: |
+          npx prisma generate
+          npx prisma db push --force-reset
+
+      - name: Start Backend Server
+        working-directory: ./backend
+        run: |
+          npm start &
+          sleep 5
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Get Playwright Version
+        id: playwright-version
+        working-directory: ./frontend
+        run: echo "PLAYWRIGHT_VERSION=$(npm ls @playwright/test | grep @playwright/test | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps
+
+      - name: Run UI E2E Tests
+        working-directory: ./frontend
+        run: npx playwright test e2e/customer-flow.spec.js e2e/smoke.spec.js
+
   docker-build:
     name: Verify Docker Build
     runs-on: ubuntu-latest
@@ -166,9 +239,8 @@ jobs:
 
   cd-deploy:
     name: Continuous Deployment (Coming Soon)
-    needs: [backend-checks, frontend-checks, docker-build]
-    # This condition ensures the deployment ONLY runs when pushing/merging into master or main, NOT during a PR!
-    if: always() && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    needs: [backend-checks, frontend-checks, e2e-ui-tests, docker-build]
+    if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -176,4 +248,8 @@ jobs:
         
       - name: CD Placeholder
         run: echo "CD Pipeline triggered because this is a Push to main or master! Real deployment steps are currently commented out."
+
+
+
+
 

@@ -19,7 +19,7 @@ import {
   get_menu_categories,
   change_menu_availability,
   getReviewsAll,
-  getIndividualMenuReview,
+
 } from "./restaurantProfileController.js";
 
 import {
@@ -104,11 +104,6 @@ router.post(
 );
 
 router.get("/reviews", authorization, authorizeRoles(role), getReviewsAll);
-router.get(
-  "/reviews/menu/:id",
-  authorization,
-  authorizeRoles(role),
-  getIndividualMenuReview
-);
 
 export { router };
+

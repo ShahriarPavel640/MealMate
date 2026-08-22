@@ -1,4 +1,4 @@
-const restaurantDocs = {
+﻿const restaurantDocs = {
   schemas: {
     RestaurantRegister: {
       type: 'object',
@@ -328,3 +328,4 @@ const restaurantDocs = {
 };
 
 export default restaurantDocs;
+
