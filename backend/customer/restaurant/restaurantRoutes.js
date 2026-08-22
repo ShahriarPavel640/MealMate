@@ -14,7 +14,6 @@ import {
   getRestaurantsSearchByName,
   toggleFavoriteRestaurant,
 } from "./restaurantController.js";
-import { getIndividualMenuReview } from "../../restaurants/profile/restaurantProfileController.js";
 
 const router = express.Router();
 const role = "customer";
@@ -70,3 +69,4 @@ router.get(
 );
 
 export default router;
+
