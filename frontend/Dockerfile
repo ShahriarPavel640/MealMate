@@ -1,10 +1,10 @@
 # --- Stage 1: Development & Builder ---
-FROM node:20-alpine AS development
+FROM node:20-slim AS development
 
 WORKDIR /app
 
 # Install dependencies
-COPY package*.json ./
+COPY package.json ./
 RUN npm install
 
 # Copy source code

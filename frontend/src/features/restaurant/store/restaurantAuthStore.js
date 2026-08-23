@@ -51,14 +51,14 @@ export const restaurantAuthStore = create((set, get) => ({
     }
   },
 
-  logout: async () => {
+  logout: async (showToast = true) => {
     set({ isLoggingOut: true });
     try {
       await axiosInstance.get("/restaurant/logout");
       set({ authRestaurant: null });
-      toast.success("Logged out successfully");
+      if (showToast) toast.success("Logged out successfully");
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Logout failed");
+      if (showToast) toast.error(err?.response?.data?.message || "Logout failed");
     } finally {
       set({ isLoggingOut: false });
     }
@@ -130,3 +130,4 @@ export const restaurantAuthStore = create((set, get) => ({
     }
   },
 }));
+
