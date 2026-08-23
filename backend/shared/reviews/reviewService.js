@@ -85,32 +85,53 @@ export const submitRiderReviewService = async (userId, data) => {
   return { message: "Rider review submitted successfully" };
 };
 
-export const getRestaurantReviewsService = async (restaurantId) => {
-  const reviews = await prisma.reviews.findMany({
-    where: { restaurant_id: parseInt(restaurantId) },
-    orderBy: { created_at: "desc" },
-    include: { users: { select: { name: true } } }
-  });
+export const getRestaurantReviewsService = async (restaurantId, skip = 0, take = 50, page = 1) => {
+  const [reviews, totalCount] = await Promise.all([
+    prisma.reviews.findMany({
+      where: { restaurant_id: parseInt(restaurantId) },
+      orderBy: { created_at: "desc" },
+      skip,
+      take,
+      include: { users: { select: { name: true } } }
+    }),
+    prisma.reviews.count({
+      where: { restaurant_id: parseInt(restaurantId) }
+    })
+  ]);
   
-  return reviews.map(r => ({
-    rating: r.rating,
-    comment: r.comment,
-    created_at: r.created_at,
-    user_name: r.users?.name || "Unknown"
-  }));
+  return {
+    reviews: reviews.map(r => ({
+      rating: r.rating,
+      comment: r.comment,
+      created_at: r.created_at,
+      user_name: r.users?.name || "Unknown"
+    })),
+    pagination: {
+      total: totalCount,
+      page,
+      limit: take,
+      totalPages: Math.ceil(totalCount / take)
+    }
+  };
 };
 
-export const getRiderReviewsService = async (riderId) => {
-  const reviews = await prisma.reviews.findMany({
-    where: { rider_id: parseInt(riderId) },
-    orderBy: { created_at: "desc" },
-    include: { users: { select: { name: true } } }
-  });
-
-  const avg = await prisma.reviews.aggregate({
-    _avg: { rating: true },
-    where: { rider_id: parseInt(riderId) }
-  });
+export const getRiderReviewsService = async (riderId, skip = 0, take = 50, page = 1) => {
+  const [reviews, totalCount, avg] = await Promise.all([
+    prisma.reviews.findMany({
+      where: { rider_id: parseInt(riderId) },
+      orderBy: { created_at: "desc" },
+      skip,
+      take,
+      include: { users: { select: { name: true } } }
+    }),
+    prisma.reviews.count({
+      where: { rider_id: parseInt(riderId) }
+    }),
+    prisma.reviews.aggregate({
+      _avg: { rating: true },
+      where: { rider_id: parseInt(riderId) }
+    })
+  ]);
 
   return {
     reviews: reviews.map(r => ({
@@ -119,6 +140,12 @@ export const getRiderReviewsService = async (riderId) => {
       created_at: r.created_at,
       user_name: r.users?.name || "Unknown"
     })),
-    averageRating: avg._avg.rating ? avg._avg.rating.toFixed(2) : null
+    averageRating: avg._avg.rating ? avg._avg.rating.toFixed(2) : null,
+    pagination: {
+      total: totalCount,
+      page,
+      limit: take,
+      totalPages: Math.ceil(totalCount / take)
+    }
   };
 };

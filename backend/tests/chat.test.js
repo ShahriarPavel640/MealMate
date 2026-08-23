@@ -2,6 +2,7 @@ import { describe, it, expect, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index.js';
 import prisma from '../prismaClient.js';
+
 const pool = {
   query: async (text, params) => {
     if (params) return prisma.$executeRawUnsafe(text, ...params);
@@ -9,7 +10,6 @@ const pool = {
   },
   end: async () => { await prisma.$disconnect(); }
 };
-
 describe('Chat API E2E', () => {
   let customerCookies;
   let orderId;
@@ -23,7 +23,7 @@ describe('Chat API E2E', () => {
   };
 
   afterAll(async () => {
-    await pool.end();
+    await prisma.$disconnect();
   });
 
   it('should setup customer and create an order', async () => {

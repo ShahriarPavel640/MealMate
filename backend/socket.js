@@ -4,12 +4,7 @@ import redisClient from "./utils/redisClient.js";
 
 let io;
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5175',
-  'http://192.168.0.101:5173',
-  process.env.FRONTEND_URL,
-].filter(Boolean);
+const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [process.env.FRONTEND_URL || "http://localhost:5173"];
 
 export const initSocket = (server) => {
   io = new Server(server, {
@@ -73,3 +68,5 @@ export const getIO = () => {
   }
   return io;
 };
+
+

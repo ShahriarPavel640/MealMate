@@ -2,14 +2,6 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index.js';
 import prisma from '../prismaClient.js';
-const pool = {
-  query: async (text, params) => {
-    if (params) return prisma.$executeRawUnsafe(text, ...params);
-    return prisma.$executeRawUnsafe(text);
-  },
-  end: async () => { await prisma.$disconnect(); }
-};
-
 describe('Customer API - Review Management', () => {
   let customerCookies;
   let createdOrderId;
@@ -49,7 +41,7 @@ describe('Customer API - Review Management', () => {
   });
 
   afterAll(async () => {
-    await pool.end();
+    await prisma.$disconnect();
   });
 
   // --- Happy Paths ---
