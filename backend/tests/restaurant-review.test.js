@@ -46,10 +46,6 @@ describe('Restaurant API E2E - Reviews', () => {
       .get('/api/restaurant/reviews')
       .set('Cookie', restaurantCookies);
     expect(allReviewsRes.statusCode).toBe(200);
-
-    const menuReviewRes = await request(app)
-      .get('/api/restaurant/reviews/menu/1')
-      .set('Cookie', restaurantCookies);
-    expect(menuReviewRes.statusCode).toBe(200);
   });
 });
+

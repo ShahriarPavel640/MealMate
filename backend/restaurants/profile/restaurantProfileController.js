@@ -12,7 +12,7 @@
   getMenuItems,
   getMenuCategories as fetchMenuCategories,
   getRestaurantReviews,
-  getMenuItemReviews
+  
 } from "./restaurantProfileService.js";
 import { generateToken } from "../../utils/jwtGenerator.js";
 import cloudinary from "../../utils/cloudinary.js";
@@ -260,13 +260,5 @@ export const getReviewsAll = async (req, res, next) => {
   }
 };
 
-export const getIndividualMenuReview = async (req, res, next) => {
-  try {
-    const restaurantId = req.user.id;
-    const menuItemId = req.params.id;
-    const reviews = await getMenuItemReviews(restaurantId, menuItemId);
-    res.status(200).json(reviews);
-  } catch (err) {
-    next(err);
-  }
-};
+
+

@@ -26,8 +26,11 @@ import { connectRedis } from "./utils/redisClient.js";
 import aiRoutes from "./shared/ai/aiRoutes.js";
 import { metricsMiddleware, register } from "./utils/metrics.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./docs/swagger.js";
 
-dotenv.config();const app = express();
+dotenv.config();
+const app = express();
 const server = http.createServer(app); // Create an HTTP server
 
 // Initialize Socket.IO
@@ -59,12 +62,22 @@ app.use((req, res, next) => {
   next();
 });
 app.use(cookieParser());
+
 const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [process.env.FRONTEND_URL || "http://localhost:5173"];
 
 app.use(
   cors({
     origin: allowedOrigins,
     credentials: true,
+  })
+);
+
+// Swagger API Documentation
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    swaggerOptions: { withCredentials: true },
   })
 );
 
@@ -85,8 +98,6 @@ app.use("/api/menu", menuRoutes); // Register the menu routes
 
 const store_id = process.env.SSL_COMMERZ_STORE_ID;
 const store_passwd = process.env.SSL_COMMERZ_STORE_PASSWORD;
-//console.log("Loaded SSLCommerz Store ID:", store_id);
-//console.log("Loaded SSLCommerz Store Password:", store_passwd);
 
 if (!store_id || !store_passwd) {
   console.error(
@@ -158,5 +169,4 @@ process.once('SIGUSR2', () => gracefulShutdown('SIGUSR2'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-export { app, server, io }; // Export the app, server, and io instance
-
+export { app, server, io };

@@ -44,10 +44,11 @@ function Signup() {
           </h2>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Full Name
               </label>
               <input
+                id="name"
                 type="text"
                 required
                 className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -59,10 +60,11 @@ function Signup() {
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Email
               </label>
               <input
+                id="email"
                 type="email"
                 required
                 className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -74,10 +76,11 @@ function Signup() {
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Password
               </label>
               <input
+                id="password"
                 type="password"
                 required
                 className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"

@@ -481,45 +481,4 @@ export const getRestaurantReviews = async (restaurantId, { page = 1, limit = 10 
   };
 };
 
-export const getMenuItemReviews = async (restaurantId, menuItemIdRaw) => {
-  const menuItemId = parseInt(menuItemIdRaw, 10);
 
-  const reviews = await prisma.reviews.findMany({
-    where: {
-      restaurant_id: restaurantId,
-      orders: {
-        order_items: {
-          some: { menu_item_id: menuItemId },
-        },
-      },
-    },
-    include: {
-      users: { select: { name: true } },
-      orders: {
-        include: {
-          order_items: {
-            where: { menu_item_id: menuItemId },
-            include: {
-              menu_items: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: { created_at: "desc" },
-  });
-
-  return reviews.map((r) => {
-    const matchedItem = r.orders?.order_items?.[0]?.menu_items;
-    return {
-      review_id: r.review_id,
-      rating: r.rating,
-      comment: r.comment,
-      created_at: r.created_at,
-      user_name: r.users?.name || "Anonymous",
-      menu_item_name: matchedItem?.name || "",
-      menu_item_image_url: matchedItem?.menu_item_image_url || "",
-      description: matchedItem?.description || "",
-    };
-  });
-};
