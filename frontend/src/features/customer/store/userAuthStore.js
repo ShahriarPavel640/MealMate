@@ -46,12 +46,12 @@ export const userAuthStore = create((set, get) => ({
       set({ authUser: { ...res.data, role: "customer" } });
       toast.success("Signed up successfully");
     } catch (err) {
-      toast.error(err.response.data.message);
+      if (showToast) toast.error(err.response?.data?.message || "Error logging out");
     } finally {
       set({ isSigningUp: false });
     }
   },
-  logout: async (data) => {
+  logout: async (showToast = true) => {
     set({ isLoggingOut: true });
     const getrestaurants = useRestaurantStore.getState().getrestaurants;
     const getcategories = useRestaurantStore.getState().getcategories;
@@ -61,9 +61,9 @@ export const userAuthStore = create((set, get) => ({
       await new Promise((resolve) => setTimeout(resolve, 0));
       await getrestaurants();
       await getcategories();
-      toast.success("Logged out successfully");
+      if (showToast) toast.success("Logged out successfully");
     } catch (err) {
-      toast.error(err.response.data.message);
+      if (showToast) toast.error(err.response?.data?.message || "Error logging out");
     }
   },
   updateProfile: async (data) => {
@@ -73,7 +73,8 @@ export const userAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("updated profile successfully");
     } catch (err) {
-      toast.error(err.response.data.message);
+      if (showToast) toast.error(err.response?.data?.message || "Error logging out");
     }
   },
 }));
+

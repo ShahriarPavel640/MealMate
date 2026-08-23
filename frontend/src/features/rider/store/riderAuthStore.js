@@ -50,16 +50,17 @@ export const useRiderAuthStore = create((set) => ({
     }
   },
 
-  logout: async () => {
+  logout: async (showToast = true) => {
     set({ isLoggingOut: true });
     try {
       await axiosInstance.post("/rider/logout");
       set({ authrider: null });
-      toast.success("Logged out successfully");
+      if (showToast) toast.success("Logged out successfully");
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Logout failed");
+      if (showToast) toast.error(err?.response?.data?.message || "Logout failed");
     } finally {
       set({ isLoggingOut: false });
     }
   },
 }));
+

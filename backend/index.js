@@ -22,6 +22,7 @@ import chatRoutes from "./shared/chats/chatRoutes.js";
 import restaurantOrder from "./restaurants/order/orderRoutes.js";
 import restaurantStat from "./restaurants/stats/statsRoutes.js";
 import notificationRoutes from "./shared/notifications/notificationRoutes.js";
+import sharedAuthRoutes from "./shared/auth/authRoutes.js";
 import { connectRedis } from "./utils/redisClient.js";
 import aiRoutes from "./shared/ai/aiRoutes.js";
 import { metricsMiddleware, register } from "./utils/metrics.js";
@@ -126,6 +127,7 @@ app.use("/api/customer/order", customerOrderRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/auth", sharedAuthRoutes);
 
 // Expose metrics endpoint for Prometheus
 app.get('/metrics', async (req, res) => {

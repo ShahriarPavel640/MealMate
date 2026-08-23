@@ -5,7 +5,7 @@ export const signup = async (req, res, next) => {
   try {
     const result = await riderAuthService.signup(req.body);
 
-    generateToken(result.user.user_id, "rider", res);
+    await generateToken(result.user.user_id, "rider", res);
 
     res.status(201).json({
       message: "Rider registered successfully",
@@ -27,7 +27,7 @@ export const login = async (req, res, next) => {
     const { email, password } = req.body;
     const result = await riderAuthService.login(email, password);
 
-    generateToken(result.user.user_id, "rider", res);
+    await generateToken(result.user.user_id, "rider", res);
 
     res.status(200).json({
       message: "Login successful",
@@ -46,7 +46,17 @@ export const login = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.cookie("jwt", "", { maxAge: 0 });
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+      const jwt = (await import("jsonwebtoken")).default;
+      const decoded = jwt.decode(refreshToken);
+      if (decoded && decoded.id) {
+        const redisClient = (await import("../../utils/redisClient.js")).default;
+        await redisClient.del(`refresh_token:${decoded.id}`);
+      }
+    }
+    res.cookie("accessToken", "", { maxAge: 0 });
+    res.cookie("refreshToken", "", { maxAge: 0 });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
     next(err);
@@ -71,3 +81,4 @@ export const verify = async (req, res, next) => {
     next(err);
   }
 };
+

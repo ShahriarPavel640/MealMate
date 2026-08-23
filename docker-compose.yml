@@ -52,7 +52,6 @@ services:
       - REDIS_URL=redis://redis:6379
     volumes:
       - ./backend:/app
-      - /app/node_modules
     depends_on:
       - db
       - redis
@@ -70,7 +69,6 @@ services:
       - VITE_SENTRY_DSN=https://534fe3aadb5ae51c767ee7b9802464fc@o4511875651600384.ingest.de.sentry.io/4511875675062352
     volumes:
       - ./frontend:/app
-      - /app/node_modules
     depends_on:
       - backend
 

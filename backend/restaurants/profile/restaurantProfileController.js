@@ -1,4 +1,4 @@
-﻿import {
+import {
   registerRestaurant,
   loginRestaurant,
   getRestaurantById,
@@ -21,7 +21,7 @@ import fs from "fs";
 export const signup = async (req, res, next) => {
   try {
     const newRestaurant = await registerRestaurant(req.body);
-    generateToken(newRestaurant.restaurant_id, "restaurant", res);
+    await generateToken(newRestaurant.restaurant_id, "restaurant", res);
 
     res.status(201).json({
       restaurant_id: newRestaurant.restaurant_id,
@@ -40,7 +40,7 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const restaurant = await loginRestaurant(email, password);
-    generateToken(restaurant.restaurant_id, "restaurant", res);
+    await generateToken(restaurant.restaurant_id, "restaurant", res);
 
     res.status(200).json({
       message: "login successfull",
@@ -58,7 +58,17 @@ export const login = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.cookie("jwt", "", { maxAge: 0 });
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+      const jwt = (await import("jsonwebtoken")).default;
+      const decoded = jwt.decode(refreshToken);
+      if (decoded && decoded.id) {
+        const redisClient = (await import("../../utils/redisClient.js")).default;
+        await redisClient.del(`refresh_token:${decoded.id}`);
+      }
+    }
+    res.cookie("accessToken", "", { maxAge: 0 });
+    res.cookie("refreshToken", "", { maxAge: 0 });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
     next(err);
@@ -259,6 +269,7 @@ export const getReviewsAll = async (req, res, next) => {
     next(err);
   }
 };
+
 
 
 
