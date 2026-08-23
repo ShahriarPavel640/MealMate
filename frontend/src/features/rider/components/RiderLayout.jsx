@@ -69,7 +69,7 @@ const RiderLayout = ({ children, onChatClick }) => {
     { name: 'Dashboard', path: '/rider', icon: Home },
     { name: 'History', path: '/rider/history', icon: History },
     { name: 'Performance', path: '/rider/earnings', icon: TrendingUp },
-    { name: 'Profile', path: '/rider/data/profile', icon: User },
+    { name: 'Profile', path: '/rider/profile', icon: User },
   ];
 
   return (
@@ -247,3 +247,4 @@ const RiderLayout = ({ children, onChatClick }) => {
 };
 
 export default RiderLayout;
+
