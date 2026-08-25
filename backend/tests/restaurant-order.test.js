@@ -61,7 +61,7 @@ describe('Restaurant API E2E - Orders', () => {
   });
 
   afterAll(async () => {
-    await pool.query("UPDATE orders SET restaurant_id = 1, status = 'pending' WHERE order_id = 1");
+    await pool.query("UPDATE orders SET restaurant_id = 1, status = 'pending_restaurant_acceptance' WHERE order_id = 1");
     if (restaurantId) {
       await pool.query('DELETE FROM restaurants WHERE restaurant_id = $1', [restaurantId]);
     }
@@ -128,4 +128,5 @@ describe('Restaurant API E2E - Orders', () => {
     expect(updateRes.statusCode).toBe(200);
   });
 });
+
 
