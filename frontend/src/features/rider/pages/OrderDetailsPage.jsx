@@ -13,7 +13,7 @@ const OrderDetailsPage = () => {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        const res = await axiosInstance.get(`/rider/data/orders/${orderId}`);
+        const res = await axiosInstance.get(`/rider/orders/${orderId}`);
         setOrder(res.data.order);
       } catch (err) {
         console.error("Error fetching order details:", err);

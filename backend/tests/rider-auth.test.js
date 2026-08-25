@@ -62,7 +62,7 @@ describe('Rider API E2E - Auth & Profile', () => {
 
   it('should get rider profile', async () => {
     const res = await request(app)
-      .get('/api/rider/data/profile')
+      .get('/api/rider/profile')
       .set('Cookie', riderCookies);
 
     expect(res.statusCode).toBe(200);
@@ -70,7 +70,7 @@ describe('Rider API E2E - Auth & Profile', () => {
 
   it('should update rider profile', async () => {
     const res = await request(app)
-      .put('/api/rider/data/profile')
+      .put('/api/rider/profile')
       .set('Cookie', riderCookies)
       .send({
         name: 'Updated Rider Name',
@@ -84,7 +84,7 @@ describe('Rider API E2E - Auth & Profile', () => {
 
   it('should update rider availability', async () => {
     const res = await request(app)
-      .put('/api/rider/data/availability')
+      .put('/api/rider/profile/availability')
       .set('Cookie', riderCookies)
       .send({ is_available: false });
 

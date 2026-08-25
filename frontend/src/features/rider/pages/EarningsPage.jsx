@@ -46,8 +46,8 @@ const RiderEarningsDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const earningsRes = await axiosInstance.get('/rider/data/earnings');
-        const reviewsRes = await axiosInstance.get('/rider/data/reviews?page=1&limit=10');
+        const earningsRes = await axiosInstance.get('/rider/stats/earnings');
+        const reviewsRes = await axiosInstance.get('/rider/stats/reviews?page=1&limit=10');
         setEarningsData(earningsRes.data);
         setReviewsData({
           reviews: reviewsRes.data.reviews,
@@ -69,7 +69,7 @@ const RiderEarningsDashboard = () => {
     setIsFetchingReviews(true);
     try {
       const nextPage = reviewsPage + 1;
-      const res = await axiosInstance.get(`/rider/data/reviews?page=${nextPage}&limit=10`);
+      const res = await axiosInstance.get(`/rider/stats/reviews?page=${nextPage}&limit=10`);
       setReviewsData(prev => ({
         ...prev,
         reviews: [...prev.reviews, ...res.data.reviews]

@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index.js';
 import prisma from '../prismaClient.js';
@@ -66,8 +66,16 @@ describe('Restaurant API E2E - Menu', () => {
     // Cleanup items, categories, then users
     if (menuItemId) await pool.query('DELETE FROM menu_items WHERE menu_item_id = $1', [menuItemId]);
     if (categoryId) await pool.query('DELETE FROM menu_categories WHERE category_id = $1', [categoryId]);
-    if (restaurantId) await pool.query('DELETE FROM users WHERE user_id = $1', [restaurantId]);
-    if (otherRestaurantId) await pool.query('DELETE FROM users WHERE user_id = $1', [otherRestaurantId]);
+    if (restaurantId) {
+      await pool.query('DELETE FROM orders WHERE user_id = $1', [restaurantId]);
+      await pool.query('DELETE FROM orders WHERE restaurant_id = $1', [restaurantId]);
+      await pool.query('DELETE FROM users WHERE user_id = $1', [restaurantId]);
+    }
+    if (otherRestaurantId) {
+      await pool.query('DELETE FROM orders WHERE user_id = $1', [otherRestaurantId]);
+      await pool.query('DELETE FROM orders WHERE restaurant_id = $1', [otherRestaurantId]);
+      await pool.query('DELETE FROM users WHERE user_id = $1', [otherRestaurantId]);
+    }
   });
 
   it('should create a menu category', async () => {

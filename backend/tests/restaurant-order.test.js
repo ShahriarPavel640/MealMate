@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index.js';
 import prisma from '../prismaClient.js';
@@ -61,8 +61,23 @@ describe('Restaurant API E2E - Orders', () => {
   });
 
   afterAll(async () => {
-    if (restaurantId) await pool.query('DELETE FROM users WHERE user_id = $1', [restaurantId]);
-    if (otherRestaurantId) await pool.query('DELETE FROM users WHERE user_id = $1', [otherRestaurantId]);
+    if (restaurantId) {
+      await pool.query('DELETE FROM notifications WHERE user_id = $1', [restaurantId]);
+      await pool.query('DELETE FROM orders WHERE user_id = $1', [restaurantId]);
+      await pool.query('DELETE FROM orders WHERE restaurant_id = $1', [restaurantId]);
+      await pool.query('DELETE FROM users WHERE user_id = $1', [restaurantId]);
+    }
+    if (otherRestaurantId) {
+      await pool.query('DELETE FROM notifications WHERE user_id = $1', [otherRestaurantId]);
+      await pool.query('DELETE FROM orders WHERE user_id = $1', [otherRestaurantId]);
+      await pool.query('DELETE FROM orders WHERE restaurant_id = $1', [otherRestaurantId]);
+      await pool.query('DELETE FROM users WHERE user_id = $1', [otherRestaurantId]);
+    }
+    if (otherRestaurantId) {
+      await pool.query('DELETE FROM orders WHERE user_id = $1', [otherRestaurantId]);
+      await pool.query('DELETE FROM orders WHERE restaurant_id = $1', [otherRestaurantId]);
+      await pool.query('DELETE FROM users WHERE user_id = $1', [otherRestaurantId]);
+    }
   });
 
   it('should fetch orders', async () => {

@@ -40,7 +40,7 @@ describe('Rider API E2E - Reviews', () => {
 
   it('should retrieve rider reviews', async () => {
     const res = await request(app)
-      .get('/api/rider/data/reviews')
+      .get('/api/rider/stats/reviews')
       .set('Cookie', riderCookies);
 
     expect(res.statusCode).toBe(200);

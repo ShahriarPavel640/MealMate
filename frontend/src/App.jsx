@@ -221,13 +221,13 @@ function App() {
           }
         />
         <Route
-          path="/rider/data/profile"
+          path="/rider/profile"
           element={
             authrider ? <ProfilePageRider /> : <Navigate to="/rider/login" />
           }
         />
         <Route
-          path="/rider/data/orders/:orderId"
+          path="/rider/orders/:orderId"
           element={
             authrider ? <OrderDetailsPage /> : <Navigate to="/rider/login" />
           }

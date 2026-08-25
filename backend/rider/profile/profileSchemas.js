@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
 export const updateProfileSchema = z.object({
   name: z.string().min(1).optional(),
@@ -11,10 +11,4 @@ export const updateProfileSchema = z.object({
 
 export const updateAvailabilitySchema = z.object({
   is_available: z.union([z.boolean(), z.string()]),
-});
-
-export const updateOrderStatusSchema = z.object({
-  status: z.enum(["out_for_delivery", "delivered", "cancelled"], {
-    errorMap: () => ({ message: "Invalid status for rider update" }),
-  }),
 });

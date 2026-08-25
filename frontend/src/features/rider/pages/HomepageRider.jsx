@@ -91,7 +91,7 @@ const HomepageRider = () => {
         if (location && location.lat && location.lon) {
           query += `&lat=${location.lat}&lon=${location.lon}`;
         }
-        const res = await axiosInstance.get(`/rider/data/dashboard${query}`);
+        const res = await axiosInstance.get(`/rider/stats/dashboard${query}`);
         setDashboardData(res.data);
         setIsAvailable(res.data.isAvailable);
         if (res.data.availablePagination) {
@@ -262,7 +262,7 @@ const HomepageRider = () => {
   const handleAvailabilityToggle = async () => {
     try {
       const newAvailability = !isAvailable;
-      await axiosInstance.put("/rider/data/availability", {
+      await axiosInstance.put("/rider/profile/availability", {
         is_available: newAvailability,
       });
       setIsAvailable(newAvailability);
@@ -278,7 +278,7 @@ const HomepageRider = () => {
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       const res = await axiosInstance.put(
-        `/rider/data/orders/${orderId}/status`,
+        `/rider/orders/${orderId}/status`,
         { status: newStatus }
       );
       toast.success("Order status updated successfully!");
@@ -533,7 +533,7 @@ const HomepageRider = () => {
                     </button>
                   )}
                   <Link
-                    to={`/rider/data/orders/${order.order_id}`}
+                    to={`/rider/orders/${order.order_id}`}
                     className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-3 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm"
                   >
                     <Eye className="size-4 mr-2" />
@@ -617,7 +617,7 @@ const HomepageRider = () => {
                           onClick={async () => {
                             try {
                               await axiosInstance.put(
-                                `/rider/data/orders/${order.order_id}/accept`
+                                `/rider/orders/${order.order_id}/accept`
                               );
                               toast.success("Order accepted!");
                               clearNotifications();
@@ -649,7 +649,7 @@ const HomepageRider = () => {
                         </button>
                       )}
                       <Link
-                        to={`/rider/data/orders/${order.order_id}`}
+                        to={`/rider/orders/${order.order_id}`}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
                       >
                         <Package className="size-5 mr-2" />
