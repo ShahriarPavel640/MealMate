@@ -103,7 +103,7 @@ const Navbar = () => {
         <>
           <li>
             <Link 
-              to="/rider/data/profile"
+              to="/rider/profile"
               className="flex items-center gap-2 px-4 py-1.5 bg-white text-[#e21b70] font-semibold rounded-full hover:bg-gray-100 transition shadow-sm"
             >
               <User className="size-4" />
@@ -319,7 +319,7 @@ const Navbar = () => {
           ) : authrider ? (
             <li>
               <Link
-                to="/rider/data/profile"
+                to="/rider/profile"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-[#e21b70] font-semibold rounded-full hover:bg-gray-100 transition shadow-sm w-full"
               >

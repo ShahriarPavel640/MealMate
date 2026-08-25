@@ -18,7 +18,7 @@ const DeliveryHistoryPage = () => {
     const fetchHistory = async () => {
       setLoading(true);
       try {
-        const res = await axiosInstance.get(`/rider/data/history?page=${currentPage}&limit=10`);
+        const res = await axiosInstance.get(`/rider/orders/history?page=${currentPage}&limit=10`);
         setHistory(res.data.history);
         setTotalPages(res.data.totalPages);
       } catch (err) {

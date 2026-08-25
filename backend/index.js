@@ -10,17 +10,19 @@ import { initSocket, getIO } from "./socket.js"; // Import initSocket and getIO
 import customerAuthRoute from "./customer/auth/authRoutes.js";
 import customerRestaurantRoutes from "./customer/restaurant/restaurantRoutes.js";
 import customerCartRoutes from "./customer/cart/cartRoutes.js";
-import router from "./rider/profile/riderRoutes.js";
-import { router as restaurantRoute } from "./restaurants/profile/restaurantProfileRoutes.js";
-import menuRoutes from "./restaurants/menu/menuRoutes.js"; // Import the menu routes
+import profileRoutes from "./rider/profile/profileRoutes.js";
+import orderRoutes from "./rider/order/orderRoutes.js";
+import statsRoutes from "./rider/stats/statsRoutes.js";
+import { router as restaurantRoute } from "./restaurant/profile/restaurantProfileRoutes.js";
+import menuRoutes from "./restaurant/menu/menuRoutes.js"; // Import the menu routes
 import cookieParser from "cookie-parser";
 import riderAuthRoute from "./rider/auth/riderAuthRoutes.js";
 import customerOrderRoutes from "./customer/order/orderRoutes.js";
 import createCustomerPaymentRoutes from "./customer/payment/paymentRoutes.js";
 import reviewRoutes from "./shared/reviews/reviewRoutes.js";
 import chatRoutes from "./shared/chats/chatRoutes.js";
-import restaurantOrder from "./restaurants/order/orderRoutes.js";
-import restaurantStat from "./restaurants/stats/statsRoutes.js";
+import restaurantOrder from "./restaurant/order/orderRoutes.js";
+import restaurantStat from "./restaurant/stats/statsRoutes.js";
 import notificationRoutes from "./shared/notifications/notificationRoutes.js";
 import sharedAuthRoutes from "./shared/auth/authRoutes.js";
 import { connectRedis } from "./utils/redisClient.js";
@@ -86,7 +88,9 @@ app.use(
 
 //console.log("Registering rider routes...");
 app.use("/api/rider", riderAuthRoute);
-app.use("/api/rider/data", router);
+app.use("/api/rider/profile", profileRoutes);
+app.use("/api/rider/orders", orderRoutes);
+app.use("/api/rider/stats", statsRoutes);
 
 //console.log("Registering restaurant routes...");
 app.use("/api/restaurant", restaurantRoute);

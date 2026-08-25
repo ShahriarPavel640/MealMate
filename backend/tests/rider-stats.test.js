@@ -40,7 +40,7 @@ describe('Rider API E2E - Stats & Dashboard', () => {
 
   it('should fetch rider dashboard data', async () => {
     const res = await request(app)
-      .get('/api/rider/data/dashboard')
+      .get('/api/rider/stats/dashboard')
       .set('Cookie', riderCookies);
 
     expect(res.statusCode).toBe(200);
@@ -48,7 +48,7 @@ describe('Rider API E2E - Stats & Dashboard', () => {
 
   it('should fetch rider earnings', async () => {
     const res = await request(app)
-      .get('/api/rider/data/earnings')
+      .get('/api/rider/stats/earnings')
       .set('Cookie', riderCookies);
 
     expect(res.statusCode).toBe(200);

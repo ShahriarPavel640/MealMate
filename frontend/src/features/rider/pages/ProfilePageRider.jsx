@@ -38,7 +38,7 @@ const ProfilePageRider = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axiosInstance.get("/rider/data/profile");
+        const res = await axiosInstance.get("/rider/profile");
         setProfile(res.data);
         setFormData({
           name: res.data.name,
@@ -77,12 +77,12 @@ const ProfilePageRider = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axiosInstance.put("/rider/data/profile", formData);
+      await axiosInstance.put("/rider/profile", formData);
       toast.success("Profile updated successfully!");
       setIsEditing(false);
       checkAuthRider(); // Refresh auth state to update name in Navbar
       // Re-fetch profile to ensure UI is updated with latest data
-      const res = await axiosInstance.get("/rider/data/profile");
+      const res = await axiosInstance.get("/rider/profile");
       setProfile(res.data);
     } catch (err) {
       console.error("Error updating profile:", err);
@@ -93,7 +93,7 @@ const ProfilePageRider = () => {
   const handleAvailabilityToggle = async () => {
     try {
       const newAvailability = !profile.is_available;
-      await axiosInstance.put("/rider/data/availability", {
+      await axiosInstance.put("/rider/profile/availability", {
         is_available: newAvailability,
       });
       setProfile({ ...profile, is_available: newAvailability });
@@ -539,7 +539,7 @@ export default ProfilePageRider;
 //   useEffect(() => {
 //     const fetchProfile = async () => {
 //       try {
-//         const res = await axiosInstance.get("/rider/data/profile");
+//         const res = await axiosInstance.get("/rider/profile");
 //         setProfile(res.data);
 //         setFormData({
 //           name: res.data.name,
@@ -566,12 +566,12 @@ export default ProfilePageRider;
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     try {
-//       await axiosInstance.put("/rider/data/profile", formData);
+//       await axiosInstance.put("/rider/profile", formData);
 //       toast.success("Profile updated successfully!");
 //       setIsEditing(false);
 //       checkAuthRider(); // Refresh auth state to update name in Navbar
 //       // Re-fetch profile to ensure UI is updated with latest data
-//       const res = await axiosInstance.get("/rider/data/profile");
+//       const res = await axiosInstance.get("/rider/profile");
 //       setProfile(res.data);
 //     } catch (err) {
 //       console.error("Error updating profile:", err);
@@ -582,7 +582,7 @@ export default ProfilePageRider;
 //   const handleAvailabilityToggle = async () => {
 //     try {
 //       const newAvailability = !profile.is_available;
-//       await axiosInstance.put("/rider/data/availability", {
+//       await axiosInstance.put("/rider/profile/availability", {
 //         is_available: newAvailability,
 //       });
 //       setProfile({ ...profile, is_available: newAvailability });
