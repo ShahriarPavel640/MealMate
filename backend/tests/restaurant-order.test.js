@@ -61,22 +61,12 @@ describe('Restaurant API E2E - Orders', () => {
   });
 
   afterAll(async () => {
+    await pool.query("UPDATE orders SET restaurant_id = 1, status = 'pending' WHERE order_id = 1");
     if (restaurantId) {
-      await pool.query('DELETE FROM notifications WHERE user_id = $1', [restaurantId]);
-      await pool.query('DELETE FROM orders WHERE user_id = $1', [restaurantId]);
-      await pool.query('DELETE FROM orders WHERE restaurant_id = $1', [restaurantId]);
-      await pool.query('DELETE FROM users WHERE user_id = $1', [restaurantId]);
+      await pool.query('DELETE FROM restaurants WHERE restaurant_id = $1', [restaurantId]);
     }
     if (otherRestaurantId) {
-      await pool.query('DELETE FROM notifications WHERE user_id = $1', [otherRestaurantId]);
-      await pool.query('DELETE FROM orders WHERE user_id = $1', [otherRestaurantId]);
-      await pool.query('DELETE FROM orders WHERE restaurant_id = $1', [otherRestaurantId]);
-      await pool.query('DELETE FROM users WHERE user_id = $1', [otherRestaurantId]);
-    }
-    if (otherRestaurantId) {
-      await pool.query('DELETE FROM orders WHERE user_id = $1', [otherRestaurantId]);
-      await pool.query('DELETE FROM orders WHERE restaurant_id = $1', [otherRestaurantId]);
-      await pool.query('DELETE FROM users WHERE user_id = $1', [otherRestaurantId]);
+      await pool.query('DELETE FROM restaurants WHERE restaurant_id = $1', [otherRestaurantId]);
     }
   });
 
@@ -138,3 +128,4 @@ describe('Restaurant API E2E - Orders', () => {
     expect(updateRes.statusCode).toBe(200);
   });
 });
+
