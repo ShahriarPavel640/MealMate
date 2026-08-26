@@ -1,7 +1,14 @@
-﻿import prisma from '../../prismaClient.js';
+import prisma from '../../prismaClient.js';
+
+interface RevenueByDay {
+  day: string;
+  date: Date;
+  revenue: number | string;
+  orders: number | string;
+}
 
 export const fetchLastWeekRevenueByDay = async (restaurantId: number) => {
-  const result: unknown[] = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<RevenueByDay[]>`
     SELECT 
         TO_CHAR(created_at, 'Dy') AS day,
         DATE_TRUNC('day', created_at) AS date,
@@ -16,15 +23,22 @@ export const fetchLastWeekRevenueByDay = async (restaurantId: number) => {
     ORDER BY date;
   `;
 
-  return result.map((row: any) => ({
+  return result.map((row) => ({
     day: row.day ? row.day.trim() : '',
     revenue: row.revenue || 0,
     orders: row.orders || 0,
   }));
 };
 
+interface RevenueByWeek {
+  week: string;
+  week_start_date: Date;
+  revenue: number | string;
+  orders: number | string;
+}
+
 export const fetchLastMonthRevenueByWeek = async (restaurantId: number) => {
-  const result: unknown[] = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<RevenueByWeek[]>`
     SELECT
         TO_CHAR(DATE_TRUNC('week', created_at), 'Mon DD') AS week,
         DATE_TRUNC('week', created_at) AS week_start_date,
@@ -39,15 +53,21 @@ export const fetchLastMonthRevenueByWeek = async (restaurantId: number) => {
     ORDER BY week_start_date;
   `;
 
-  return result.map((row: any) => ({
+  return result.map((row) => ({
     week: row.week ? row.week.trim() : '',
     revenue: row.revenue || 0,
     orders: row.orders || 0,
   }));
 };
 
+interface TopSellingItem {
+  name: string;
+  orders: number | string;
+  revenue: number | string;
+}
+
 export const fetchTopSellingItems = async (restaurantId: number) => {
-  const result: unknown[] = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<TopSellingItem[]>`
     SELECT 
       MI.name,
       SUM(OI.quantity)::int AS orders,
@@ -62,15 +82,20 @@ export const fetchTopSellingItems = async (restaurantId: number) => {
     LIMIT 5;
   `;
 
-  return result.map((row: any) => ({
+  return result.map((row) => ({
     name: row.name,
-    orders: parseInt(row.orders, 10) || 0,
+    orders: parseInt(String(row.orders), 10) || 0,
     revenue: `Tk ${Number(row.revenue || 0).toFixed(2)}`,
   }));
 };
 
+interface CategorySales {
+  category_name: string;
+  total_sold: number | string;
+}
+
 export const fetchCategoryWiseSales = async (restaurantId: number) => {
-  const result: unknown[] = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<CategorySales[]>`
     SELECT 
       MC.name AS category_name,
       SUM(OI.quantity)::int AS total_sold
@@ -96,15 +121,20 @@ export const fetchCategoryWiseSales = async (restaurantId: number) => {
     '#118AB2',
   ];
 
-  return result.map((row: any, idx: number) => ({
+  return result.map((row, idx: number) => ({
     name: row.category_name,
-    value: parseInt(row.total_sold, 10) || 0,
+    value: parseInt(String(row.total_sold), 10) || 0,
     color: colors[idx % colors.length],
   }));
 };
 
+interface LastTwoWeekStats {
+  last_week: number | string;
+  second_last_week: number | string;
+}
+
 export const fetchLastTwoWeekRevenue = async (restaurantId: number) => {
-  const result: unknown[] = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<LastTwoWeekStats[]>`
     SELECT
       COALESCE(SUM(CASE 
         WHEN created_at >= NOW() - INTERVAL '7 days' THEN total_amount 
@@ -123,11 +153,11 @@ export const fetchLastTwoWeekRevenue = async (restaurantId: number) => {
       AND status = 'delivered'
   `;
 
-  return (result as any[])[0] || { last_week: 0, second_last_week: 0 };
+  return result[0] || { last_week: 0, second_last_week: 0 };
 };
 
 export const fetchLastTwoWeekOrderCount = async (restaurantId: number) => {
-  const result: unknown[] = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<LastTwoWeekStats[]>`
     SELECT
       COUNT(*) FILTER (
         WHERE created_at >= NOW()::date - INTERVAL '7 days'
@@ -142,11 +172,11 @@ export const fetchLastTwoWeekOrderCount = async (restaurantId: number) => {
       AND status = 'delivered'
   `;
 
-  return (result as any[])[0] || { last_week: 0, second_last_week: 0 };
+  return result[0] || { last_week: 0, second_last_week: 0 };
 };
 
 export const fetchLastTwoWeekNewCustomer = async (restaurantId: number) => {
-  const result: unknown[] = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<LastTwoWeekStats[]>`
     SELECT
       COUNT(DISTINCT user_id) FILTER (
         WHERE created_at >= NOW()::date - INTERVAL '7 days'
@@ -160,5 +190,5 @@ export const fetchLastTwoWeekNewCustomer = async (restaurantId: number) => {
     WHERE restaurant_id = ${restaurantId} AND status = 'delivered'
   `;
 
-  return (result as any[])[0] || { last_week: 0, second_last_week: 0 };
+  return result[0] || { last_week: 0, second_last_week: 0 };
 };

@@ -1,16 +1,17 @@
+import { Socket } from 'socket.io';
 import prisma from '../prismaClient.js';
 import { getIO } from '../socket.js';
 import logger from '../utils/logger.js';
 
-export const handleRestaurantSocketEvents = (socket: any) => {
-  socket.on('accept_order', async ({ orderId, restaurantId }: any) => {
+export const handleRestaurantSocketEvents = (socket: Socket) => {
+  socket.on('accept_order', async ({ orderId, restaurantId }: { orderId: string | number; restaurantId: string | number }) => {
     logger.info(`Socket accept_order: Order ID: ${orderId}, Restaurant ID: ${restaurantId}`);
     const io = getIO();
     try {
       const order = await prisma.orders.update({
         where: {
-          order_id: parseInt(orderId, 10),
-          restaurant_id: parseInt(restaurantId, 10),
+          order_id: parseInt(String(orderId), 10),
+          restaurant_id: parseInt(String(restaurantId), 10),
         },
         data: { status: 'preparing' },
       });
@@ -25,14 +26,14 @@ export const handleRestaurantSocketEvents = (socket: any) => {
     }
   });
 
-  socket.on('reject_order', async ({ orderId, restaurantId }: any) => {
+  socket.on('reject_order', async ({ orderId, restaurantId }: { orderId: string | number; restaurantId: string | number }) => {
     logger.info(`Socket reject_order: Order ID: ${orderId}, Restaurant ID: ${restaurantId}`);
     const io = getIO();
     try {
       const order = await prisma.orders.update({
         where: {
-          order_id: parseInt(orderId, 10),
-          restaurant_id: parseInt(restaurantId, 10),
+          order_id: parseInt(String(orderId), 10),
+          restaurant_id: parseInt(String(restaurantId), 10),
         },
         data: { status: 'restaurant_rejected' },
       });

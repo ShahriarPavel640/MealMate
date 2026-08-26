@@ -137,7 +137,7 @@ export const initiatePaymentService = async ({
     process.env.STORE_PASSWD as string,
     is_live
   );
-  const apiResponse = await sslcz.init(data);
+  const apiResponse = (await sslcz.init(data)) as { status?: string; GatewayPageURL?: string };
 
   if (apiResponse.status === 'SUCCESS') {
     return {

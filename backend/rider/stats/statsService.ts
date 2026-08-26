@@ -281,7 +281,7 @@ export const getRiderReviews = async (riderId: number, { page = 1, limit = 5 }: 
   return {
     reviews: reviews.map((r) => ({
       review_id: r.review_id,
-      rating: (r as {rating: number}).rating,
+      rating: Number(r.rating),
       comment: r.comment,
       created_at: r.created_at,
       user_name: r.users?.name || 'Anonymous',

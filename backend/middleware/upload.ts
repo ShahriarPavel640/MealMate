@@ -1,5 +1,6 @@
 import logger from '../utils/logger.js';
-import multer from 'multer';
+import multer, { FileFilterCallback } from 'multer';
+import { Request } from 'express';
 import path from 'path';
 import fs from 'fs';
 
@@ -10,10 +11,10 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 const storage = multer.diskStorage({
-  destination: function (req: any, file: any, cb: any) {
+  destination: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) {
     cb(null, uploadDir);
   },
-  filename: function (req: any, file: any, cb: any) {
+  filename: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) {
     const ext = path.extname(file.originalname);
     cb(null, `${Date.now()}${ext}`);
   },
@@ -22,7 +23,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req: any, file: any, cb: any) => {
+  fileFilter: (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
     const filetypes = /jpeg|jpg|png|gif|webp|avif|svg/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);

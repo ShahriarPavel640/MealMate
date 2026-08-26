@@ -1,12 +1,55 @@
 import prisma from '../prismaClient.js';
 import { AppError } from '../middleware/errorHandler.js';
 
-export const getNearbyRestaurants = async (userId: number, page: number | string, limit: number | string) => {
+interface NearbyRestaurant {
+  restaurant_id: number;
+  name: string;
+  phone: string;
+  email: string;
+  average_rating: number | string | null;
+  image_url: string | null;
+  distance?: number | string;
+  is_favorite?: boolean;
+  is_open?: boolean;
+  descriptions?: string | null;
+  street?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  restaurant_name?: string;
+}
+
+interface CountResult {
+  count: number | string;
+}
+
+interface MenuItemWithDetails {
+  menu_item_id: number;
+  category_id: number;
+  name: string;
+  description: string | null;
+  price: number | string;
+  is_available: boolean;
+  is_active: boolean;
+  menu_item_image_url: string | null;
+  discount: number | string | null;
+  created_at: Date;
+  category_name: string;
+  menu_category_image_url: string | null;
+  order_count: number | string;
+}
+
+interface RestaurantHour {
+  day_of_week: string;
+  open_time: string;
+  close_time: string;
+}
+
+export const getNearbyRestaurants = async (userId: number, page: number, limit: number) => {
   const radius = 5; // 5km
-  const offset = ((page as number) - 1) * (limit as number);
+  const offset = (page - 1) * limit;
 
   // Get customer's primary location
-  const userLocationResult: any = await prisma.$queryRaw`
+  const userLocationResult = await prisma.$queryRaw<{latitude: string | number, longitude: string | number}[]>`
     SELECT latitude, longitude FROM user_locations WHERE user_id = ${userId} AND is_primary = true
   `;
 
@@ -16,7 +59,7 @@ export const getNearbyRestaurants = async (userId: number, page: number | string
   const userLat = userLocationResult[0].latitude;
   const userLon = userLocationResult[0].longitude;
 
-  const restaurants: any = await prisma.$queryRaw`
+  const restaurants = await prisma.$queryRaw<NearbyRestaurant[]>`
     SELECT 
       r.restaurant_id, r.name, r.phone, r.email, r.average_rating, r.image_url,
       get_distance_km(rl.longitude, rl.latitude, ${userLon}, ${userLat}) AS distance,
@@ -37,7 +80,7 @@ export const getNearbyRestaurants = async (userId: number, page: number | string
     LIMIT ${limit} OFFSET ${offset}
   `;
 
-  const totalResult: any = await prisma.$queryRaw`
+  const totalResult = await prisma.$queryRaw<CountResult[]>`
     SELECT COUNT(*) 
     FROM restaurants r
     JOIN user_locations rl ON (r.location_id = rl.location_id OR (r.location_id IS NULL AND r.restaurant_id = rl.restaurant_id))
@@ -45,15 +88,15 @@ export const getNearbyRestaurants = async (userId: number, page: number | string
   `;
 
   return {
-    data: restaurants.map((r: any) => ({ ...r, distance: Number(r.distance) || 0 })),
+    data: restaurants.map((r) => ({ ...r, distance: Number(r.distance) || 0 })),
     total: Number(totalResult[0].count),
   };
 };
 
-export const getRestaurants = async (page: number | string, limit: number | string) => {
-  const offset = ((page as number) - 1) * (limit as number);
+export const getRestaurants = async (page: number, limit: number) => {
+  const offset = (page - 1) * limit;
 
-  const restaurants: any = await prisma.$queryRaw`
+  const restaurants = await prisma.$queryRaw<NearbyRestaurant[]>`
     SELECT 
       r.restaurant_id, r.name, r.phone, r.email, r.average_rating, r.image_url,
       (
@@ -69,7 +112,7 @@ export const getRestaurants = async (page: number | string, limit: number | stri
     LIMIT ${limit} OFFSET ${offset}
   `;
 
-  const totalResult: any = await prisma.$queryRaw`SELECT COUNT(*) FROM restaurants`;
+  const totalResult = await prisma.$queryRaw<CountResult[]>`SELECT COUNT(*) FROM restaurants`;
 
   return {
     data: restaurants,
@@ -78,7 +121,7 @@ export const getRestaurants = async (page: number | string, limit: number | stri
 };
 
 export const getRestaurant = async (restaurantId: number) => {
-  const restaurantRes: any = await prisma.$queryRaw`
+  const restaurantRes = await prisma.$queryRaw<NearbyRestaurant[]>`
     SELECT
       r.restaurant_id,
       r.name AS restaurant_name,
@@ -108,7 +151,7 @@ export const getRestaurant = async (restaurantId: number) => {
   }
   const r = restaurantRes[0];
 
-  const menuItems: any = await prisma.$queryRaw`
+  const menuItems = await prisma.$queryRaw<MenuItemWithDetails[]>`
     SELECT 
       mi.*, 
       mi.created_at, 
@@ -125,7 +168,7 @@ export const getRestaurant = async (restaurantId: number) => {
 
   const address = [r.street, r.city, r.postal_code].filter(Boolean).join(', ');
 
-  const hoursRes: any = await prisma.$queryRaw`
+  const hoursRes = await prisma.$queryRaw<RestaurantHour[]>`
     SELECT day_of_week, open_time, close_time
     FROM restaurant_hours
     WHERE restaurant_id = ${restaurantId}
@@ -162,45 +205,45 @@ export const getRestaurant = async (restaurantId: number) => {
         delivery_time: '',
         delivery_radius: '',
       },
-      operating_hours: hoursRes.map((h: any) => ({
+      operating_hours: hoursRes.map((h) => ({
         day_of_week: h.day_of_week,
         open_time: h.open_time,
         close_time: h.close_time,
       })),
     },
-    menuItems: menuItems.map((item: any) => ({
+    menuItems: menuItems.map((item) => ({
       ...item,
       order_count: Number(item.order_count) || 0,
     })),
   };
 };
 
-export const getRestaurantByLocation = async (userLat: any, userLon: any, radiusMeters: any) => {
-  const query = async (radius: any) => prisma.$queryRaw`
+export const getRestaurantByLocation = async (userLat: number, userLon: number, radiusMeters: number = 5000) => {
+  const query = async (radius: number) => prisma.$queryRaw<NearbyRestaurant[]>`
     SELECT 
       r.restaurant_id, r.name, r.phone, r.email, r.average_rating, r.image_url,
       ST_Distance(
         ST_MakePoint(rl.longitude, rl.latitude)::GEOGRAPHY,
-        ST_MakePoint(${parseFloat(userLon)}, ${parseFloat(userLat)})::GEOGRAPHY
+        ST_MakePoint(${userLon}, ${userLat})::GEOGRAPHY
       ) AS distance
     FROM restaurants r
     JOIN user_locations rl ON (r.location_id = rl.location_id OR (r.location_id IS NULL AND r.restaurant_id = rl.restaurant_id))
     WHERE ST_DWithin(
       ST_MakePoint(rl.longitude, rl.latitude)::GEOGRAPHY,
-      ST_MakePoint(${parseFloat(userLon)}, ${parseFloat(userLat)})::GEOGRAPHY,
-      ${parseFloat(radius)}
+      ST_MakePoint(${userLon}, ${userLat})::GEOGRAPHY,
+      ${radius}
     )
     ORDER BY distance
     LIMIT 50
   `;
 
-  let result: any = await query(radiusMeters);
+  let result = await query(radiusMeters);
 
   if (result.length === 0) {
     result = await query(10000); // try 10km
   }
 
-  return (result as any[]).map((r: any) => ({ ...r, distance: Number(r.distance) || 0 }));
+  return result.map((r) => ({ ...r, distance: Number(r.distance) || 0 }));
 };
 
 export const getReviewsAll = async (restaurantId: number) => {
@@ -245,11 +288,11 @@ export const toggleFavoriteRestaurant = async (userId: number, restaurantId: num
   }
 };
 
-export const getRestaurantsSearchByName = async (rest_name: string, page: any, limit: any) => {
-  const offset = ((page as number) - 1) * (limit as number);
+export const getRestaurantsSearchByName = async (rest_name: string, page: number, limit: number) => {
+  const offset = (page - 1) * limit;
   const searchPattern = `%${rest_name.trim()}%`;
 
-  const restaurants: any = await prisma.$queryRaw`
+  const restaurants = await prisma.$queryRaw<NearbyRestaurant[]>`
     SELECT r.*,
       (
         EXISTS (
@@ -264,8 +307,8 @@ export const getRestaurantsSearchByName = async (rest_name: string, page: any, l
     LIMIT ${limit} OFFSET ${offset}
   `;
 
-  const totalResult: any =
-    await prisma.$queryRaw`SELECT COUNT(*) FROM restaurants r WHERE name ILIKE ${searchPattern}`;
+  const totalResult =
+    await prisma.$queryRaw<CountResult[]>`SELECT COUNT(*) FROM restaurants r WHERE name ILIKE ${searchPattern}`;
 
   return {
     data: restaurants,

@@ -1,6 +1,14 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../../prismaClient.js';
 import { AppError } from '../../middleware/errorHandler.js';
 import { getIO } from '../../socket.js';
+
+interface TodayStatsRow {
+  revenue_today: number | null;
+  revenue_yesterday: number | null;
+  orders_today: number | null;
+  orders_yesterday: number | null;
+}
 
 export const getRecentOrders = async (restaurantId: number) => {
   const orders = await prisma.orders.findMany({
@@ -14,18 +22,19 @@ export const getRecentOrders = async (restaurantId: number) => {
           menu_items: { select: { name: true, price: true } },
         },
       },
+      payments: true,
     },
   });
 
-  return orders.map((order: any) => {
-    const items = order.order_items.map((oi: any) => ({
+  return orders.map((order) => {
+    const items = order.order_items.map((oi) => ({
       name: oi.menu_items?.name || 'Unknown Item',
       quantity: oi.quantity || 1,
-      price: parseFloat(oi.menu_items?.price ?? oi.price ?? 0),
+      price: parseFloat(String(oi.menu_items?.price ?? oi.price ?? 0)),
     }));
 
     const calculatedTotal = items.reduce(
-      (acc: any, item: any) => acc + item.quantity * item.price,
+      (acc, item) => acc + item.quantity * item.price,
       0
     );
     const customerUser = order.users_orders_user_idTousers;
@@ -46,11 +55,13 @@ export const getRecentOrders = async (restaurantId: number) => {
         order.total_amount ? Number(order.total_amount).toFixed(2) : calculatedTotal.toFixed(2)
       ),
       status: order.status,
-      orderTime: new Date(order.created_at).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      paymentMethod: order.payment_method || 'Cash on Delivery',
+      orderTime: order.created_at
+        ? new Date(order.created_at).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '',
+      paymentMethod: order.payments?.method_type || 'Cash on Delivery',
     };
   });
 };
@@ -63,9 +74,9 @@ export const getPaginatedOrders = async (
   const limitNum = Number(limit) || 5;
   const offset = (pageNum - 1) * limitNum;
 
-  const where: any = { restaurant_id: restaurantId };
+  const where: Prisma.ordersWhereInput = { restaurant_id: restaurantId };
   if (status && status !== 'all') {
-    where.status = status;
+    where.status = status as import('@prisma/client').order_status;
   }
 
   const [totalItems, orders] = await Promise.all([
@@ -82,21 +93,24 @@ export const getPaginatedOrders = async (
             menu_items: { select: { name: true, price: true } },
           },
         },
+        deliveries: true,
+        payments: true,
       },
     }),
   ]);
 
   const totalPages = Math.ceil(totalItems / limitNum);
 
-  const formattedOrders = orders.map((order: any) => {
-    const items = order.order_items.map((oi: any) => ({
+  const formattedOrders = orders.map((order) => {
+    const items = order.order_items.map((oi) => ({
       name: oi.menu_items?.name || 'Item',
       quantity: oi.quantity || 1,
-      price: parseFloat(oi.menu_items?.price ?? oi.price ?? 0),
+      price: parseFloat(String(oi.menu_items?.price ?? oi.price ?? 0)),
     }));
 
-    const total = items.reduce((acc: any, item: any) => acc + item.quantity * item.price, 0);
+    const total = items.reduce((acc, item) => acc + item.quantity * item.price, 0);
     const customerUser = order.users_orders_user_idTousers;
+    const dropoffAddr = order.deliveries?.[0]?.dropoff_addr || '';
 
     return {
       order_id: order.order_id,
@@ -105,8 +119,8 @@ export const getPaginatedOrders = async (
       customer_name: customerUser?.name || 'Customer',
       phone: customerUser?.phone_number || '',
       customer_phone: customerUser?.phone_number || '',
-      address: order.dropoff_addr || '',
-      dropoff_addr: order.dropoff_addr || '',
+      address: dropoffAddr,
+      dropoff_addr: dropoffAddr,
       items,
       total: parseFloat(
         order.total_amount ? Number(order.total_amount).toFixed(2) : total.toFixed(2)
@@ -115,14 +129,16 @@ export const getPaginatedOrders = async (
         order.total_amount ? Number(order.total_amount).toFixed(2) : total.toFixed(2)
       ),
       status: order.status,
-      orderTime: new Date(order.created_at).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      orderTime: order.created_at
+        ? new Date(order.created_at).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '',
       created_at: order.created_at,
       estimatedTime: '25 min',
-      paymentMethod: order.payment_method || 'Credit Card',
-      payment_method: order.payment_method || 'Credit Card',
+      paymentMethod: order.payments?.method_type || 'Credit Card',
+      payment_method: order.payments?.method_type || 'Credit Card',
       special_instructions: order.special_instructions || null,
     };
   });
@@ -180,7 +196,7 @@ export const updateOrderStatus = async (restaurantId: number, orderId: number, n
         io.to(`customer_${order.user_id}`).emit('order_status_updated', updatedOrder);
       }
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     // ignore if socket server is not connected
   }
 
@@ -196,24 +212,26 @@ export const updateOrderStatus = async (restaurantId: number, orderId: number, n
           message: `Your order #${orderId} status has been updated to ${newStatus}.`,
         },
       });
-    } catch (e: any) {}
+    } catch (e: unknown) {}
   }
 
   if (newStatus === 'ready_for_pickup') {
     try {
-      const deliveryDetails: any = await prisma.orders.findUnique({
+      const deliveryDetails = await prisma.orders.findUnique({
         where: { order_id: orderId },
         include: {
           restaurants: {
-            include: { user_locations: true } as unknown as import('@prisma/client').Prisma.restaurantsInclude,
+            include: {
+              user_locations_restaurants_location_idTouser_locations: true,
+            },
           },
           deliveries: true,
         },
       });
 
-      if (deliveryDetails && deliveryDetails.restaurants?.user_locations) {
-        const restLoc = deliveryDetails.restaurants.user_locations;
-        let availableRiders = [];
+      const restLoc = deliveryDetails?.restaurants?.user_locations_restaurants_location_idTouser_locations;
+      if (deliveryDetails && restLoc) {
+        let availableRiders: Array<{ user_id: number }> = [];
 
         try {
           const redis = (await import('../../utils/redisClient.js')).default;
@@ -232,17 +250,17 @@ export const updateOrderStatus = async (restaurantId: number, orderId: number, n
               }
             }
           }
-        } catch (err: any) {}
+        } catch (err: unknown) {}
 
         if (availableRiders.length === 0 && restLoc.longitude && restLoc.latitude) {
-          const pgRiders = await prisma.$queryRaw`
+          const pgRiders = await prisma.$queryRaw<Array<{ user_id: number }>>`
             SELECT DISTINCT rp.user_id 
             FROM rider_profiles rp
             JOIN user_locations ul ON rp.user_id = ul.user_id
             WHERE rp.is_available = true 
               AND get_distance_km(${Number(restLoc.longitude)}, ${Number(restLoc.latitude)}, ul.longitude, ul.latitude) <= 5
           `;
-          availableRiders = pgRiders as any[];
+          availableRiders = pgRiders;
         }
 
         const io = getIO();
@@ -262,14 +280,14 @@ export const updateOrderStatus = async (restaurantId: number, orderId: number, n
           });
         }
       }
-    } catch (err: any) {}
+    } catch (err: unknown) {}
   }
 
   return updatedOrder;
 };
 
 export const getTodayOrderStats = async (restaurantId: number) => {
-  const result = await prisma.$queryRaw`
+  const result = await prisma.$queryRaw<TodayStatsRow[]>`
     SELECT
       SUM(CASE WHEN DATE(created_at) = CURRENT_DATE THEN total_amount ELSE 0 END)::FLOAT AS revenue_today,
       SUM(CASE WHEN DATE(created_at) = CURRENT_DATE - INTERVAL '1 day' THEN total_amount ELSE 0 END)::FLOAT AS revenue_yesterday,
@@ -279,16 +297,21 @@ export const getTodayOrderStats = async (restaurantId: number) => {
     WHERE restaurant_id = ${restaurantId} AND status = 'delivered'
   `;
 
-  const row = (result as any[])[0] || {};
-  const revenue_today = parseFloat(row.revenue_today) || 0;
-  const revenue_yesterday = parseFloat(row.revenue_yesterday) || 0;
-  const orders_today = parseInt(row.orders_today, 10) || 0;
-  const orders_yesterday = parseInt(row.orders_yesterday, 10) || 0;
+  const row = result[0] || {
+    revenue_today: 0,
+    revenue_yesterday: 0,
+    orders_today: 0,
+    orders_yesterday: 0,
+  };
+  const revenue_today = parseFloat(String(row.revenue_today || 0)) || 0;
+  const revenue_yesterday = parseFloat(String(row.revenue_yesterday || 0)) || 0;
+  const orders_today = parseInt(String(row.orders_today || 0), 10) || 0;
+  const orders_yesterday = parseInt(String(row.orders_yesterday || 0), 10) || 0;
 
   const avgOrderValueToday = orders_today > 0 ? revenue_today / orders_today : 0;
   const avgOrderValueYesterday = orders_yesterday > 0 ? revenue_yesterday / orders_yesterday : 0;
 
-  const calcChange = (today: any, yesterday: any) => {
+  const calcChange = (today: number, yesterday: number) => {
     if (yesterday === 0) return { change: '+100%', type: 'increase' };
     const diff = today - yesterday;
     const percent = ((diff / yesterday) * 100).toFixed(1);

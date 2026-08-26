@@ -7,7 +7,7 @@ import redisClient from '../utils/redisClient.js';
  * @param {function} keyGenerator - Function that takes req and returns the cache key string
  * @param {number} ttl - Time to live in seconds (default 300s = 5 minutes)
  */
-export const cacheMiddleware = (keyGenerator: any, ttl = 300) => {
+export const cacheMiddleware = (keyGenerator: (req: Request) => string | undefined, ttl = 300) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Resilience: bypass if Redis is down
     if (!redisClient.isOpen) {
@@ -28,7 +28,7 @@ export const cacheMiddleware = (keyGenerator: any, ttl = 300) => {
       // Cache Miss - Intercept response
       logger.info(`[Redis Cache MISS] ${key} - Fetching from DB...`);
       const originalJson = res.json;
-      res.json = function (body: any) {
+      res.json = function (body: unknown) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           redisClient.setEx(key, ttl, JSON.stringify(body)).catch((err) => {
             logger.error('Redis SetEx Error:', err);

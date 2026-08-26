@@ -113,8 +113,8 @@ export const getRestaurantFullProfile = async (restaurantId: number) => {
   const loc = restaurant.user_locations_restaurants_location_idTouser_locations;
   const dayOrder = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
   const sortedHours = (restaurant.restaurant_hours || []).sort(
-    (a: any, b: any) =>
-      ((dayOrder as any)[a.day_of_week] || 8) - ((dayOrder as any)[b.day_of_week] || 8)
+    (a: {day_of_week: string}, b: {day_of_week: string}) =>
+      ((dayOrder as Record<string, number>)[a.day_of_week] || 8) - ((dayOrder as Record<string, number>)[b.day_of_week] || 8)
   );
 
   return {
@@ -304,7 +304,7 @@ export const addMenuItemWithImage = async (restaurantId: number, itemData: z.inf
   };
 };
 
-export const editMenuItemWithImage = async (restaurantId: number, menuItemIdRaw: number, itemData: any, newImageUrl?: string) => {
+export const editMenuItemWithImage = async (restaurantId: number, menuItemIdRaw: number, itemData: Partial<z.infer<typeof addMenuSchema>> & { menu_item_image_url?: string }, newImageUrl?: string) => {
   const menuItemId = menuItemIdRaw;
   const { name, category, description, price, is_available, discount, menu_item_image_url } =
     itemData;
@@ -431,7 +431,7 @@ export const getMenuItems = async (restaurantId: number) => {
     },
   });
 
-  return items.map((item: any) => ({
+  return items.map((item) => ({
     menu_item_id: item.menu_item_id,
     category_id: item.category_id,
     name: item.name,
@@ -457,7 +457,7 @@ export const getMenuCategories = async (restaurantId: number) => {
     distinct: ['name'],
   });
 
-  const categoryNames = categories.map((c: any) => c.name);
+  const categoryNames = categories.map((c) => c.name);
   categoryNames.unshift('All');
   return categoryNames;
 };
@@ -485,7 +485,7 @@ export const getRestaurantReviews = async (restaurantId: number, { page = 1, lim
   const totalPages = Math.ceil(totalItems / limitNum);
 
   return {
-    data: reviews.map((r: any) => ({
+    data: reviews.map((r) => ({
       review_id: r.review_id,
       rating: r.rating,
       comment: r.comment,

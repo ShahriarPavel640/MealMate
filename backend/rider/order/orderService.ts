@@ -4,8 +4,8 @@ import { AppError } from '../../middleware/errorHandler.js';
 import { getIO } from '../../socket.js';
 
 export const getDeliveryHistory = async (riderId: number, { page = 1, limit = 10 }: { page?: string | number; limit?: string | number } = {}) => {
-  const pageNum = parseInt(page, 10) || 1;
-  const limitNum = parseInt(limit, 10) || 10;
+  const pageNum = Number(page) || 1;
+  const limitNum = Number(limit) || 10;
   const offset = (pageNum - 1) * limitNum;
 
   const where = {
