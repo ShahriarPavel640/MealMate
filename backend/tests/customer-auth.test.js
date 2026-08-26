@@ -2,11 +2,12 @@ import { describe, it, expect, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index.js';
 import prisma from '../prismaClient.js';
+
 describe('Customer API - Auth & Profile', () => {
   let customerCookies;
   const testCustomer = {
     name: 'Auth Test Customer',
-    email: 'auth-customer@test.com',
+    email: `auth-customer-${Date.now()}@test.com`,
     password: 'password123',
     phone_number: '1234567890',
     latitude: 23.8103,
