@@ -42,6 +42,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_average_rating ON reviews;
 CREATE TRIGGER trigger_update_average_rating
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH ROW
@@ -80,7 +81,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS archive_menu_item_trigger ON menu_items;
 CREATE TRIGGER archive_menu_item_trigger
 BEFORE DELETE ON menu_items
 FOR EACH ROW
 EXECUTE FUNCTION archive_deleted_menu_item();
+
