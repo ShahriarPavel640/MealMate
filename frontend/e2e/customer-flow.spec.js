@@ -34,8 +34,9 @@ test.describe('Customer Flow E2E', () => {
     await page.goto('/restaurants');
     await page.waitForLoadState('networkidle');
     
-    // We will just hit the backend endpoint directly to ensure it works
-    const response = await page.request.get('/api/customer/getRestaurants');
+    // We will hit the backend endpoint directly to ensure it works
+    const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
+    const response = await page.request.get(`${apiUrl}/api/customer/getRestaurants`);
     expect(response.ok()).toBeTruthy();
   });
 });

@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "start": "npx prisma generate && node --import ./instrument.js dist/index.js",
-        "dev": "tsx watch --import ./instrument.js index.ts",
+        "start": "npx prisma generate && npm run build && node dist/index.js",
+        "dev": "tsx watch index.ts",
         "build": "tsc && tsc-alias",
         "test": "vitest",
         "lint": "eslint . --ext .ts",

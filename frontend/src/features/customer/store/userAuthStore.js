@@ -46,7 +46,7 @@ export const userAuthStore = create((set, get) => ({
       set({ authUser: { ...res.data, role: "customer" } });
       toast.success("Signed up successfully");
     } catch (err) {
-      if (showToast) toast.error(err.response?.data?.message || "Error logging out");
+      toast.error(err.response?.data?.message || "Sign up failed");
     } finally {
       set({ isSigningUp: false });
     }
