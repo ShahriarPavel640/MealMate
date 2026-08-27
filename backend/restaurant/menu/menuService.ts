@@ -1,5 +1,5 @@
-import prisma from '../../prismaClient.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import prisma from '@/prismaClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
 import { z } from 'zod';
 import { updateMenuItemSchema } from './menuSchemas.js';
 

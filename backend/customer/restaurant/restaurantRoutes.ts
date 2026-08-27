@@ -1,7 +1,7 @@
 import express, { Request } from 'express';
-import authorization from '../../middleware/authorization.js';
-import authorizeRoles from '../../middleware/authorizeRoles.js';
-import { cacheMiddleware } from '../../middleware/cacheMiddleware.js';
+import authorization from '@/middleware/authorization.js';
+import authorizeRoles from '@/middleware/authorizeRoles.js';
+import { cacheMiddleware } from '@/middleware/cacheMiddleware.js';
 import {
   getNearbyRestaurants,
   getRestaurants,

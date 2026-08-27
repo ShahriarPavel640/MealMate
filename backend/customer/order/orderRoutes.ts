@@ -1,8 +1,8 @@
 import express from 'express';
 import * as orderController from './orderController.js';
-import authorization from '../../middleware/authorization.js';
-import authorizeRoles from '../../middleware/authorizeRoles.js';
-import { validate } from '../../middleware/validate.js';
+import authorization from '@/middleware/authorization.js';
+import authorizeRoles from '@/middleware/authorizeRoles.js';
+import { validate } from '@/middleware/validate.js';
 import { createOrderSchema } from './orderSchemas.js';
 
 const router = express.Router();

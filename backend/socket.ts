@@ -1,12 +1,11 @@
 import { Server } from 'socket.io';
-import { handleRestaurantSocketEvents } from './socketHandlers/restaurantSocketHandler.js';
-import redisClient from './utils/redisClient.js';
+import { handleRestaurantSocketEvents } from '@/socketHandlers/restaurantSocketHandler.js';
+import redisClient from '@/utils/redisClient.js';
+import env from '@/config/env.js';
 
 let io: import('socket.io').Server | undefined;
 
-const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-];
+const allowedOrigins = env.CORS_ORIGINS?.split(',') || [env.FRONTEND_URL];
 
 export const initSocket = (server: import('http').Server) => {
   io = new Server(server, {

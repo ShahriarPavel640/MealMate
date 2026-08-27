@@ -1,7 +1,7 @@
 import express from 'express';
-import authorization from '../../middleware/authorization.js';
-import authorizeRoles from '../../middleware/authorizeRoles.js';
-import { validate } from '../../middleware/validate.js';
+import authorization from '@/middleware/authorization.js';
+import authorizeRoles from '@/middleware/authorizeRoles.js';
+import { validate } from '@/middleware/validate.js';
 import { addToCartSchema } from './cartSchemas.js';
 import { getCart, addToCart, deleteCartItem } from './cartController.js';
 

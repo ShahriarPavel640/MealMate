@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-dotenv.config();
+import env from '@/config/env.js';
 
 const authorization = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -10,7 +9,7 @@ const authorization = async (req: Request, res: Response, next: NextFunction) =>
     if (!token) {
       return res.status(401).json({ message: 'Not authorized. No token provided.' });
     }
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string);
+    const payload = jwt.verify(token, env.JWT_SECRET);
     req.user = (payload as any).user || payload;
 
     next();

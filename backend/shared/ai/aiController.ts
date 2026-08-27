@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import redisClient from '../../utils/redisClient.js';
+import redisClient from '@/utils/redisClient.js';
 import * as aiService from './aiService.js';
 
 export const generateMenuDescription = async (req: Request, res: Response, next: NextFunction) => {

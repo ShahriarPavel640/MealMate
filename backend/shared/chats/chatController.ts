@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { getIO } from '../../socket.js';
+import { getIO } from '@/socket.js';
 import * as chatService from './chatService.js';
-import logger from '../../utils/logger.js';
+import logger from '@/utils/logger.js';
 
 export const getConversations = async (req: Request, res: Response, next: NextFunction) => {
   try {

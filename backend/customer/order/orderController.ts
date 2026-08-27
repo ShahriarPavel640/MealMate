@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as orderService from './orderService.js';
-import { getIO } from '../../socket.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import { getIO } from '@/socket.js';
+import { AppError } from '@/middleware/errorHandler.js';
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -1,4 +1,4 @@
-import prisma from '../../prismaClient.js';
+import prisma from '@/prismaClient.js';
 
 export const getConversations = async (userId: number) => {
   const participations = await prisma.chat_participants.findMany({

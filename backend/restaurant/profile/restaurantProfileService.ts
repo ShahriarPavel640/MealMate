@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../../prismaClient.js';
+import prisma from '@/prismaClient.js';
 import bcrypt from 'bcrypt';
-import { AppError } from '../../middleware/errorHandler.js';
-import redisClient from '../../utils/redisClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
+import redisClient from '@/utils/redisClient.js';
 
 import { z } from 'zod';
 import { restaurantRegisterSchema, addMenuSchema, editProfileSchema } from './restaurantProfileSchemas.js';

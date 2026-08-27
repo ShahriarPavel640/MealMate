@@ -1,15 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import * as paymentService from './paymentService.js';
-import { getIO } from '../../socket.js';
-import logger from '../../utils/logger.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import { getIO } from '@/socket.js';
+import logger from '@/utils/logger.js';
+import { AppError } from '@/middleware/errorHandler.js';
+import env from '@/config/env.js';
 
 export const initiatePayment = async (
   req: Request,
   res: Response,
   next: NextFunction,
-  store_id: string = process.env.STORE_ID || '',
-  store_passwd: string = process.env.STORE_PASSWD || ''
+  store_id: string = env.STORE_ID,
+  store_passwd: string = env.STORE_PASSWD
 ) => {
   try {
     const { cartItems, customerInfo, total_amount, paymentMethod, specialInstructions } = req.body;
@@ -48,13 +49,11 @@ export const handleSuccess = async (req: Request, res: Response, next: NextFunct
       }
     }
 
-    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success?tran_id=${tran_id}`;
+    const redirectUrl = `${env.FRONTEND_URL}/payment-success?tran_id=${tran_id}`;
     res.redirect(redirectUrl);
   } catch (err: any) {
     logger.error('Error handling payment success redirect:', err);
-    res.redirect(
-      `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-fail?tran_id=${tran_id}`
-    );
+    res.redirect(`${env.FRONTEND_URL}/payment-fail?tran_id=${tran_id}`);
   }
 };
 
@@ -65,9 +64,7 @@ export const handleFail = async (req: Request, res: Response, next: NextFunction
   } catch (err: any) {
     logger.error('Error handling payment fail redirect:', err);
   } finally {
-    res.redirect(
-      `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-fail?tran_id=${tran_id}`
-    );
+    res.redirect(`${env.FRONTEND_URL}/payment-fail?tran_id=${tran_id}`);
   }
 };
 
@@ -78,9 +75,7 @@ export const handleCancel = async (req: Request, res: Response, next: NextFuncti
   } catch (err: any) {
     logger.error('Error handling payment cancel redirect:', err);
   } finally {
-    res.redirect(
-      `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-cancel?tran_id=${tran_id}`
-    );
+    res.redirect(`${env.FRONTEND_URL}/payment-cancel?tran_id=${tran_id}`);
   }
 };
 

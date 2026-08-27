@@ -26,8 +26,8 @@ interface CountResult {
   count: number | string | bigint;
 }
 
-import prisma from '../../prismaClient.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import prisma from '@/prismaClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
 
 export const getNearbyRestaurants = async (userId: number, page: number, limit: number) => {
   const radius = 5; // 5km

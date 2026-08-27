@@ -1,6 +1,6 @@
 import express from 'express';
-import authorization from '../../middleware/authorization.js';
-import authorizeRoles from '../../middleware/authorizeRoles.js';
+import authorization from '@/middleware/authorization.js';
+import authorizeRoles from '@/middleware/authorizeRoles.js';
 
 import { getDashboardData, getEarnings, getRiderReviews } from './statsController.js';
 

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../../middleware/errorHandler.js';
+import { AppError } from '@/middleware/errorHandler.js';
 import {
   addMenuCategory,
   updateMenuCategory,
@@ -8,7 +8,7 @@ import {
   updateMenuItem,
   deleteMenuItem,
 } from './menuService.js';
-import redisClient from '../../utils/redisClient.js';
+import redisClient from '@/utils/redisClient.js';
 
 export const createMenuCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {

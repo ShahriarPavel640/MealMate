@@ -1,8 +1,8 @@
 ﻿import express from 'express';
-import authorization from '../../middleware/authorization.js';
-import authorizeRoles from '../../middleware/authorizeRoles.js';
-import upload from '../../middleware/upload.js';
-import { validate } from '../../middleware/validate.js';
+import authorization from '@/middleware/authorization.js';
+import authorizeRoles from '@/middleware/authorizeRoles.js';
+import upload from '@/middleware/upload.js';
+import { validate } from '@/middleware/validate.js';
 
 import {
   signup as restaurant_signup,

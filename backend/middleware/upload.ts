@@ -1,4 +1,4 @@
-import logger from '../utils/logger.js';
+import logger from '@/utils/logger.js';
 import multer, { FileFilterCallback } from 'multer';
 import { Request } from 'express';
 import path from 'path';

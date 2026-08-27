@@ -1,5 +1,5 @@
-import prisma from '../../prismaClient.js';
-import redisClient from '../../utils/redisClient.js';
+import prisma from '@/prismaClient.js';
+import redisClient from '@/utils/redisClient.js';
 
 export const getDashboardData = async (riderId: number, { page = 1, limit = 5, lat, lon }: { page?: string | number, limit?: string | number, lat?: string | number, lon?: string | number }) => {
   const pageNum = parseInt(String(page), 10) || 1;

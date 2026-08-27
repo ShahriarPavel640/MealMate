@@ -34,13 +34,14 @@ export interface SSLCommerzIPNPayload {
 
 import { Prisma } from '@prisma/client';
 import SSLCommerzPayment from 'sslcommerz-lts';
-import prisma from '../../prismaClient.js';
-import { createOrderFromCart, fetchFullOrderDetails } from '../order/orderService.js';
+import prisma from '@/prismaClient.js';
+import { createOrderFromCart, fetchFullOrderDetails } from '@/customer/order/orderService.js';
 import { v4 as uuidv4 } from 'uuid';
-import { AppError } from '../../middleware/errorHandler.js';
-import logger from '../../utils/logger.js';
+import { AppError } from '@/middleware/errorHandler.js';
+import logger from '@/utils/logger.js';
 import { z } from 'zod';
 import { initiatePaymentSchema } from './paymentSchemas.js';
+import env from '@/config/env.js';
 
 type InitiatePaymentPayload = z.infer<typeof initiatePaymentSchema> & {
   userId: number;
@@ -48,7 +49,7 @@ type InitiatePaymentPayload = z.infer<typeof initiatePaymentSchema> & {
   store_passwd: string;
 };
 
-const is_live = process.env.SSL_COMMERZ_IS_LIVE === 'true';
+const is_live = env.SSL_COMMERZ_IS_LIVE;
 
 export const initiatePaymentService = async ({
   userId,
@@ -93,8 +94,8 @@ export const initiatePaymentService = async ({
     }
   );
 
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-  const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+  const frontendUrl = env.FRONTEND_URL;
+  const backendUrl = env.BACKEND_URL;
 
   const addressString =
     typeof customerInfo.address === 'object'
@@ -133,8 +134,8 @@ export const initiatePaymentService = async ({
   };
 
   const sslcz = new SSLCommerzPayment(
-    process.env.STORE_ID as string,
-    process.env.STORE_PASSWD as string,
+    store_id || env.STORE_ID,
+    store_passwd || env.STORE_PASSWD,
     is_live
   );
   const apiResponse = (await sslcz.init(data)) as { status?: string; GatewayPageURL?: string };

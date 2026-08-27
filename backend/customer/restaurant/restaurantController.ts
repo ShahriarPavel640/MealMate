@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as restaurantService from './restaurantService.js';
-import { AppError } from '../../middleware/errorHandler.js';
+import { AppError } from '@/middleware/errorHandler.js';
 
 export const getNearbyRestaurants = async (req: Request, res: Response, next: NextFunction) => {
   try {

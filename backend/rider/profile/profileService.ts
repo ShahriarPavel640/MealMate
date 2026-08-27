@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../../prismaClient.js';
-import { AppError } from '../../middleware/errorHandler.js';
-import redisClient from '../../utils/redisClient.js';
+import prisma from '@/prismaClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
+import redisClient from '@/utils/redisClient.js';
 
 export const getRiderProfile = async (riderId: number) => {
   const user = await prisma.users.findUnique({

@@ -1,4 +1,4 @@
-import prisma from '../../prismaClient.js';
+import prisma from '@/prismaClient.js';
 
 export const getNotifications = async (targetId: number, targetType: 'user' | 'restaurant' | 'rider', limit: number, offset: number) => {
   return await prisma.notifications.findMany({
