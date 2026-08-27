@@ -194,13 +194,15 @@ jobs:
         working-directory: ./backend
         run: |
           npx prisma generate
-          npx prisma db push --force-reset
+          npx prisma db push --force-reset --accept-data-loss
+          npx prisma db execute --file ../triggers.sql --url "$DATABASE_URL"
+          npx prisma db execute --file ../populate.sql --url "$DATABASE_URL"
 
       - name: Start Backend Server
         working-directory: ./backend
         run: |
           npm start &
-          sleep 5
+          npx wait-on tcp:5000 -t 30000
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
