@@ -1,6 +1,6 @@
-import prisma from '../../prismaClient.js';
-import { AppError } from '../../middleware/errorHandler.js';
-import redisClient from '../../utils/redisClient.js';
+import prisma from '@/prismaClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
+import redisClient from '@/utils/redisClient.js';
 
 export const submitRestaurantReviewService = async (userId: number, data: { restaurantId?: number, riderId?: number, orderId: number, rating: number, comment: string }) => {
   const { restaurantId, orderId, rating, comment } = data;

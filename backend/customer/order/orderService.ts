@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../../prismaClient.js';
-import { AppError } from '../../middleware/errorHandler.js';
-import logger from '../../utils/logger.js';
+import prisma from '@/prismaClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
+import logger from '@/utils/logger.js';
 import { z } from 'zod';
 import { createOrderSchema } from './orderSchemas.js';
 

@@ -1,5 +1,5 @@
-import prisma from '../prismaClient.js';
-import { AppError } from '../middleware/errorHandler.js';
+import prisma from '@/prismaClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
 
 interface NearbyRestaurant {
   restaurant_id: number;

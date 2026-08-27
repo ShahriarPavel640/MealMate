@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import express from 'express';
-import authorization from '../../middleware/authorization.js';
-import authorizeRoles from '../../middleware/authorizeRoles.js';
-import { validate } from '../../middleware/validate.js';
+import authorization from '@/middleware/authorization.js';
+import authorizeRoles from '@/middleware/authorizeRoles.js';
+import { validate } from '@/middleware/validate.js';
 import { initiatePaymentSchema } from './paymentSchemas.js';
 import {
   handleIPN,

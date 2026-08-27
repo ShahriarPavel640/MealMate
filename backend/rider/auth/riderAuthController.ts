@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as riderAuthService from './riderAuthService.js';
-import { generateToken } from '../../utils/jwtGenerator.js';
+import { generateToken } from '@/utils/jwtGenerator.js';
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -52,7 +52,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
       const jwt = (await import('jsonwebtoken')).default;
       const decoded = jwt.decode(refreshToken);
       if (decoded && (decoded as any).id) {
-        const redisClient = (await import('../../utils/redisClient.js')).default;
+        const redisClient = (await import('@/utils/redisClient.js')).default;
         await redisClient.del(`refresh_token:${(decoded as any).id}`);
       }
     }

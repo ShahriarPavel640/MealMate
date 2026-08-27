@@ -1,7 +1,7 @@
 import { Socket } from 'socket.io';
-import prisma from '../prismaClient.js';
-import { getIO } from '../socket.js';
-import logger from '../utils/logger.js';
+import prisma from '@/prismaClient.js';
+import { getIO } from '@/socket.js';
+import logger from '@/utils/logger.js';
 
 export const handleRestaurantSocketEvents = (socket: Socket) => {
   socket.on('accept_order', async ({ orderId, restaurantId }: { orderId: string | number; restaurantId: string | number }) => {

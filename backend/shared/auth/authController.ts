@@ -1,10 +1,9 @@
-import logger from '../../utils/logger.js';
+import logger from '@/utils/logger.js';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import redisClient from '../../utils/redisClient.js';
-import { generateToken } from '../../utils/jwtGenerator.js';
-import dotenv from 'dotenv';
-dotenv.config();
+import redisClient from '@/utils/redisClient.js';
+import { generateToken } from '@/utils/jwtGenerator.js';
+import env from '@/config/env.js';
 
 export const refreshToken = async (req: Request, res: Response, _next: NextFunction) => {
   try {
@@ -14,7 +13,7 @@ export const refreshToken = async (req: Request, res: Response, _next: NextFunct
     }
 
     // Verify token
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET as string) as jwt.JwtPayload;
+    const decoded = jwt.verify(refreshToken, env.JWT_SECRET) as jwt.JwtPayload;
     const userId = (decoded as any).id;
     const role = (decoded as any).role;
 

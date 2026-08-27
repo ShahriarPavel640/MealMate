@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../../middleware/errorHandler.js';
+import { AppError } from '@/middleware/errorHandler.js';
 import {
   fetchLastWeekRevenueByDay,
   fetchLastMonthRevenueByWeek,

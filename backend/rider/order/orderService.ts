@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../../prismaClient.js';
-import { AppError } from '../../middleware/errorHandler.js';
-import { getIO } from '../../socket.js';
+import prisma from '@/prismaClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
+import { getIO } from '@/socket.js';
 
 export const getDeliveryHistory = async (riderId: number, { page = 1, limit = 10 }: { page?: string | number; limit?: string | number } = {}) => {
   const pageNum = Number(page) || 1;

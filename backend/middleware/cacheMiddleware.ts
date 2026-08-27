@@ -1,6 +1,6 @@
-import logger from '../utils/logger.js';
+import logger from '@/utils/logger.js';
 import { Request, Response, NextFunction } from 'express';
-import redisClient from '../utils/redisClient.js';
+import redisClient from '@/utils/redisClient.js';
 
 /**
  * Cache middleware for Express

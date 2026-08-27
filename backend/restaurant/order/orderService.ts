@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../../prismaClient.js';
-import { AppError } from '../../middleware/errorHandler.js';
-import { getIO } from '../../socket.js';
+import prisma from '@/prismaClient.js';
+import { AppError } from '@/middleware/errorHandler.js';
+import { getIO } from '@/socket.js';
 
 interface TodayStatsRow {
   revenue_today: number | null;
@@ -234,7 +234,7 @@ export const updateOrderStatus = async (restaurantId: number, orderId: number, n
         let availableRiders: Array<{ user_id: number }> = [];
 
         try {
-          const redis = (await import('../../utils/redisClient.js')).default;
+          const redis = (await import('@/utils/redisClient.js')).default;
           if (redis.isOpen && restLoc.longitude && restLoc.latitude) {
             const nearbyRiderIds = await redis.geoRadius(
               'active_riders',

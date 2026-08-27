@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
 import redisClient from './redisClient.js';
-dotenv.config();
+import env from '@/config/env.js';
 
 export const generateToken = async (
   id: string | number,
@@ -9,12 +8,12 @@ export const generateToken = async (
   res: import('express').Response
 ) => {
   // 1. Generate Access Token (15 minutes)
-  const accessToken = jwt.sign({ id, role }, process.env.JWT_SECRET as string, {
+  const accessToken = jwt.sign({ id, role }, env.JWT_SECRET, {
     expiresIn: '15m',
   });
 
   // 2. Generate Refresh Token (7 days)
-  const refreshToken = jwt.sign({ id, role }, process.env.JWT_SECRET as string, {
+  const refreshToken = jwt.sign({ id, role }, env.JWT_SECRET, {
     expiresIn: '7d',
   });
 
@@ -28,7 +27,7 @@ export const generateToken = async (
     maxAge: 15 * 60 * 1000, // 15 minutes
     httpOnly: true,
     sameSite: 'strict',
-    secure: process.env.NODE_ENV !== 'development',
+    secure: env.NODE_ENV !== 'development',
   });
 
   // 5. Set Refresh Token Cookie
@@ -36,7 +35,7 @@ export const generateToken = async (
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true,
     sameSite: 'strict',
-    secure: process.env.NODE_ENV !== 'development',
+    secure: env.NODE_ENV !== 'development',
   });
 
   return { accessToken, refreshToken };

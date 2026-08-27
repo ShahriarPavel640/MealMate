@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../../prismaClient.js';
+import prisma from '@/prismaClient.js';
 import bcrypt from 'bcrypt';
-import { AppError } from '../../middleware/errorHandler.js';
+import { AppError } from '@/middleware/errorHandler.js';
 
 export interface RiderSignupData {
   name: string;

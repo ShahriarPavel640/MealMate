@@ -1,8 +1,8 @@
-import prisma from '../../prismaClient.js';
+import prisma from '@/prismaClient.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import env from '@/config/env.js';
 
-const apiKey =
-  (process.env.GEMINI_API_KEY as string as string) || (process.env.GOOGLE_API_KEY as string);
+const apiKey = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 

@@ -1,12 +1,9 @@
-import logger from '../utils/logger.js';
+import logger from './logger.js';
 import { createClient } from 'redis';
-import dotenv from 'dotenv';
-dotenv.config();
+import { getRedisUrl } from '@/config/env.js';
 
 const redisClient = createClient({
-  url:
-    process.env.REDIS_URL ||
-    (process.env.DB_HOST === 'db' ? 'redis://redis:6379' : 'redis://127.0.0.1:6379'),
+  url: getRedisUrl(),
 });
 
 redisClient.on('error', (err) => logger.info('Redis Client Error', err));
