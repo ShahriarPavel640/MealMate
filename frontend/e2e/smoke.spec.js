@@ -18,9 +18,9 @@ test.describe('Customer Portal', () => {
 test.describe('Restaurant Portal', () => {
   test('should load the restaurant homepage (partner)', async ({ page }) => {
     await page.goto('/partner');
-    // Wait for network idle or main container
-    await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL(/.*partner/);
+    // Wait for something specific rather than networkidle
+    await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 10000 });
   });
 });
 

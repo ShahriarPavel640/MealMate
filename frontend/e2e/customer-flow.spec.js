@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Customer Flow E2E', () => {
-  const uniqueId = Date.now();
+  const uniqueId = Date.now() + Math.random().toString(36).substring(7);
   const testCustomer = {
     name: 'E2E Customer',
     email: `customer${uniqueId}@example.com`,
@@ -17,7 +17,8 @@ test.describe('Customer Flow E2E', () => {
     
     // Simulate picking location (wait for modal and confirm)
     await page.getByRole('button', { name: /Pick Location/i }).click();
-    const confirmBtn = page.getByRole('button', { name: 'Confirm Location' });
+    // Wait for the modal map to appear
+    const confirmBtn = page.getByRole('button', { name: /Confirm Location/i });
     await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
     await confirmBtn.click();
     

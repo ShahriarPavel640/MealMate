@@ -182,7 +182,10 @@ function App() {
           path="/restaurant/:restaurantId/reviews"
           element={<RestaurantReviewsPage />}
         />
-        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route 
+          path="/checkout" 
+          element={authUser ? <CheckoutPage /> : <Navigate to="/login" />} 
+        />
         <Route path="/order-history" element={<OrderHistoryPage />} />
         <Route
           path="/simulate-payment-gateway"

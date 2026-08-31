@@ -14,7 +14,7 @@ function LoginPageRest() {
 
   useEffect(() => {
     if (authRestaurant) {
-      navigate("/restaurant/");
+      navigate("/partner");
     }
   }, [authRestaurant, navigate]);
 

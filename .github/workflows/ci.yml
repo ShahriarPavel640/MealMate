@@ -227,7 +227,7 @@ jobs:
 
       - name: Run UI E2E Tests
         working-directory: ./frontend
-        run: npx playwright test e2e/customer-flow.spec.js e2e/smoke.spec.js
+        run: npx playwright test
 
   docker-build:
     name: Verify Docker Build

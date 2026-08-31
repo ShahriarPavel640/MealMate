@@ -62,7 +62,7 @@ const RiderLayout = ({ children, onChatClick }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/rider/login');
   };
 
   const navItems = [
