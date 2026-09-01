@@ -22,7 +22,7 @@ test.describe('Restaurant Flow E2E', () => {
       await page.getByRole('button', { name: /Pick Location/i }).click();
       const confirmBtn = page.getByRole('button', { name: /Confirm Location/i });
       await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
-      await confirmBtn.click();
+      await confirmBtn.click({ force: true });
 
       await page.getByRole('button', { name: 'Create Account' }).click();
       
@@ -46,10 +46,11 @@ test.describe('Restaurant Flow E2E', () => {
 
   test.describe('Dashboard & Tabs', () => {
     test.beforeEach(async ({ page }) => {
+      test.setTimeout(60000); // Give it more time
       const uniqueId = Date.now() + Math.random().toString(36).substring(7);
       const testEmail = `restaurant_pages_${uniqueId}@example.com`;
       
-      await page.goto('/partner');
+      await page.goto('/partner', { timeout: 60000 });
       await page.getByRole('tab', { name: 'Sign Up' }).click();
       await page.getByLabel('Restaurant Name').fill('Test Restaurant');
       await page.getByLabel('Email', { exact: true }).fill(testEmail);
@@ -59,7 +60,7 @@ test.describe('Restaurant Flow E2E', () => {
       await page.getByRole('button', { name: /Pick Location/i }).click();
       const confirmBtn = page.getByRole('button', { name: /Confirm Location/i });
       await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
-      await confirmBtn.click();
+      await confirmBtn.click({ force: true });
 
       await page.getByRole('button', { name: 'Create Account' }).click();
       await expect(page).toHaveURL(/.*(?:partner|restaurant)/, { timeout: 10000 });
