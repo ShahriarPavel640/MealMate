@@ -35,27 +35,27 @@ interface LocationState {
   lng: number | string | null;
 }
 
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+const DAY_ABBR_TO_FULL: Record<string, string> = {
+  Mon: "monday",
+  Tue: "tuesday",
+  Wed: "wednesday",
+  Thu: "thursday",
+  Fri: "friday",
+  Sat: "saturday",
+  Sun: "sunday",
+};
+
 const RestaurantProfile: React.FC = () => {
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-
-  const dayAbbrToFull: Record<string, string> = {
-    Mon: "monday",
-    Tue: "tuesday",
-    Wed: "wednesday",
-    Thu: "thursday",
-    Fri: "friday",
-    Sat: "saturday",
-    Sun: "sunday",
-  };
-
   const [restaurantName, setRestaurantName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
@@ -82,7 +82,7 @@ const RestaurantProfile: React.FC = () => {
   const [location, setLocation] = useState<LocationState>({ lat: null, lng: null });
 
   const [operatingHours, setOperatingHours] = useState<OperatingHourItem[]>(
-    days.map((day) => ({
+    DAYS.map((day: string) => ({
       day,
       enabled: false,
       open: "10:00",
@@ -122,14 +122,20 @@ const RestaurantProfile: React.FC = () => {
         lng: data.longitude || null,
       });
 
-      const backendHoursMap: Record<string, any> = {};
-      (data.operating_hours || []).forEach((h: any) => {
+      interface BackendOperatingHour {
+        day_of_week: string;
+        open_time?: string;
+        close_time?: string;
+        is_closed?: boolean;
+      }
+      const backendHoursMap: Record<string, BackendOperatingHour> = {};
+      ((data.operating_hours || []) as BackendOperatingHour[]).forEach((h) => {
         const fullDay =
-          dayAbbrToFull[h.day_of_week] || h.day_of_week.toLowerCase();
+          DAY_ABBR_TO_FULL[h.day_of_week] || h.day_of_week.toLowerCase();
         backendHoursMap[fullDay] = h;
       });
       setOperatingHours(
-        days.map((day) => {
+        DAYS.map((day) => {
           const key = day.toLowerCase();
           if (backendHoursMap[key]) {
             const openTime = backendHoursMap[key].open_time
@@ -507,7 +513,7 @@ const RestaurantProfile: React.FC = () => {
       <LocationPickerModal
         isOpen={locationModalOpen}
         onClose={() => setLocationModalOpen(false)}
-        onSelect={(coords: any) => setLocation(coords)}
+        onSelect={(coords: { lat: number; lng: number }) => setLocation(coords)}
         initialLocation={location}
       />
     </div>

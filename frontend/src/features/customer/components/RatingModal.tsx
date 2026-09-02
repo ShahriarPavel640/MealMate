@@ -80,11 +80,11 @@ const RatingModal: React.FC<RatingModalProps> = ({
       }
       onReviewSubmitted(target.type);
       onClose();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting review:", error);
-      if (error?.response?.status === 409) {
-        toast.error(error.response.data.message);
+      const apiErr = error as { response?: { status?: number; data?: { message?: string } } };
+      if (apiErr?.response?.status === 409) {
+        toast.error(apiErr.response.data?.message || "Already reviewed.");
       } else {
         toast.error("Failed to submit review. Please try again.");
       }

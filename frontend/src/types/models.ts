@@ -85,6 +85,7 @@ export interface CartItem {
   name?: string;
   price?: number;
   image?: string;
+  menu_item_image_url?: string;
   restaurant_id?: number;
   restaurant_name?: string;
 }

@@ -2,9 +2,6 @@ import { test, expect } from '@playwright/test';
 import { loginRestaurant } from './helpers.js';
 
 test.describe('Restaurant Flow E2E', () => {
-  const seedEmail = 'sandra22@hotmail.com'; // From populate.sql
-  const seedPassword = 'password123';
-
   test.describe('Auth Flow', () => {
     test('Signup -> Logout -> Login', async ({ page }) => {
       const uniqueId = Date.now();

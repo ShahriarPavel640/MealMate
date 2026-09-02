@@ -76,7 +76,7 @@ export function CartSidebar({
                     className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm"
                   >
                     <img
-                      src={item.image || (item as any).menu_item_image_url}
+                      src={item.image || item.menu_item_image_url}
                       alt={item.name}
                       className="w-20 h-20 object-cover rounded-xl shadow-sm"
                     />

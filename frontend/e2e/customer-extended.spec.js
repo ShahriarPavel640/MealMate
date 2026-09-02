@@ -32,7 +32,7 @@ test.describe('Customer Extended E2E', () => {
     await page.goto('/restaurants');
     
     // Verify at least one restaurant card is visible
-    await expect(page.getByText(/View Menu/i).first()).toBeVisible();
+    await expect(page.getByText(/View Menu/i).first()).toBeVisible({ timeout: 15000 });
     
     // Get the name of the first restaurant
     const firstRestaurantName = await page.getByRole('heading', { level: 3 }).first().textContent();

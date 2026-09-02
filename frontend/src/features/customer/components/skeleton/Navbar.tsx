@@ -13,6 +13,7 @@ const Navbar: React.FC = () => {
   const authUser = userAuthStore((state) => state.authUser);
 
   const { authrider, logout: riderLogout } = useRiderAuthStore();
+  const isChatOpen = useChatStore((state) => state.isChatOpen);
   const navigate = useNavigate();
 
   const { 
@@ -166,7 +167,7 @@ const Navbar: React.FC = () => {
           {/* Chat Button (Customer Only) */}
           {authUser && (
             <div className="relative mr-2 md:mr-4">
-              <ChatButton isChatOpen={useChatStore((state) => state.isChatOpen)} />
+              <ChatButton isChatOpen={isChatOpen} />
             </div>
           )}
 

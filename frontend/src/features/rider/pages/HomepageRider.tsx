@@ -123,7 +123,7 @@ const HomepageRider: React.FC = () => {
 
   // Fetch DB notifications on mount
   useEffect(() => {
-    const rId = (authrider as any)?.user_id || (authrider as any)?.rider_id;
+    const rId = authrider ? (authrider.rider_id || authrider.user_id || authrider.id) : undefined;
     if (authrider && rId) {
       fetchNotifications(0, 10);
     }
@@ -217,7 +217,7 @@ const HomepageRider: React.FC = () => {
           (position) => {
             const { latitude, longitude } = position.coords;
 
-            const rId = (authrider as any)?.user_id || (authrider as any)?.rider_id;
+            const rId = authrider ? (authrider.rider_id || authrider.user_id || authrider.id) : undefined;
             if (isAvailable) {
               socketService.emit("update_location", {
                 riderId: rId,

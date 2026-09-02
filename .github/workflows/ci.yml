@@ -126,6 +126,10 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
 
+      - name: Run Type Check
+        working-directory: ./frontend
+        run: npm run type-check
+
       - name: Build Application
         working-directory: ./frontend
         run: npm run build

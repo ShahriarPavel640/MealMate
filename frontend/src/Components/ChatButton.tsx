@@ -30,8 +30,14 @@ const ChatButton: React.FC<ChatButtonProps> = ({ isChatOpen }) => {
 
     fetchUnreadCount();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleReceiveMessage = (message: any) => {
+    interface IncomingChatMessage {
+      sender_id?: number | string;
+      sender_name?: string;
+      chat_order_id?: number | string;
+      order_id?: number | string;
+    }
+
+    const handleReceiveMessage = (message: IncomingChatMessage) => {
       // Don't toast or increment count if the message was sent by ourselves
       if (Number(message.sender_id) === Number(currentUserId)) return;
 

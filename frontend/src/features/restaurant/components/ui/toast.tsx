@@ -52,8 +52,7 @@ const Toast = React.forwardRef<
 ));
 Toast.displayName = ToastPrimitives.Root.displayName;
 
-export interface ToastActionElement
-  extends React.ReactElement<typeof ToastAction> {}
+export type ToastActionElement = React.ReactElement<typeof ToastAction>;
 
 const ToastAction = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Action>,

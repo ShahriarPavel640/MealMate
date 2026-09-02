@@ -52,9 +52,9 @@ export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
       const res = await axiosInstance.post("/restaurant/login", data);
       set({ authRestaurant: { ...res.data, role: 'restaurant' } });
       toast.success("Logged in successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Login failed");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "Login failed");
     } finally {
       set({ isLoggingIn: false });
     }
@@ -66,9 +66,9 @@ export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
       const res = await axiosInstance.post("/restaurant/register", data);
       set({ authRestaurant: { ...res.data, role: 'restaurant' } });
       toast.success("Signed up successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Signup failed");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "Signup failed");
     } finally {
       set({ isSigningUp: false });
     }
@@ -79,9 +79,9 @@ export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
     try {
       await axiosInstance.get("/restaurant/logout");
       if (showToast) toast.success("Logged out successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      if (showToast) toast.error(err?.response?.data?.message || "Logout failed");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      if (showToast) toast.error(apiErr?.response?.data?.message || "Logout failed");
     } finally {
       set({ isLoggingOut: false });
     }
@@ -91,9 +91,9 @@ export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
       set({ isChangingMenu: true });
       const res = await axiosInstance.post("/restaurant/add_menu", data);
       return res.data.item;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "add menu item failed");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "add menu item failed");
     } finally {
       set({ isChangingMenu: false });
     }
@@ -119,9 +119,9 @@ export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
       const res = await axiosInstance.get("/restaurant/get_menu_items");
       set({ initialMenuItems: res.data });
       return res.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "failed loading menu");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "failed loading menu");
       return [];
     }
   },
@@ -144,9 +144,9 @@ export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
         return await get().get_menus();
       }
       return false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "failed deleting menu");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "failed deleting menu");
       return false;
     }
   },

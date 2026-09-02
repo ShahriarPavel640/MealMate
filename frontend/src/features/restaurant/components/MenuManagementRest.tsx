@@ -57,7 +57,7 @@ function MenuManagementRest(): React.JSX.Element {
   }, [get_menus, get_categories]);
 
   const filteredItems = menuItems.filter((item) => {
-    const itemCat = (item as any).category_name || item.category;
+    const itemCat = item.category_name || item.category;
     const matchesCategory =
       selectedCategory === "All" || itemCat === selectedCategory;
     const matchesSearch = item.name
@@ -225,7 +225,7 @@ function MenuManagementRest(): React.JSX.Element {
               >
                 <div className="relative overflow-hidden rounded-t-lg">
                   <img
-                    src={(item as any).menu_item_image_url || item.image || ""}
+                    src={item.menu_item_image_url || item.image || ""}
                     alt={item.name}
                     className="w-full h-48 object-cover rounded-t-lg group-hover:scale-110 transition-transform duration-500"
                   />
@@ -257,7 +257,7 @@ function MenuManagementRest(): React.JSX.Element {
                     variant="outline"
                     className="w-fit bg-gray-700 border-gray-500 text-white"
                   >
-                    {(item as any).category_name || item.category}
+                    {item.category_name || item.category}
                   </Badge>
                 </CardHeader>
                 <CardContent>

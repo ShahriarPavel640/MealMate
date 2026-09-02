@@ -36,7 +36,6 @@ interface AuthUserLike {
   id?: number | string;
   role?: string;
   name?: string;
-  [key: string]: any;
 }
 
 interface ChatModalProps {

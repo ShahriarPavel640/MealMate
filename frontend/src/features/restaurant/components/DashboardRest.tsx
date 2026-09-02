@@ -86,10 +86,6 @@ const DashboardRest: React.FC<DashboardRestProps> = ({
 }) => {
   const { authRestaurant } = restaurantAuthStore();
 
-  if (!authRestaurant) {
-    return <Navigate to="/partner" replace />;
-  }
-
   const [recentOrders, setRecentOrders] = useState<FormattedOrder[]>([]);
   const [statsCards, setStatsCards] = useState<StatCardItem[]>([]);
 
@@ -97,19 +93,20 @@ const DashboardRest: React.FC<DashboardRestProps> = ({
     try {
       const response = await axiosInstance.get("/restaurant/today_stat");
       return response.data;
-    } catch (err: any) {
-      console.error("Error fetching today stat:", err.message);
+    } catch (err: unknown) {
+      console.error("Error fetching today stat:", (err as Error)?.message || err);
       return [];
     }
   };
 
   useEffect(() => {
+    if (!authRestaurant) return;
     const fetchStat = async () => {
       const stat = await getStatCard();
       setStatsCards(stat);
     };
     fetchStat();
-  }, []);
+  }, [authRestaurant]);
 
   const getRecentOrder = async (): Promise<FormattedOrder[]> => {
     try {
@@ -144,19 +141,24 @@ const DashboardRest: React.FC<DashboardRestProps> = ({
       }));
 
       return formattedOrders;
-    } catch (err: any) {
-      console.error("Error fetching recent orders:", err.message);
+    } catch (err: unknown) {
+      console.error("Error fetching recent orders:", (err as Error)?.message || err);
       return [];
     }
   };
 
   useEffect(() => {
+    if (!authRestaurant) return;
     const fetchOrders = async () => {
       const orders = await getRecentOrder();
       setRecentOrders(orders);
     };
     fetchOrders();
-  }, []);
+  }, [authRestaurant]);
+
+  if (!authRestaurant) {
+    return <Navigate to="/partner" replace />;
+  }
 
   return (
     <div className="p-6 space-y-6 bg-gray-900 min-h-screen text-gray-100">

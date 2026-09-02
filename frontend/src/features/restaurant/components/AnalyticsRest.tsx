@@ -101,8 +101,8 @@ const AnalyticsRest: React.FC = () => {
         "/restaurant/stats/daily_revenue"
       );
       return response.data;
-    } catch (err: any) {
-      console.error("Error fetching recent orders:", err.message);
+    } catch (err: unknown) {
+      console.error("Error fetching recent orders:", (err as Error)?.message || err);
       return [];
     }
   };
@@ -148,8 +148,8 @@ const AnalyticsRest: React.FC = () => {
         "/restaurant/stats/top_selling_items"
       );
       return response.data;
-    } catch (err: any) {
-      console.error("Error fetching top items:", err.message);
+    } catch (err: unknown) {
+      console.error("Error fetching top items:", (err as Error)?.message || err);
       return [];
     }
   };
@@ -169,8 +169,8 @@ const AnalyticsRest: React.FC = () => {
         "/restaurant/stats/monthly_revenue"
       );
       return response.data;
-    } catch (err: any) {
-      console.error("Error fetching weekly revenue:", err.message);
+    } catch (err: unknown) {
+      console.error("Error fetching weekly revenue:", (err as Error)?.message || err);
       return [];
     }
   };

@@ -35,7 +35,7 @@ const RiderLayout: React.FC<RiderLayoutProps> = ({ children, onChatClick }) => {
     }
   };
 
-  const currentUserId = (authrider as any)?.user_id || (authrider as any)?.rider_id || (authrider as any)?.id;
+  const currentUserId = authrider ? (authrider.rider_id || authrider.user_id || authrider.id) : undefined;
 
   useEffect(() => {
     if (authrider && currentUserId) {

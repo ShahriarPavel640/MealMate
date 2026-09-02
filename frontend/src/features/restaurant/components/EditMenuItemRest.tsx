@@ -66,12 +66,12 @@ const EditMenuItemRest: React.FC<EditMenuItemRestProps> = ({ item, onBack, onSav
         name: item.name || "",
         description: item.description || "",
         price: item.price !== undefined ? String(item.price) : "",
-        category: (item as any).category_name || item.category || "",
-        menu_item_image_url: (item as any).menu_item_image_url || item.image || "",
+        category: item.category_name || item.category || "",
+        menu_item_image_url: item.menu_item_image_url || item.image || "",
         is_available: item.is_available !== false,
-        discount: (item as any).discount !== undefined ? String((item as any).discount) : "",
+        discount: item.discount !== undefined ? String(item.discount) : "",
       });
-      setImagePreview((item as any).menu_item_image_url || item.image || null);
+      setImagePreview(item.menu_item_image_url || item.image || null);
     }
   }, [item]);
 

@@ -72,14 +72,19 @@ const App: React.FC = () => {
   const { isChatOpen, chatOrderId, closeChat } = useChatStore();
 
   const currentAuthUser = authUser || authRestaurant || authrider;
-  const currentUserId =
-    (currentAuthUser as any)?.user_id ||
-    (currentAuthUser as any)?.restaurant_id ||
-    (currentAuthUser as any)?.id ||
-    (currentAuthUser as any)?.rider_id;
-  const currentUserType =
-    currentAuthUser?.role ||
-    ((currentAuthUser as any)?.restaurant_id ? "restaurant" : undefined);
+  let currentUserId: number | undefined;
+  let currentUserType: string | undefined;
+
+  if (authUser) {
+    currentUserId = authUser.user_id;
+    currentUserType = authUser.role || "customer";
+  } else if (authRestaurant) {
+    currentUserId = authRestaurant.restaurant_id || authRestaurant.id;
+    currentUserType = authRestaurant.role || "restaurant";
+  } else if (authrider) {
+    currentUserId = authrider.rider_id || authrider.user_id || authrider.id;
+    currentUserType = authrider.role || "rider";
+  }
 
   useEffect(() => {
     checkAuth();

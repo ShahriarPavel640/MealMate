@@ -46,9 +46,9 @@ export const useRiderAuthStore = create<RiderAuthState>((set) => ({
       const res = await axiosInstance.post("/rider/login", data);
       set({ authrider: { ...res.data, role: 'rider' } });
       toast.success("Logged in successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Login failed");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "Login failed");
     } finally {
       set({ isLoggingIn: false });
     }
@@ -60,9 +60,9 @@ export const useRiderAuthStore = create<RiderAuthState>((set) => ({
       const res = await axiosInstance.post("/rider/signup", data);
       set({ authrider: { ...res.data, role: 'rider' } });
       toast.success("Signed up successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Signup failed");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "Signup failed");
     } finally {
       set({ isSigningUp: false });
     }
@@ -73,9 +73,9 @@ export const useRiderAuthStore = create<RiderAuthState>((set) => ({
     try {
       await axiosInstance.post("/rider/logout");
       if (showToast) toast.success("Logged out successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      if (showToast) toast.error(err?.response?.data?.message || "Logout failed");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      if (showToast) toast.error(apiErr?.response?.data?.message || "Logout failed");
     } finally {
       set({ isLoggingOut: false });
     }

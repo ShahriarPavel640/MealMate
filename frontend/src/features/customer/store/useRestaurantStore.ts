@@ -114,10 +114,10 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
       const res = await axiosInstance.get("customer/getCategories");
       console.log("categories are: ", res.data);
       set({ categories: res.data });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching categories", err);
-      toast.error(err?.response?.data?.message || "Failed to load categories");
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "Failed to load categories");
       set({ categories: [] });
     }
   },

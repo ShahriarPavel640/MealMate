@@ -16,6 +16,15 @@ export type ChartConfig = {
   );
 };
 
+export interface ChartPayloadItem {
+  name?: string;
+  dataKey?: string | number;
+  value?: unknown;
+  color?: string;
+  payload?: { fill?: string; [key: string]: unknown };
+  [key: string]: unknown;
+}
+
 type ChartContextProps = {
   config: ChartConfig;
 };
@@ -188,7 +197,7 @@ const ChartTooltipContent = React.forwardRef<
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
-          {payload.map((item: any, index: number) => {
+          {payload.map((item: ChartPayloadItem, index: number) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
             const indicatorColor = color || item.payload?.fill || item.color;
@@ -291,7 +300,7 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map((item: any, index: number) => {
+        {payload.map((item: ChartPayloadItem, index: number) => {
           const key = `${nameKey || item.dataKey || "value"}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
@@ -332,23 +341,24 @@ function getPayloadConfigFromPayload(
     return undefined;
   }
 
+  const recordPayload = payload as Record<string, unknown>;
   const payloadPayload =
-    "payload" in payload &&
-    typeof (payload as any).payload === "object" &&
-    (payload as any).payload !== null
-      ? (payload as any).payload
+    "payload" in recordPayload &&
+    typeof recordPayload.payload === "object" &&
+    recordPayload.payload !== null
+      ? (recordPayload.payload as Record<string, unknown>)
       : undefined;
 
   let configLabelKey: string = key;
 
-  if (key in (payload as any) && typeof (payload as any)[key] === "string") {
-    configLabelKey = (payload as any)[key];
+  if (key in recordPayload && typeof recordPayload[key] === "string") {
+    configLabelKey = recordPayload[key] as string;
   } else if (
     payloadPayload &&
     key in payloadPayload &&
     typeof payloadPayload[key] === "string"
   ) {
-    configLabelKey = payloadPayload[key];
+    configLabelKey = payloadPayload[key] as string;
   }
 
   return configLabelKey in config

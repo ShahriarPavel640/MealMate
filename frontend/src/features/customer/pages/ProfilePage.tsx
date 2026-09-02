@@ -63,7 +63,7 @@ function Profile(): React.JSX.Element {
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await updateProfile(formData as any);
+    await updateProfile(formData);
   };
 
   return (

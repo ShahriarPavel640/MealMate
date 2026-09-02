@@ -17,7 +17,7 @@ interface UserAuthState {
   login: (data: Record<string, unknown>) => Promise<void>;
   signup: (data: Record<string, unknown>) => Promise<void>;
   logout: (showToast?: boolean) => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfile: (data: Partial<User> | Record<string, unknown>) => Promise<void>;
   token?: string;
 }
 
@@ -49,9 +49,9 @@ export const userAuthStore = create<UserAuthState>((set, get) => ({
       set({ authUser: { ...res.data, role: "customer" } });
       console.log("auth user:", get().authUser);
       toast.success("Logged in successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "something went wrong..");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "something went wrong..");
     } finally {
       set({ isLoggingIn: false });
     }
@@ -63,9 +63,9 @@ export const userAuthStore = create<UserAuthState>((set, get) => ({
       const res = await axiosInstance.post("/customer/register", data);
       set({ authUser: { ...res.data, role: "customer" } });
       toast.success("Signed up successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Sign up failed");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "Sign up failed");
     } finally {
       set({ isSigningUp: false });
     }
@@ -81,9 +81,9 @@ export const userAuthStore = create<UserAuthState>((set, get) => ({
       await getrestaurants();
       await getcategories();
       if (showToast) toast.success("Logged out successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      if (showToast) toast.error(err.response?.data?.message || "Error logging out");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      if (showToast) toast.error(apiErr?.response?.data?.message || "Error logging out");
     }
   },
 
@@ -93,9 +93,9 @@ export const userAuthStore = create<UserAuthState>((set, get) => ({
       const res = await axiosInstance.put("/customer/update_profile", data);
       set({ authUser: res.data });
       toast.success("updated profile successfully");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Error updating profile");
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      toast.error(apiErr?.response?.data?.message || "Error updating profile");
     }
   },
 }));

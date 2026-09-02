@@ -1,5 +1,5 @@
 import React from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast, ToastProps } from "@/hooks/use-toast";
 import {
   Toast,
   ToastClose,
@@ -15,7 +15,8 @@ export function Toaster(): React.JSX.Element {
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }: any) {
+      {toasts.map(function ({ id, title, description, action, ...props }: ToastProps) {
+        const actionObj = typeof action === "object" && action !== null ? (action as { onClick?: () => void; label?: React.ReactNode }) : null;
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
@@ -28,8 +29,8 @@ export function Toaster(): React.JSX.Element {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  if (typeof action.onClick === "function") {
-                    action.onClick();
+                  if (actionObj && typeof actionObj.onClick === "function") {
+                    actionObj.onClick();
                   }
                   if (typeof props.onOpenChange === "function") {
                     props.onOpenChange(false);
@@ -37,7 +38,7 @@ export function Toaster(): React.JSX.Element {
                 }}
                 className="bg-green-500 text-white hover:bg-green-600"
               >
-                {action.label || action}
+                {actionObj?.label || (typeof action === "string" ? action : null)}
               </Button>
             )}
             <ToastClose />
