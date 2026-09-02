@@ -1,0 +1,82 @@
+import React from "react";
+import { Link } from "react-router-dom";
+
+export interface Category {
+  id?: string;
+  category_id?: number;
+  name: string;
+  menu_category_image_url?: string;
+  menu_caetgory_image_url?: string;
+}
+
+const sampleCategories: Category[] = [
+  {
+    id: "biryani",
+    name: "Biryani",
+    menu_category_image_url: "https://source.unsplash.com/400x300/?biryani",
+  },
+  {
+    id: "pizza",
+    name: "Pizza",
+    menu_category_image_url: "https://source.unsplash.com/400x300/?pizza",
+  },
+  {
+    id: "desserts",
+    name: "Desserts",
+    menu_category_image_url: "https://source.unsplash.com/400x300/?dessert",
+  },
+];
+
+interface FeaturedCategoriesProps {
+  categories?: Category[];
+}
+
+const FeaturedCategories: React.FC<FeaturedCategoriesProps> = ({
+  categories = sampleCategories,
+}) => (
+  <div className="py-20 bg-base-100">
+    <div className="max-w-7xl mx-auto px-4">
+      <div className="flex justify-between items-center mb-12">
+        <div>
+          <h2 className="text-4xl font-bold mb-2">Featured Categories</h2>
+          <p className="text-xl text-base-content/70">
+            Explore popular food types
+          </p>
+        </div>
+        <Link to="/categories" className="btn btn-outline btn-lg">
+          Browse All Categories
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        {categories.map((category, idx) => (
+          <Link
+            key={category.category_id || category.id || idx}
+            to={`/categories/${category.id || category.category_id}`}
+            className="group"
+          >
+            <div className="card bg-base-200 shadow-lg hover:shadow-2xl transition-all duration-300 group-hover:-translate-y-3 rounded-3xl border border-gray-100 overflow-hidden">
+              <figure className="relative overflow-hidden">
+                <img
+                  src={category.menu_category_image_url || category.menu_caetgory_image_url}
+                  alt={category.name}
+                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+                />
+              </figure>
+              <div className="card-body text-center">
+                <h3 className="text-xl font-semibold text-base-content">
+                  {category.name}
+                </h3>
+                <p className="text-sm text-base-content/60 mt-1">
+                  Explore {category.name} restaurants
+                </p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+export default FeaturedCategories;

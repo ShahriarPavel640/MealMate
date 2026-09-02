@@ -5,29 +5,38 @@ export interface User {
   email: string;
   phone_number?: string;
   profile_pic?: string;
-  address?: string;
+  address?: string | { street?: string; city?: string; postal_code?: string };
   latitude?: number;
   longitude?: number;
+  location?: { latitude?: number; longitude?: number };
   role?: 'customer';
+  user?: { name?: string; email?: string };
 }
 
 // Restaurant
 export interface Restaurant {
   restaurant_id: number;
+  id?: number;
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   phone_number?: string;
   description?: string;
+  descriptions?: string;
   image?: string;
+  image_url?: string;
   logo?: string;
   latitude?: number;
   longitude?: number;
   address?: string;
   opening_hours?: string;
   avg_rating?: number;
+  average_rating?: number | string;
+  rating?: number | string;
   is_open?: boolean;
   is_favorite?: boolean;
   distance?: number;
+  category?: string;
   role?: 'restaurant';
 }
 
@@ -52,8 +61,18 @@ export interface MenuItem {
   description?: string;
   price: number;
   image?: string;
+  menu_item_image_url?: string;
   category?: string;
-  is_available: boolean;
+  category_id?: number;
+  category_name?: string;
+  menu_category_image_url?: string;
+  is_available?: boolean;
+  isPopular?: boolean;
+  isVegetarian?: boolean;
+  discount?: number;
+  prep_time?: number;
+  order_count?: number;
+  created_at?: string;
 }
 
 // Cart
