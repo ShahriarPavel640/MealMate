@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, History, TrendingUp, User, MessageCircle, LogOut, Menu, X, Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, History, TrendingUp, User, MessageCircle, LogOut, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRiderAuthStore } from '@/features/rider/store/riderAuthStore';
 import socketService from "@/services/socketService";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
 
-const RiderLayout = ({ children, onChatClick }) => {
+interface RiderLayoutProps {
+  children: React.ReactNode;
+  onChatClick?: () => void;
+}
+
+interface IncomingChatMessage {
+  sender_id?: number | string;
+  chat_order_id?: number | string;
+  order_id?: number | string;
+  sender_name?: string;
+  [key: string]: unknown;
+}
+
+const RiderLayout: React.FC<RiderLayoutProps> = ({ children, onChatClick }) => {
   const { authrider, logout } = useRiderAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,19 +35,17 @@ const RiderLayout = ({ children, onChatClick }) => {
     }
   };
 
-  const currentUserId = authrider?.user_id || authrider?.id;
+  const currentUserId = (authrider as any)?.user_id || (authrider as any)?.rider_id || (authrider as any)?.id;
 
   useEffect(() => {
     if (authrider && currentUserId) {
       fetchUnreadCount();
 
-      const handleReceiveMessage = (message) => {
-        // Don't toast or increment count if the message was sent by ourselves
+      const handleReceiveMessage = (message: IncomingChatMessage) => {
         if (Number(message.sender_id) === Number(currentUserId)) return;
 
         const incomingOrderId = String(message.chat_order_id || message.order_id);
         if (document.body.dataset.openChatOrderId === incomingOrderId) {
-          // We are currently looking at this specific chat. Do not toast or increment badge!
           return;
         }
 
@@ -42,7 +53,6 @@ const RiderLayout = ({ children, onChatClick }) => {
         toast.success(`New message from ${message.sender_name || 'someone'}`);
       };
 
-      // When a chat is marked as read (e.g. user opens a conversation), refetch the count
       const handleChatReadUpdate = () => fetchUnreadCount();
 
       socketService.on("receive_message", handleReceiveMessage);
@@ -247,4 +257,3 @@ const RiderLayout = ({ children, onChatClick }) => {
 };
 
 export default RiderLayout;
-

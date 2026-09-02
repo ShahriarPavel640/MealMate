@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { Loader2, MapPin } from "lucide-react";
 import { useRiderAuthStore } from "@/features/rider/store/riderAuthStore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "@/features/customer/components/skeleton/Navbar";
 import LocationPickerModal from "@/features/customer/components/LocationPickerModal";
 import toast from "react-hot-toast";
 
-function SignupPageRider() {
+interface RiderSignupFormData {
+  name: string;
+  email: string;
+  password: string;
+  phone_number: string;
+  vehicle_type: string;
+  current_location: string;
+  latitude: number | null;
+  longitude: number | null;
+  [key: string]: unknown;
+}
+
+const SignupPageRider: React.FC = () => {
   const navigate = useNavigate();
   const { signup, isSigningUp, authrider } = useRiderAuthStore();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RiderSignupFormData>({
     name: "",
     email: "",
     password: "",
@@ -29,7 +41,7 @@ function SignupPageRider() {
     }
   }, [authrider, navigate]);
 
-  const handleLocationSelect = (coords) => {
+  const handleLocationSelect = (coords: { lat: number; lng: number }) => {
     setFormData({
       ...formData,
       latitude: coords.lat,
@@ -38,7 +50,7 @@ function SignupPageRider() {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (formData.latitude === null || formData.longitude === null) {
       toast.error("Please pick your location on the map.");
@@ -57,10 +69,14 @@ function SignupPageRider() {
           </h2>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label 
+                htmlFor="name"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 Full Name
               </label>
               <input
+                id="name"
                 type="text"
                 required
                 className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -72,10 +88,14 @@ function SignupPageRider() {
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label 
+                htmlFor="email"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 Email
               </label>
               <input
+                id="email"
                 type="email"
                 required
                 className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -87,10 +107,14 @@ function SignupPageRider() {
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label 
+                htmlFor="password"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 Password
               </label>
               <input
+                id="password"
                 type="password"
                 required
                 className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -102,10 +126,14 @@ function SignupPageRider() {
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label 
+                htmlFor="phone_number"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 Phone Number
               </label>
               <input
+                id="phone_number"
                 type="text"
                 required
                 className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -117,10 +145,14 @@ function SignupPageRider() {
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label 
+                htmlFor="vehicle_type"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 Vehicle Type
               </label>
               <select
+                id="vehicle_type"
                 required
                 className="w-full p-2.5 border rounded-lg bg-gray-50 border-gray-300 text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 value={formData.vehicle_type}
@@ -174,12 +206,12 @@ function SignupPageRider() {
             </button>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Already have an account?{" "}
-              <a
-                href="/rider/login"
+              <Link
+                to="/rider/login"
                 className="font-medium text-primary-600 hover:underline dark:text-primary-500"
               >
                 Sign in
-              </a>
+              </Link>
             </p>
           </form>
         </div>
@@ -188,10 +220,10 @@ function SignupPageRider() {
         isOpen={locationModalOpen}
         onClose={() => setLocationModalOpen(false)}
         onSelect={handleLocationSelect}
-        initialLocation={formData.latitude ? { lat: formData.latitude, lng: formData.longitude } : { lat: 23.8103, lng: 90.4125 }}
+        initialLocation={formData.latitude !== null && formData.longitude !== null ? { lat: formData.latitude, lng: formData.longitude } : { lat: 23.8103, lng: 90.4125 }}
       />
     </>
   );
-}
+};
 
 export default SignupPageRider;

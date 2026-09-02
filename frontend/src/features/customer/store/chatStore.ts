@@ -2,8 +2,8 @@ import { create } from "zustand";
 
 interface ChatState {
   isChatOpen: boolean;
-  chatOrderId: number | null;
-  openChat: (orderId?: number | null) => void;
+  chatOrderId: number | string | null;
+  openChat: (orderId?: number | string | null) => void;
   closeChat: () => void;
 }
 

@@ -1,18 +1,17 @@
-/* eslint-disable */
 import React, { useState } from "react";
 import { useRiderAuthStore } from "@/features/rider/store/riderAuthStore";
 import { Loader2 } from "lucide-react";
 import Navbar from "@/features/customer/components/skeleton/Navbar";
 import { Link } from "react-router-dom";
 
-function LoginPageRider() {
+const LoginPageRider: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const { login, isLoggingIn } = useRiderAuthStore();
    
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await login(formData);
   };
@@ -41,7 +40,6 @@ function LoginPageRider() {
               <form
                 onSubmit={handleSubmit}
                 className="space-y-4 md:space-y-6"
-                action="#"
               >
                 <div>
                   <label
@@ -52,6 +50,7 @@ function LoginPageRider() {
                   </label>
 
                   <input
+                    id="email"
                     type="email"
                     className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="name@company.com"
@@ -62,10 +61,14 @@ function LoginPageRider() {
                   />
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                  <label 
+                    htmlFor="password"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
                     Password
                   </label>
                   <input
+                    id="password"
                     type="password"
                     className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="********"
@@ -105,6 +108,6 @@ function LoginPageRider() {
       </section>
     </div>
   );
-}
+};
 
 export default LoginPageRider;

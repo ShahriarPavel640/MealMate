@@ -11,15 +11,49 @@ import { Button } from "@/features/restaurant/components/ui/button";
 import { Input } from "@/features/restaurant/components/ui/input";
 import socketService from "@/services/socketService";
 
-const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
-  const [messages, setMessages] = useState([]);
+interface ChatMessage {
+  message_id?: number | string;
+  sender_id?: number | string;
+  sender_role?: string;
+  sender_name?: string;
+  sent_at?: string;
+  message: string;
+  chat_order_id?: number | string;
+  order_id?: number | string;
+}
+
+interface ConversationItem {
+  chat_id: number | string;
+  order_id: number | string;
+  participant_name: string;
+  unread_count: number | string;
+}
+
+interface AuthUserLike {
+  user_id?: number | string;
+  restaurant_id?: number | string;
+  rider_id?: number | string;
+  id?: number | string;
+  role?: string;
+  name?: string;
+  [key: string]: any;
+}
+
+interface ChatModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  orderId?: number | string | null;
+  currentAuthUser?: AuthUserLike | null;
+}
+
+const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, orderId, currentAuthUser }) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [conversations, setConversations] = useState([]);
-  const [currentChatOrderId, setCurrentChatOrderId] = useState(orderId);
+  const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [currentChatOrderId, setCurrentChatOrderId] = useState<number | string | null | undefined>(orderId);
   const [currentChatParticipantName, setCurrentChatParticipantName] =
     useState("");
-  const messagesEndRef = useRef(null);
-  // Track which orderId is currently open so socket handlers can reference it
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const currentChatOrderIdRef = useRef(currentChatOrderId);
 
   const currentUserId =
@@ -47,7 +81,7 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
   useEffect(() => {
     currentChatOrderIdRef.current = currentChatOrderId;
     if (isOpen && currentChatOrderId) {
-      document.body.dataset.openChatOrderId = currentChatOrderId;
+      document.body.dataset.openChatOrderId = String(currentChatOrderId);
     } else {
       delete document.body.dataset.openChatOrderId;
     }
@@ -60,30 +94,26 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
     };
   }, []);
 
-  // Dispatch chatReadUpdate to notify ChatButton/RiderLayout to refetch unread count
   const dispatchChatReadUpdate = () => {
     window.dispatchEvent(new CustomEvent("chatReadUpdate"));
   };
 
-  const handleReceiveMessage = useCallback((message) => {
+  const handleReceiveMessage = useCallback((message: ChatMessage) => {
     const openOrderId = currentChatOrderIdRef.current;
 
-    // If a specific chat is open and the message belongs to it, add it to the view
     if (openOrderId && String(message.chat_order_id || message.order_id) === String(openOrderId)) {
       setMessages((prevMessages) => [...prevMessages, message]);
 
-      // If the message is not from us, mark it as read immediately since we're looking at it
       if (Number(message.sender_id) !== Number(currentUserId)) {
         axiosInstance.put(`/chat/${openOrderId}/read`).then(() => {
           dispatchChatReadUpdate();
         }).catch(console.error);
       }
     } else if (!openOrderId) {
-      // We're on the conversation list view — update the per-conversation unread count
       if (Number(message.sender_id) !== Number(currentUserId)) {
         setConversations(prev => prev.map(convo => {
           if (String(convo.order_id) === String(message.chat_order_id || message.order_id)) {
-            return { ...convo, unread_count: (parseInt(convo.unread_count) || 0) + 1 };
+            return { ...convo, unread_count: (parseInt(String(convo.unread_count)) || 0) + 1 };
           }
           return convo;
         }));
@@ -98,9 +128,8 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
         axiosInstance
           .get(`/chat/${currentChatOrderId}`)
           .then((res) => {
-            setMessages(res.data.messages);
-            setCurrentChatParticipantName(res.data.otherParticipantName);
-            // Dispatch event after the backend successfully marks it as read
+            setMessages(res.data.messages || []);
+            setCurrentChatParticipantName(res.data.otherParticipantName || "");
             dispatchChatReadUpdate();
           })
           .catch((error) => {
@@ -109,16 +138,14 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
             setCurrentChatParticipantName("");
           });
 
-        // Join the order room for real-time messages
         if (socketService.socket && socketService.socket.connected) {
           socketService.emit("join_room", currentChatOrderId);
         }
       } else {
-        // Fetch conversation list
         axiosInstance
           .get("/chat")
           .then((res) => {
-            setConversations(res.data);
+            setConversations(res.data || []);
           })
           .catch((error) => {
             console.error("Error fetching conversations:", error);
@@ -161,18 +188,17 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
         message: newMessage,
       });
       setNewMessage("");
-      // Do NOT reload messages here! Let the socket event update the UI.
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
 
-  const handleConversationClick = (convo) => {
+  const handleConversationClick = (convo: ConversationItem) => {
     setCurrentChatOrderId(convo.order_id);
     setCurrentChatParticipantName(convo.participant_name);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -290,7 +316,7 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
 
                       return (
                         <div
-                          key={`${msg.message_id}_${index}`}
+                          key={`${msg.message_id || index}_${index}`}
                           className={`flex items-start space-x-3 ${
                             isCurrentUser ? "justify-end" : "justify-start"
                           }`}
@@ -390,7 +416,7 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
                     <Input
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
+                      onKeyDown={handleKeyPress}
                       placeholder="Type your message..."
                       className="w-full pr-28 py-4 text-base resize-none border-2 border-gray-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 rounded-xl text-gray-800 placeholder-gray-500 transition-all duration-200 outline-none shadow-sm bg-gray-50 focus:bg-white"
                     />
@@ -453,7 +479,7 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
                     <div
                       key={convo.chat_id}
                       className={`p-5 border-2 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow-md ${
-                        parseInt(convo.unread_count) > 0
+                        parseInt(String(convo.unread_count)) > 0
                           ? "border-indigo-300 bg-indigo-50/30"
                           : "border-gray-200 bg-white"
                       }`}
@@ -466,9 +492,9 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
                               {convo.participant_name?.charAt(0)?.toUpperCase() ||
                                 "U"}
                             </div>
-                            {parseInt(convo.unread_count) > 0 && (
+                            {parseInt(String(convo.unread_count)) > 0 && (
                               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white shadow-sm">
-                                {parseInt(convo.unread_count) > 9 ? '9+' : convo.unread_count}
+                                {parseInt(String(convo.unread_count)) > 9 ? '9+' : convo.unread_count}
                               </span>
                             )}
                           </div>
@@ -495,7 +521,7 @@ const ChatModal = ({ isOpen, onClose, orderId, currentAuthUser }) => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          {parseInt(convo.unread_count) > 0 && (
+                          {parseInt(String(convo.unread_count)) > 0 && (
                             <span className="text-xs font-semibold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">
                               {convo.unread_count} new
                             </span>

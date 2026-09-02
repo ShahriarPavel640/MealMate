@@ -43,6 +43,8 @@ export interface Restaurant {
 // Rider
 export interface Rider {
   rider_id: number;
+  user_id?: number;
+  id?: number;
   name: string;
   email: string;
   phone_number?: string;
@@ -126,6 +128,7 @@ export interface OrderItem {
 // Notification
 export interface Notification {
   notification_id?: number;
+  id?: number | string;
   type?: string;
   message: string;
   is_read?: boolean;
