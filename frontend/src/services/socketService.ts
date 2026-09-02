@@ -1,15 +1,19 @@
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 class SocketService {
+  public socket: Socket;
+  public connecting: boolean;
+  public roomQueue: string[];
+
   constructor() {
     this.socket = io(SOCKET_URL, { transports: ['websocket'], autoConnect: false });
     this.connecting = false;
     this.roomQueue = []; // Queue for rooms to join upon connection
   }
 
-  connect(userId, userType) {
+  connect(userId?: number | string | null, userType?: string | null) {
     if (this.socket && this.socket.connected) {
       console.log('SocketService: Already connected.');
       // Ensure the user joins their specific room even if already connected (e.g. background reconnects)
@@ -50,7 +54,7 @@ class SocketService {
     });
   }
 
-  joinRoom(roomName) {
+  joinRoom(roomName: string) {
     if (this.socket && this.socket.connected) {
       console.log(`SocketService: Joining room: ${roomName}`);
       this.socket.emit('join_room', roomName);
@@ -67,7 +71,7 @@ class SocketService {
     if (this.socket && this.socket.connected) {
       while(this.roomQueue.length > 0) {
         const roomName = this.roomQueue.shift();
-        this.joinRoom(roomName);
+        if (roomName) this.joinRoom(roomName);
       }
     }
   }
@@ -80,7 +84,7 @@ class SocketService {
     }
   }
 
-  emit(event, data) {
+  emit(event: string, data?: unknown) {
     if (this.socket) {
       console.log(`SocketService: Emitting event '${event}' with data:`, data);
       this.socket.emit(event, data);
@@ -89,14 +93,16 @@ class SocketService {
     }
   }
 
-  on(event, callback) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  on(event: string, callback: (...args: any[]) => void) {
     if (this.socket) {
       console.log(`SocketService: Registering listener for event: ${event}`);
       this.socket.on(event, callback);
     }
   }
 
-  off(event, callback) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  off(event: string, callback?: (...args: any[]) => void) {
     if (this.socket) {
       console.log(`SocketService: De-registering listener for event: ${event}`);
       this.socket.off(event, callback);
