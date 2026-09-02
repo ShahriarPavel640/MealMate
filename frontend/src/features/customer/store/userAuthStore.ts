@@ -1,11 +1,27 @@
-/* eslint-disable */
 import { create } from "zustand";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
-import { data } from "react-router-dom";
 import { useRestaurantStore } from "./useRestaurantStore";
+import { User } from "@/types/models";
 
-export const userAuthStore = create((set, get) => ({
+// Define the state interface
+interface UserAuthState {
+  authUser: (User & { role: 'customer' }) | null;
+  isSigningUp: boolean;
+  isLoggingIn: boolean;
+  isUpdatingProfile: boolean;
+  isCheckingAuth: boolean;
+  onlineUsers: unknown[];
+  socket: unknown | null;
+  checkAuth: () => Promise<void>;
+  login: (data: Record<string, unknown>) => Promise<void>;
+  signup: (data: Record<string, unknown>) => Promise<void>;
+  logout: (showToast?: boolean) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
+  token?: string;
+}
+
+export const userAuthStore = create<UserAuthState>((set, get) => ({
   authUser: null,
   isSigningUp: false,
   isLoggingIn: false,
@@ -33,48 +49,53 @@ export const userAuthStore = create((set, get) => ({
       set({ authUser: { ...res.data, role: "customer" } });
       console.log("auth user:", get().authUser);
       toast.success("Logged in successfully");
-    } catch (err) {
-      toast.error(err.response.data.message || "something went wrong..");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "something went wrong..");
     } finally {
       set({ isLoggingIn: false });
     }
   },
+
   signup: async (data) => {
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/customer/register", data);
       set({ authUser: { ...res.data, role: "customer" } });
       toast.success("Signed up successfully");
-    } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       toast.error(err.response?.data?.message || "Sign up failed");
     } finally {
       set({ isSigningUp: false });
     }
   },
+
   logout: async (showToast = true) => {
-    set({ isLoggingOut: true });
+    set({ authUser: null }); // Clear immediately to prevent infinite interceptor loops on 401
     const getrestaurants = useRestaurantStore.getState().getrestaurants;
     const getcategories = useRestaurantStore.getState().getcategories;
     try {
       await axiosInstance.get("/customer/logout");
-      set({ authUser: null });
       await new Promise((resolve) => setTimeout(resolve, 0));
       await getrestaurants();
       await getcategories();
       if (showToast) toast.success("Logged out successfully");
-    } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       if (showToast) toast.error(err.response?.data?.message || "Error logging out");
     }
   },
+
   updateProfile: async (data) => {
     console.log("data in store", data);
     try {
       const res = await axiosInstance.put("/customer/update_profile", data);
       set({ authUser: res.data });
       toast.success("updated profile successfully");
-    } catch (err) {
-      if (showToast) toast.error(err.response?.data?.message || "Error logging out");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Error updating profile");
     }
   },
 }));
-

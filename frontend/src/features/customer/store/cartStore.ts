@@ -1,7 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { CartItem } from "@/types/models";
 
-export const useCartStore = create(
+interface CartState {
+  cartItems: CartItem[];
+  addToCart: (item: CartItem) => void;
+  updateQuantity: (menuItemId: number, quantity: number) => void;
+  removeFromCart: (cartItemId: number) => void;
+  clearCart: () => void;
+}
+
+export const useCartStore = create<CartState>()(
   persist(
     (set) => ({
       cartItems: [],

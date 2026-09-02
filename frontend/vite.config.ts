@@ -24,6 +24,7 @@ export default defineConfig({
     strictPort: true,
     watch: {
       usePolling: true, // Required for Windows Docker volume mounts
+      ignored: ['**/node_modules/**', '**/.git/**', '**/playwright-report/**', '**/test-results/**'],
     },
     hmr: {
       clientPort: 5174, // Matches host port 5174 mapped in docker-compose

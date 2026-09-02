@@ -1,8 +1,20 @@
 import { create } from "zustand";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
+import { Notification } from "@/types/models";
 
-export const useNotificationStore = create((set) => ({
+interface NotificationState {
+  notifications: Notification[];
+  unreadCount: number;
+  hasMore: boolean;
+  loading: boolean;
+  addNotification: (notification: Notification) => void;
+  fetchNotifications: (offset?: number, limit?: number) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  clearNotifications: () => void;
+}
+
+export const useNotificationStore = create<NotificationState>((set) => ({
   notifications: [],
   unreadCount: 0,
   hasMore: true,
@@ -18,7 +30,7 @@ export const useNotificationStore = create((set) => ({
     try {
       set({ loading: true });
       const response = await axiosInstance.get(`/notifications?offset=${offset}&limit=${limit}`);
-      const newNotifications = response.data;
+      const newNotifications: Notification[] = response.data;
       
       set((state) => {
         // If offset is 0, we are doing an initial load. Otherwise we are appending (infinite scroll)

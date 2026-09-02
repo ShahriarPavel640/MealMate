@@ -1,12 +1,26 @@
 import { create } from "zustand";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
+import { Rider } from "@/types/models";
 
-export const useRiderAuthStore = create((set) => ({
+interface RiderAuthState {
+  authrider: (Rider & { role: 'rider' }) | null;
+  isSigningUp: boolean;
+  isLoggingIn: boolean;
+  isCheckingAuth: boolean;
+  isLoggingOut?: boolean;
+  checkAuthRider: () => Promise<void>;
+  login: (data: Record<string, unknown>) => Promise<void>;
+  signup: (data: Record<string, unknown>) => Promise<void>;
+  logout: (showToast?: boolean) => Promise<void>;
+}
+
+export const useRiderAuthStore = create<RiderAuthState>((set) => ({
   authrider: null,
   isSigningUp: false,
   isLoggingIn: false,
   isCheckingAuth: true,
+  isLoggingOut: false,
 
   checkAuthRider: async () => {
     try {
@@ -30,7 +44,8 @@ export const useRiderAuthStore = create((set) => ({
       const res = await axiosInstance.post("/rider/login", data);
       set({ authrider: { ...res.data, role: 'rider' } });
       toast.success("Logged in successfully");
-    } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       toast.error(err?.response?.data?.message || "Login failed");
     } finally {
       set({ isLoggingIn: false });
@@ -43,7 +58,8 @@ export const useRiderAuthStore = create((set) => ({
       const res = await axiosInstance.post("/rider/signup", data);
       set({ authrider: { ...res.data, role: 'rider' } });
       toast.success("Signed up successfully");
-    } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       toast.error(err?.response?.data?.message || "Signup failed");
     } finally {
       set({ isSigningUp: false });
@@ -51,16 +67,15 @@ export const useRiderAuthStore = create((set) => ({
   },
 
   logout: async (showToast = true) => {
-    set({ isLoggingOut: true });
+    set({ isLoggingOut: true, authrider: null });
     try {
       await axiosInstance.post("/rider/logout");
-      set({ authrider: null });
       if (showToast) toast.success("Logged out successfully");
-    } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       if (showToast) toast.error(err?.response?.data?.message || "Logout failed");
     } finally {
       set({ isLoggingOut: false });
     }
   },
 }));
-
