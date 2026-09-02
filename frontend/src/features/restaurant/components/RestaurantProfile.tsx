@@ -1,5 +1,4 @@
-/* eslint-disable */
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -13,12 +12,30 @@ import { Label } from "@/features/restaurant/components/ui/label";
 import { Textarea } from "@/features/restaurant/components/ui/textarea";
 import { Badge } from "@/features/restaurant/components/ui/badge";
 import { Switch } from "@/features/restaurant/components/ui/switch";
-import { Clock, MapPin, Star } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
 import LocationPickerModal from "@/features/customer/components/LocationPickerModal";
 
-function RestaurantProfile() {
+interface OperatingHourItem {
+  day: string;
+  enabled: boolean;
+  open: string;
+  close: string;
+}
+
+interface AddressState {
+  street: string | null;
+  city: string | null;
+  postal_code: string | null;
+}
+
+interface LocationState {
+  lat: number | string | null;
+  lng: number | string | null;
+}
+
+const RestaurantProfile: React.FC = () => {
   const days = [
     "Monday",
     "Tuesday",
@@ -28,7 +45,8 @@ function RestaurantProfile() {
     "Saturday",
     "Sunday",
   ];
-  const dayAbbrToFull = {
+
+  const dayAbbrToFull: Record<string, string> = {
     Mon: "monday",
     Tue: "tuesday",
     Wed: "wednesday",
@@ -37,10 +55,44 @@ function RestaurantProfile() {
     Sat: "saturday",
     Sun: "sunday",
   };
-  React.useEffect(() => {
+
+  const [restaurantName, setRestaurantName] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [address, setAddress] = useState<AddressState>({
+    street: null,
+    city: null,
+    postal_code: null,
+  });
+
+  const [deliveryFee, setDeliveryFee] = useState<string>("");
+  const [minOrder, setMinOrder] = useState<string>("");
+  const [deliveryTime, setDeliveryTime] = useState<string>("");
+  const [deliveryRadius, setDeliveryRadius] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>(
+    "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop"
+  );
+  const [customerRating, setCustomerRating] = useState<number | string | null>(null);
+  const [createdAt, setCreatedAt] = useState<string>("Recently");
+  const [locationModalOpen, setLocationModalOpen] = useState<boolean>(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState<boolean>(false);
+
+  const [location, setLocation] = useState<LocationState>({ lat: null, lng: null });
+
+  const [operatingHours, setOperatingHours] = useState<OperatingHourItem[]>(
+    days.map((day) => ({
+      day,
+      enabled: false,
+      open: "10:00",
+      close: "22:00",
+    }))
+  );
+
+  useEffect(() => {
     axiosInstance.get("/restaurant/get_restaurant_profile").then((res) => {
       const data = res.data;
-      console.log("restaurnat profile: ", data);
       setRestaurantName(data.restaurant_name || "");
       setDescription(data.description || "");
       setPhone(data.phone || "");
@@ -60,21 +112,18 @@ function RestaurantProfile() {
         data.restaurant_image ||
           "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop"
       );
-      setDescription(data.description);
       if (data.created_at) {
         const date = new Date(data.created_at);
-        setCreatedAt(date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+        setCreatedAt(date.toLocaleDateString("en-US", { month: "short", year: "numeric" }));
       }
 
-      // Initialize location state from backend data
       setLocation({
-        lat: data.latitude || null, // <-- Adjust keys if different
+        lat: data.latitude || null,
         lng: data.longitude || null,
       });
 
-      // Map backend operating_hours to state for all days
-      const backendHoursMap = {};
-      (data.operating_hours || []).forEach((h) => {
+      const backendHoursMap: Record<string, any> = {};
+      (data.operating_hours || []).forEach((h: any) => {
         const fullDay =
           dayAbbrToFull[h.day_of_week] || h.day_of_week.toLowerCase();
         backendHoursMap[fullDay] = h;
@@ -83,8 +132,12 @@ function RestaurantProfile() {
         days.map((day) => {
           const key = day.toLowerCase();
           if (backendHoursMap[key]) {
-            const openTime = backendHoursMap[key].open_time ? backendHoursMap[key].open_time.slice(0, 5) : "09:00";
-            const closeTime = backendHoursMap[key].close_time ? backendHoursMap[key].close_time.slice(0, 5) : "22:00";
+            const openTime = backendHoursMap[key].open_time
+              ? backendHoursMap[key].open_time.slice(0, 5)
+              : "09:00";
+            const closeTime = backendHoursMap[key].close_time
+              ? backendHoursMap[key].close_time.slice(0, 5)
+              : "22:00";
             return {
               day,
               enabled: true,
@@ -103,62 +156,36 @@ function RestaurantProfile() {
       );
     });
   }, []);
-  // Initialize state with backend data
-  const [restaurantName, setRestaurantName] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [phone, setPhone] = React.useState("");
-  const [email, setEmail] = React.useState(""); // Email is not editable
-  const [address, setAddress] = React.useState({
-    street: null,
-    city: null,
-    postal_code: null,
-  });
 
-  const [deliveryFee, setDeliveryFee] = React.useState("");
-  const [minOrder, setMinOrder] = React.useState("");
-  const [deliveryTime, setDeliveryTime] = React.useState("");
-  const [deliveryRadius, setDeliveryRadius] = React.useState("");
-  const [imageFile, setImageFile] = React.useState(null);
-  const [imagePreview, setImagePreview] = React.useState(null);
-  const [customerRating, setCustomerRating] = React.useState(null);
-  const [createdAt, setCreatedAt] = React.useState("Recently");
-  const [locationModalOpen, setLocationModalOpen] = React.useState(false);
-  const [isUpdatingProfile, setIsUpdatingProfile] = React.useState(false);
-
-  // Location state with lat & lng
-  const [location, setLocation] = React.useState({ lat: null, lng: null });
-
-  const [operatingHours, setOperatingHours] = React.useState(
-    days.map((day) => ({
-      day,
-      enabled: false,
-      open: "10:00",
-      close: "22:00",
-    }))
-  );
-
-  const handleToggleDay = (idx) => {
+  const handleToggleDay = (idx: number) => {
     setOperatingHours((hours) =>
       hours.map((h, i) => (i === idx ? { ...h, enabled: !h.enabled } : h))
     );
   };
 
-  const handleTimeChange = (idx, field, value) => {
+  const handleTimeChange = (idx: number, field: "open" | "close", value: string) => {
     setOperatingHours((hours) =>
       hours.map((h, i) => (i === idx ? { ...h, [field]: value } : h))
     );
   };
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
 
-  // Prepare data for backend
   const handleSave = async () => {
-    if (location.lat === null || location.lng === null || location.lat === "" || location.lng === "") {
-      toast.error("Please pick your restaurant's location on the map.", { duration: 3000 });
+    if (
+      location.lat === null ||
+      location.lng === null ||
+      location.lat === "" ||
+      location.lng === ""
+    ) {
+      toast.error("Please pick your restaurant's location on the map.", {
+        duration: 3000,
+      });
       return;
     }
 
@@ -175,25 +202,22 @@ function RestaurantProfile() {
     formData.append("description", description);
     formData.append("phone", phone);
     formData.append("email", email);
-    formData.append("address", address);
     formData.append("delivery_fee", deliveryFee);
     formData.append("min_order", minOrder);
     formData.append("delivery_time", deliveryTime);
     formData.append("delivery_radius", deliveryRadius);
-    formData.append("street", address.street);
-    formData.append("city", address.city);
-    formData.append("postal_code", address.postal_code);
+    formData.append("street", address.street || "");
+    formData.append("city", address.city || "");
+    formData.append("postal_code", address.postal_code || "");
 
-    // convert operating hours to JSON string (or handle it on backend)
     formData.append("operating_hours", JSON.stringify(backendHours));
     if (imageFile) {
       formData.append("image", imageFile);
     }
 
-    // Append location if set
     if (location.lat !== null && location.lng !== null) {
-      formData.append("latitude", location.lat);
-      formData.append("longitude", location.lng);
+      formData.append("latitude", String(location.lat));
+      formData.append("longitude", String(location.lng));
     }
 
     try {
@@ -203,7 +227,6 @@ function RestaurantProfile() {
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log("profile updated..");
       toast.success("Profile updated!", { duration: 3000 });
     } catch (err) {
       toast.error("Failed to update profile!", { duration: 3000 });
@@ -211,6 +234,7 @@ function RestaurantProfile() {
       setIsUpdatingProfile(false);
     }
   };
+
   if (isUpdatingProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -328,10 +352,7 @@ function RestaurantProfile() {
                     className="bg-gray-700 text-white flex-grow"
                   />
                 </div>
-                {/* <div className="text-sm text-gray-300 mt-1">
-                  Selected Location: {location.lat ?? "-"} ,{" "}
-                  {location.lng ?? "-"}
-                </div> */}
+
                 <Label htmlFor="Location">Location coordinate</Label>
                 <div className="flex items-center space-x-2">
                   <Button
@@ -415,14 +436,11 @@ function RestaurantProfile() {
               ))}
             </CardContent>
           </Card>
-
-
         </div>
 
         {/* Right Content */}
         <div className="space-y-6">
           {/* Restaurant Photo */}
-
           <Card className="bg-gray-800">
             <CardHeader>
               <CardTitle className="text-white">Restaurant Photo</CardTitle>
@@ -462,15 +480,8 @@ function RestaurantProfile() {
                   <span className="text-sm">Customer Rating</span>
                 </div>
                 <Badge className="bg-yellow-800 text-yellow-100">
-                  {customerRating} / 5.0
+                  {customerRating ? `${customerRating} / 5.0` : "N/A"}
                 </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                {/* <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-blue-400" />
-                  <span className="text-sm">Avg Delivery Time</span>
-                </div> */}
-                {/* <Badge className="bg-blue-800 text-blue-100">32 min</Badge> */}
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -481,30 +492,6 @@ function RestaurantProfile() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Account Status */}
-          {/* <Card className="bg-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white">Account Status</CardTitle>
-              <CardDescription className="text-gray-400">
-                Your partnership status and verification
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Account Verified</span>
-                <Badge className="bg-green-800 text-green-100">Verified</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Partnership Level</span>
-                <Badge className="bg-purple-800 text-purple-100">Premium</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Status</span>
-                <Badge className="bg-green-800 text-green-100">Active</Badge>
-              </div>
-            </CardContent>
-          </Card> */}
         </div>
       </div>
 
@@ -520,11 +507,11 @@ function RestaurantProfile() {
       <LocationPickerModal
         isOpen={locationModalOpen}
         onClose={() => setLocationModalOpen(false)}
-        onSelect={(coords) => setLocation(coords)}
+        onSelect={(coords: any) => setLocation(coords)}
         initialLocation={location}
       />
     </div>
   );
-}
+};
 
 export default RestaurantProfile;

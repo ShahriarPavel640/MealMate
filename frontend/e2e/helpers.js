@@ -4,9 +4,11 @@ export async function loginCustomer(page, email, password) {
   if (!page.url().includes('/login')) {
     await page.goto('/login');
   }
-  await page.getByPlaceholder('name@company.com').fill(email);
-  await page.getByPlaceholder('********').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  const emailInput = page.locator('input[type="email"], input#email').first();
+  const passwordInput = page.locator('input[type="password"], input#password').first();
+  await emailInput.fill(email);
+  await passwordInput.fill(password);
+  await page.getByRole('button', { name: /Sign in|Login/i }).first().click();
   await expect(page).toHaveURL('/', { timeout: 10000 });
 }
 
@@ -14,20 +16,24 @@ export async function loginRestaurant(page, email, password) {
   if (!page.url().includes('/partner')) {
     await page.goto('/partner');
   }
-  await page.locator('input#email').first().fill(email);
-  await page.locator('input#password').first().fill(password);
+  const emailInput = page.locator('input#email, input[type="email"]').first();
+  const passwordInput = page.locator('input#password, input[type="password"]').first();
+  await emailInput.fill(email);
+  await passwordInput.fill(password);
   await page.getByRole('button', { name: /Sign In|Login/i }).first().click();
-  // We can verify success if the dashboard loads
-  await expect(page.getByText('Recent Orders').first()).toBeVisible({ timeout: 10000 });
+  // Wait for dashboard to load (Recent Orders text)
+  await expect(page.getByText('Recent Orders')).toBeVisible({ timeout: 10000 });
 }
 
 export async function loginRider(page, email, password) {
   if (!page.url().includes('/rider/login')) {
     await page.goto('/rider/login');
   }
-  await page.getByPlaceholder('name@company.com').fill(email);
-  await page.getByPlaceholder('********').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  const emailInput = page.locator('input[type="email"], input#email').first();
+  const passwordInput = page.locator('input[type="password"], input#password').first();
+  await emailInput.fill(email);
+  await passwordInput.fill(password);
+  await page.getByRole('button', { name: /Sign in|Login/i }).first().click();
   await expect(page).toHaveURL(/.*rider/, { timeout: 10000 });
 }
 

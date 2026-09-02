@@ -1,4 +1,5 @@
-/* eslint-disable */
+import React, { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -16,13 +17,48 @@ import {
   Star,
   ArrowUpRight,
   ArrowDownRight,
+  LucideIcon,
 } from "lucide-react";
 import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthStore";
-import { useEffect } from "react";
-import { useState } from "react";
 import { axiosInstance } from "@/lib/axios";
 
-const getStatusColor = (status) => {
+interface DashboardRestProps {
+  setActiveTab: (tab: string) => void;
+  setCurrentView?: (view: string) => void;
+}
+
+interface StatCardItem {
+  title: string;
+  value: string | number;
+  change: string;
+  type: "increase" | "decrease" | string;
+  description: string;
+}
+
+interface RawOrderItem {
+  quantity: number;
+  name: string;
+}
+
+interface RawOrder {
+  id: string;
+  customer: string;
+  items: RawOrderItem[];
+  total: number;
+  status: string;
+  created_at: string;
+}
+
+interface FormattedOrder {
+  id: string;
+  customer: string;
+  items: string;
+  amount: string;
+  status: string;
+  time: string;
+}
+
+const getStatusColor = (status: string): string => {
   switch (status) {
     case "confirmed":
       return "bg-blue-100 text-blue-800";
@@ -37,30 +73,31 @@ const getStatusColor = (status) => {
   }
 };
 
-// Icon mapping based on stat titles
-const iconMap = {
+const iconMap: Record<string, LucideIcon> = {
   "Today's Revenue": Banknote,
   "Orders Today": ShoppingBag,
   "Avg Order Value": TrendingUp,
   "Customer Rating": Star,
 };
 
-const DashboardRest = ({ setActiveTab, setCurrentView }) => {
+const DashboardRest: React.FC<DashboardRestProps> = ({
+  setActiveTab,
+  setCurrentView,
+}) => {
   const { authRestaurant } = restaurantAuthStore();
 
   if (!authRestaurant) {
-    // User is logged out, redirect to login page
     return <Navigate to="/partner" replace />;
   }
 
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [statsCards, setStastCards] = useState([]);
+  const [recentOrders, setRecentOrders] = useState<FormattedOrder[]>([]);
+  const [statsCards, setStatsCards] = useState<StatCardItem[]>([]);
 
-  const getStatCard = async () => {
+  const getStatCard = async (): Promise<StatCardItem[]> => {
     try {
-      const respons = await axiosInstance.get("/restaurant/today_stat");
-      return respons.data;
-    } catch (err) {
+      const response = await axiosInstance.get("/restaurant/today_stat");
+      return response.data;
+    } catch (err: any) {
       console.error("Error fetching today stat:", err.message);
       return [];
     }
@@ -69,20 +106,20 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
   useEffect(() => {
     const fetchStat = async () => {
       const stat = await getStatCard();
-      setStastCards(stat);
+      setStatsCards(stat);
     };
     fetchStat();
   }, []);
 
-  const getRecentOrder = async () => {
+  const getRecentOrder = async (): Promise<FormattedOrder[]> => {
     try {
       const response = await axiosInstance.get("/restaurant/recent_orders");
-      const rawOrders = response.data;
+      const rawOrders: RawOrder[] = response.data;
 
-      const getTimeAgo = (createdAt) => {
+      const getTimeAgo = (createdAt: string): string => {
         const createdDate = new Date(createdAt);
         const now = new Date();
-        const diffMs = now - createdDate; // difference in milliseconds
+        const diffMs = now.getTime() - createdDate.getTime();
 
         const seconds = Math.floor(diffMs / 1000);
         const minutes = Math.floor(seconds / 60);
@@ -95,19 +132,19 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
         else return `${days} day${days > 1 ? "s" : ""} ago`;
       };
 
-      const formattedOrders = rawOrders.map((order) => ({
+      const formattedOrders: FormattedOrder[] = rawOrders.map((order) => ({
         id: order.id,
         customer: order.customer,
         items: order.items
           .map((item) => `${item.quantity}x ${item.name}`)
           .join(", "),
-        amount: `Tk ${order.total.toFixed(2)}`,
+        amount: `Tk ${Number(order.total).toFixed(2)}`,
         status: order.status,
         time: getTimeAgo(order.created_at),
       }));
 
       return formattedOrders;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching recent orders:", err.message);
       return [];
     }
@@ -175,7 +212,11 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
                 Your latest customer orders
               </CardDescription>
             </div>
-            <Button variant="outline" className="border-gray-600 text-gray-100 hover:bg-gray-700 hover:text-white transition-colors" onClick={() => setActiveTab("orders")}>
+            <Button
+              variant="outline"
+              className="border-gray-600 text-gray-100 hover:bg-gray-700 hover:text-white transition-colors"
+              onClick={() => setActiveTab("orders")}
+            >
               View All Orders
             </Button>
           </div>
@@ -230,7 +271,7 @@ const DashboardRest = ({ setActiveTab, setCurrentView }) => {
               className="bg-white text-orange-600 hover:bg-gray-100 hover:scale-105 transition-all shadow-md"
               onClick={() => {
                 setActiveTab("menu");
-                setCurrentView && setCurrentView("add");
+                if (setCurrentView) setCurrentView("add");
               }}
             >
               Add Item

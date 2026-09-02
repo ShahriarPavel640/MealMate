@@ -18,11 +18,11 @@ interface RestaurantAuthState {
   login: (data: Record<string, unknown>) => Promise<void>;
   signup: (data: Record<string, unknown>) => Promise<void>;
   logout: (showToast?: boolean) => Promise<void>;
-  add_menu_item: (data: Record<string, unknown>) => Promise<MenuItem | undefined>;
-  edit_menu_item: (data: Record<string, unknown>, id: number) => Promise<MenuItem[] | false>;
+  add_menu_item: (data: Record<string, unknown> | FormData) => Promise<MenuItem | undefined>;
+  edit_menu_item: (data: Record<string, unknown> | FormData, id: number) => Promise<MenuItem[] | false>;
   get_menus: () => Promise<MenuItem[]>;
   get_categories: () => Promise<string[]>;
-  delete_menu_item: (id: number) => Promise<MenuItem[] | false>;
+  delete_menu_item: (id: number | string) => Promise<MenuItem[] | false>;
 }
 
 export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({

@@ -1,5 +1,4 @@
-/* eslint-disable */
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -11,33 +10,35 @@ import { Button } from "@/features/restaurant/components/ui/button";
 import { Input } from "@/features/restaurant/components/ui/input";
 import { Label } from "@/features/restaurant/components/ui/label";
 import { Textarea } from "@/features/restaurant/components/ui/textarea";
-import { ArrowLeft, Upload, Save } from "lucide-react";
+import { Badge } from "@/features/restaurant/components/ui/badge";
+import { ArrowLeft, Upload, Save, Eye, EyeOff, Sparkles, Loader2 } from "lucide-react";
 import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthStore";
 import toast from "react-hot-toast";
 import { axiosInstance } from "@/lib/axios";
-import { Sparkles, Loader2 } from "lucide-react";
+import { MenuItem } from "@/types/models";
 
-// const categories = [
-//   "Pizza",
-//   "Burgers",
-//   "Pasta",
-//   "Salads",
-//   "Desserts",
-//   "Beverages",
-// ];
+interface EditMenuItemRestProps {
+  item: MenuItem | null;
+  onBack: () => void;
+  onSave: (payload: FormData) => Promise<void>;
+}
 
-export const AddMenuItemRest = ({ onBack, onSave }) => {
-  const { add_menu_item, isChangingMenu } = restaurantAuthStore();
+const EditMenuItemRest: React.FC<EditMenuItemRestProps> = ({ item, onBack, onSave }) => {
+  const { isChangingMenu } = restaurantAuthStore();
+
   const [formData, setFormData] = useState({
+    menu_item_id: item?.menu_item_id ? String(item.menu_item_id) : "",
     name: "",
     description: "",
     price: "",
     category: "",
-    image: "",
+    menu_item_image_url: "",
+    is_available: true,
     discount: "",
   });
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerateDescription = async () => {
@@ -58,40 +59,65 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
+  useEffect(() => {
+    if (item) {
+      setFormData({
+        menu_item_id: String(item.menu_item_id),
+        name: item.name || "",
+        description: item.description || "",
+        price: item.price !== undefined ? String(item.price) : "",
+        category: (item as any).category_name || item.category || "",
+        menu_item_image_url: (item as any).menu_item_image_url || item.image || "",
+        is_available: item.is_available !== false,
+        discount: (item as any).discount !== undefined ? String((item as any).discount) : "",
+      });
+      setImagePreview((item as any).menu_item_image_url || item.image || null);
+    }
+  }, [item]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formPayload = new FormData();
-    formPayload.append("name", formData.name);
-    formPayload.append("description", formData.description);
-    formPayload.append("price", formData.price);
-    formPayload.append("category", formData.category);
-    formPayload.append("discount", formData.discount);
-    formPayload.append("is_available", true);
+    const payload = new FormData();
+    payload.append("menu_item_id", formData.menu_item_id);
+    payload.append("name", formData.name);
+    payload.append("description", formData.description);
+    payload.append("price", formData.price);
+    payload.append("category", formData.category);
+    payload.append("is_available", formData.is_available ? "true" : "false");
+    payload.append("discount", formData.discount);
+
     if (imageFile) {
-      formPayload.append("image", imageFile);
+      payload.append("image", imageFile);
+    } else {
+      payload.append("menu_item_image_url", formData.menu_item_image_url);
     }
 
-    const savedItem = await add_menu_item(formPayload);
-    if (savedItem) {
-      onSave(savedItem);
-      onBack();
-    } else {
-      toast.error("failed adding menu");
-    }
+    await onSave(payload);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const toggleStatus = () => {
+    setFormData((prev) => ({
+      ...prev,
+      is_available: !prev.is_available,
+    }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  if (!item) return <div className="text-white">Item not found</div>;
   if (isChangingMenu) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -108,7 +134,6 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
 
   return (
     <div className="p-6 space-y-6 text-white bg-gray-900 min-h-screen">
-      {/* Header */}
       <div className="flex items-center space-x-4">
         <Button
           variant="outline"
@@ -119,28 +144,24 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
           <span>Back to Menu</span>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Add New Menu Item</h1>
-          <p className="text-gray-400">
-            Create a new item for your restaurant menu
-          </p>
+          <h1 className="text-2xl font-bold">Edit Menu Item</h1>
+          <p className="text-gray-400">Update your menu item details</p>
         </div>
       </div>
 
-      {/* Form */}
       <div className="max-w-2xl">
         <Card className="bg-gray-900 border border-gray-700">
           <CardHeader>
             <CardTitle className="text-gray-200">Item Details</CardTitle>
             <CardDescription className="text-gray-200">
-              Fill in the information for your new menu item
+              Fill in the updated information for your menu item
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Image Upload */}
               <div className="space-y-2">
                 <Label htmlFor="image">Item Image</Label>
-                <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-gray-500 transition-colors relative">
+                <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-gray-500 transition-colors">
                   <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                   {imagePreview && (
                     <img
@@ -156,8 +177,6 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
                     PNG, JPG, GIF up to 10MB
                   </p>
                   <Input
-                    id="image"
-                    name="image"
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
@@ -166,14 +185,12 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
                 </div>
               </div>
 
-              {/* Item Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Item Name *</Label>
                 <Input
                   id="name"
                   name="name"
                   type="text"
-                  placeholder="e.g., Margherita Pizza"
                   value={formData.name}
                   onChange={handleInputChange}
                   required
@@ -181,7 +198,6 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
                 />
               </div>
 
-              {/* Description */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="description">Description *</Label>
@@ -204,16 +220,14 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder="Describe your menu item ingredients and preparation..."
                   value={formData.description}
                   onChange={handleInputChange}
-                  required
                   rows={3}
+                  required
                   className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                 />
               </div>
 
-              {/* Price and Category */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="price">Price *</Label>
@@ -226,7 +240,6 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
                       name="price"
                       type="number"
                       step="0.01"
-                      placeholder="0.00"
                       value={formData.price}
                       onChange={handleInputChange}
                       className="pl-8 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -250,7 +263,6 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
                 </div>
               </div>
 
-              {/* Discount */}
               <div className="space-y-2">
                 <Label htmlFor="discount">Discount</Label>
                 <div className="relative">
@@ -262,7 +274,6 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
                     name="discount"
                     type="number"
                     step="0.01"
-                    placeholder="0.00"
                     value={formData.discount}
                     onChange={handleInputChange}
                     className="pl-8 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -270,14 +281,33 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
                 </div>
               </div>
 
-              {/* Submit Buttons */}
+              <div className="flex items-center space-x-2">
+                <Badge
+                  className={
+                    formData.is_available ? "bg-green-500" : "bg-gray-600"
+                  }
+                >
+                  {formData.is_available ? "active" : "inactive"}
+                </Badge>
+                <Button variant="outline" onClick={toggleStatus}>
+                  {formData.is_available ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">
+                    {formData.is_available ? "Set Inactive" : "Set Active"}
+                  </span>
+                </Button>
+              </div>
+
               <div className="flex space-x-4 pt-4">
                 <Button
                   type="submit"
                   className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 flex-1"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  Save Menu Item
+                  Save Changes
                 </Button>
                 <Button
                   type="button"
@@ -295,3 +325,5 @@ export const AddMenuItemRest = ({ onBack, onSave }) => {
     </div>
   );
 };
+
+export default EditMenuItemRest;

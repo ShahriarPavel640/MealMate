@@ -11,11 +11,11 @@ import LoginPage from "@/features/restaurant/components/LoginPageRest";
 import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthStore";
 import RestaurantReviewsPage from "@/features/restaurant/components/RestaurantReviewDashboard";
 
-function HomepageRest() {
+const HomepageRest: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "dashboard";
-  
-  const setActiveTab = (tab) => {
+
+  const setActiveTab = (tab: string) => {
     setSearchParams({ tab }, { replace: true });
   };
   const { authRestaurant } = restaurantAuthStore();
@@ -24,7 +24,7 @@ function HomepageRest() {
     switch (activeTab) {
       case "dashboard":
         return (
-          <DashboardRest activeTab={activeTab} setActiveTab={setActiveTab} />
+          <DashboardRest setActiveTab={setActiveTab} />
         );
       case "menu":
         return <MenuManagementRest />;
@@ -37,7 +37,7 @@ function HomepageRest() {
       case "reviews":
         return <RestaurantReviewsPage />;
       default:
-        return <DashboardRest />;
+        return <DashboardRest setActiveTab={setActiveTab} />;
     }
   };
 
@@ -54,6 +54,6 @@ function HomepageRest() {
       </div>
     </div>
   );
-}
+};
 
 export default HomepageRest;

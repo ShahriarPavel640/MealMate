@@ -10,6 +10,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface SidebarRestProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "menu", label: "Menu Management", icon: Menu },
@@ -19,7 +24,7 @@ const menuItems = [
   { id: "reviews", label: "Customer Reviews", icon: Star },
 ];
 
-function SidebarRest({ activeTab, setActiveTab }) {
+function SidebarRest({ activeTab, setActiveTab }: SidebarRestProps): React.JSX.Element {
   return (
     <div className="w-64 bg-gray-900 shadow-lg border-r border-gray-800">
       <div className="p-6 border-b border-gray-800">

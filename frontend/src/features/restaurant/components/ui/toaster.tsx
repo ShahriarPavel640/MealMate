@@ -7,15 +7,15 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from "./toast"; // Assuming these are from your shadcn/ui setup
-import { Button } from "./button"; // Assuming you have a Button component
+} from "./toast";
+import { Button } from "./button";
 
-export function Toaster() {
+export function Toaster(): React.JSX.Element {
   const { toasts } = useToast();
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, cancel, ...props }) {
+      {toasts.map(function ({ id, title, description, action, ...props }: any) {
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
@@ -28,24 +28,16 @@ export function Toaster() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  action.onClick();
-                  props.onOpenChange(false);
+                  if (typeof action.onClick === "function") {
+                    action.onClick();
+                  }
+                  if (typeof props.onOpenChange === "function") {
+                    props.onOpenChange(false);
+                  }
                 }}
                 className="bg-green-500 text-white hover:bg-green-600"
               >
-                {action.label}
-              </Button>
-            )}
-            {cancel && (
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  cancel.onClick();
-                  props.onOpenChange(false);
-                }}
-                className="bg-red-500 text-white hover:bg-red-600"
-              >
-                {cancel.label}
+                {action.label || action}
               </Button>
             )}
             <ToastClose />

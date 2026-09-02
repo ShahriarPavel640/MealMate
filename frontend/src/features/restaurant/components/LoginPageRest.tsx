@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useState } from "react";
 import { Button } from "@/features/restaurant/components/ui/button";
 import { Input } from "@/features/restaurant/components/ui/input";
@@ -18,17 +17,24 @@ import {
   TabsTrigger,
 } from "@/features/restaurant/components/ui/tabs";
 import { ChefHat, TrendingUp, Users, Clock, Star, Shield, MapPin } from "lucide-react";
-import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom";
 import LocationPickerModal from "@/features/customer/components/LocationPickerModal";
 import toast from "react-hot-toast";
 
-const LoginPage = () => {
-  const { login, signup, isLoggingIn, authRestaurant, isSigningUp } =
-    restaurantAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
+interface LoginPageProps {
+  onLogin?: () => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = () => {
+  const { login, signup, isLoggingIn, isSigningUp } = restaurantAuthStore();
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [formDataSignup, setFormDataSignup] = useState({
+  const [formDataSignup, setFormDataSignup] = useState<{
+    email: string;
+    password: string;
+    phone: string;
+    name: string;
+    latitude: number | null;
+    longitude: number | null;
+  }>({
     email: "",
     password: "",
     phone: "",
@@ -38,19 +44,22 @@ const LoginPage = () => {
   });
   const [locationModalOpen, setLocationModalOpen] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     await login(formData);
   };
 
-  const handleSignup = async (e) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (formDataSignup.latitude === null || formDataSignup.longitude === null) {
       toast.error("Please pick your restaurant's location on the map.");
       return;
     }
-    await signup(formDataSignup);
+    await signup({
+      ...formDataSignup,
+      latitude: formDataSignup.latitude,
+      longitude: formDataSignup.longitude,
+    });
   };
 
   return (
@@ -469,10 +478,6 @@ const LoginPage = () => {
       />
     </div>
   );
-};
-
-LoginPage.propTypes = {
-  onLogin: PropTypes.func.isRequired,
 };
 
 export default LoginPage;

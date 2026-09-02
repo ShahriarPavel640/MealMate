@@ -1,4 +1,4 @@
-/* eslint-disable */
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -34,37 +34,74 @@ import {
   Users,
   Star,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { axiosInstance } from "@/lib/axios";
 
-const AnalyticsRest = () => {
-  const [dailyRevenueData, setDailyRevenueData] = useState([]);
-  const [topItems, setTopItems] = useState([]);
-  const [weeklyTrendsData, setWeeklyTrendeData] = useState([]);
-  const [categoryData, setCategoryData] = useState([]);
-  const [loading, setLoading] = useState(false);
+interface DailyRevenueItem {
+  day: string;
+  revenue: number;
+  orders?: number;
+}
 
-  const [weeklyRevenueVal, setWeeklyRevenueVal] = useState({
+interface TopItem {
+  name: string;
+  orders: number;
+  revenue: string | number;
+}
+
+interface WeeklyTrendItem {
+  week: string;
+  revenue: number;
+}
+
+interface CategoryItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface WeeklyRevenueStats {
+  last_week: number;
+  last_two_week: number;
+}
+
+interface OrderCountStats {
+  last_week: number;
+  second_last_week: number;
+}
+
+interface NewCustomerStats {
+  last_week: number;
+  second_last_week: number;
+}
+
+const AnalyticsRest: React.FC = () => {
+  const [dailyRevenueData, setDailyRevenueData] = useState<DailyRevenueItem[]>([]);
+  const [topItems, setTopItems] = useState<TopItem[]>([]);
+  const [weeklyTrendsData, setWeeklyTrendsData] = useState<WeeklyTrendItem[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryItem[]>([]);
+  const [, setLoading] = useState<boolean>(false);
+
+  const [weeklyRevenueVal, setWeeklyRevenueVal] = useState<WeeklyRevenueStats>({
     last_week: 0,
     last_two_week: 0,
   });
-  const [totalOrderLastWeekVal, setTotalOrderLastWeekVal] = useState({
+  const [totalOrderLastWeekVal, setTotalOrderLastWeekVal] = useState<OrderCountStats>({
     last_week: 0,
     second_last_week: 0,
   });
-  const [newCustomerVal, setNewCustomerVal] = useState({
+  const [newCustomerVal, setNewCustomerVal] = useState<NewCustomerStats>({
     last_week: 0,
     second_last_week: 0,
   });
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState<number>(0);
 
-  const getDailyRevenue = async () => {
+  const getDailyRevenue = async (): Promise<DailyRevenueItem[]> => {
     try {
       const response = await axiosInstance.get(
         "/restaurant/stats/daily_revenue"
       );
       return response.data;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching recent orders:", err.message);
       return [];
     }
@@ -73,6 +110,7 @@ const AnalyticsRest = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
+        setLoading(true);
         const [revenueRes, orderRes, customerRes, restData] = await Promise.all(
           [
             axiosInstance.get("/restaurant/stats/last_two_week_revenue"),
@@ -81,7 +119,6 @@ const AnalyticsRest = () => {
             axiosInstance.get("/restaurant/get_restaurant_profile"),
           ]
         );
-        console.log("restaurant data: ", restData.data);
         setWeeklyRevenueVal(revenueRes.data);
         setTotalOrderLastWeekVal(orderRes.data);
         setNewCustomerVal(customerRes.data);
@@ -105,13 +142,13 @@ const AnalyticsRest = () => {
     fetchDailyRevenue();
   }, []);
 
-  const getTopItems = async () => {
+  const getTopItems = async (): Promise<TopItem[]> => {
     try {
       const response = await axiosInstance.get(
         "/restaurant/stats/top_selling_items"
       );
       return response.data;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching top items:", err.message);
       return [];
     }
@@ -126,13 +163,13 @@ const AnalyticsRest = () => {
     fetchTopItems();
   }, []);
 
-  const getWeeklyRevenue = async () => {
+  const getWeeklyRevenue = async (): Promise<WeeklyTrendItem[]> => {
     try {
       const response = await axiosInstance.get(
         "/restaurant/stats/monthly_revenue"
       );
       return response.data;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching weekly revenue:", err.message);
       return [];
     }
@@ -141,20 +178,20 @@ const AnalyticsRest = () => {
   useEffect(() => {
     const fetchWeeklyRevenue = async () => {
       const data = await getWeeklyRevenue();
-      setWeeklyTrendeData(data);
+      setWeeklyTrendsData(data);
     };
 
     fetchWeeklyRevenue();
   }, []);
 
-  const getCategoryData = async () => {
+  const getCategoryData = async (): Promise<CategoryItem[]> => {
     try {
       const response = await axiosInstance.get(
         "/restaurant/stats/category_wise_sell"
       );
       return response.data;
     } catch (err) {
-      console.error("Error in fething categorywise sell data");
+      console.error("Error in fetching categorywise sell data");
       return [];
     }
   };
@@ -189,8 +226,8 @@ const AnalyticsRest = () => {
 
           <CardContent>
             {(() => {
-              const lastWeek = parseFloat(weeklyRevenueVal?.last_week ?? 0);
-              const prevWeek = parseFloat(weeklyRevenueVal?.last_two_week ?? 0);
+              const lastWeek = parseFloat(String(weeklyRevenueVal?.last_week ?? 0));
+              const prevWeek = parseFloat(String(weeklyRevenueVal?.last_two_week ?? 0));
 
               return (
                 <>
@@ -200,12 +237,9 @@ const AnalyticsRest = () => {
 
                   <div className="flex items-center space-x-1 mt-1">
                     {prevWeek === 0 && lastWeek === 0 ? (
-                      <>
-                        <span className="text-sm text-gray-400">
-                          No revenue in the last two weeks
-                        </span>
-                        {console.log("1st")}
-                      </>
+                      <span className="text-sm text-gray-400">
+                        No revenue in the last two weeks
+                      </span>
                     ) : prevWeek === 0 ? (
                       <>
                         <TrendingUp className="h-4 w-4 text-green-400" />
@@ -213,7 +247,6 @@ const AnalyticsRest = () => {
                         <span className="text-sm text-gray-400">
                           vs last week
                         </span>
-                        {console.log("2nd")}
                       </>
                     ) : lastWeek >= prevWeek ? (
                       <>
@@ -228,7 +261,6 @@ const AnalyticsRest = () => {
                         <span className="text-sm text-gray-400">
                           vs last week
                         </span>
-                        {console.log("3rd")}
                       </>
                     ) : (
                       <>
@@ -243,7 +275,6 @@ const AnalyticsRest = () => {
                         <span className="text-sm text-gray-400">
                           vs last week
                         </span>
-                        {console.log("4th")}
                       </>
                     )}
                   </div>
@@ -261,21 +292,13 @@ const AnalyticsRest = () => {
             <ShoppingBag className="h-4 w-4 text-blue-400" />
           </CardHeader>
 
-          {/* <CardContent>
-            <div className="text-2xl font-bold text-white">309</div>
-            <div className="flex items-center space-x-1 mt-1">
-              <TrendingUp className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-green-400">+8.1%</span>
-              <span className="text-sm text-gray-400">vs last week</span>
-            </div>
-          </CardContent> */}
           <CardContent>
             {(() => {
               const lastWeek = parseFloat(
-                totalOrderLastWeekVal?.last_week ?? 0
+                String(totalOrderLastWeekVal?.last_week ?? 0)
               );
               const prevWeek = parseFloat(
-                totalOrderLastWeekVal?.second_last_week ?? 0
+                String(totalOrderLastWeekVal?.second_last_week ?? 0)
               );
 
               return (
@@ -341,19 +364,11 @@ const AnalyticsRest = () => {
             <Users className="h-4 w-4 text-purple-400" />
           </CardHeader>
 
-          {/* <CardContent>
-            <div className="text-2xl font-bold text-white">47</div>
-            <div className="flex items-center space-x-1 mt-1">
-              <TrendingDown className="h-4 w-4 text-red-400" />
-              <span className="text-sm text-red-400">-2.3%</span>
-              <span className="text-sm text-gray-400">vs last week</span>
-            </div>
-          </CardContent> */}
           <CardContent>
             {(() => {
-              const lastWeek = parseFloat(newCustomerVal?.last_week ?? 0);
+              const lastWeek = parseFloat(String(newCustomerVal?.last_week ?? 0));
               const prevWeek = parseFloat(
-                newCustomerVal?.second_last_week ?? 0
+                String(newCustomerVal?.second_last_week ?? 0)
               );
               const isIncrease = lastWeek > prevWeek;
 
@@ -416,11 +431,6 @@ const AnalyticsRest = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{rating}</div>
-            {/* <div className="flex items-center space-x-1 mt-1">
-              <TrendingUp className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-green-400">+0.2</span>
-              <span className="text-sm text-gray-400">vs last week</span>
-            </div> */}
           </CardContent>
         </Card>
       </div>
@@ -467,7 +477,7 @@ const AnalyticsRest = () => {
                       contentStyle={{
                         backgroundColor: "#1f2937",
                         color: "#fff",
-                        border: "1px solid #374151"
+                        border: "1px solid #374151",
                       }}
                       itemStyle={{ color: "#fff" }}
                     />
@@ -498,7 +508,7 @@ const AnalyticsRest = () => {
                       contentStyle={{
                         backgroundColor: "#1f2937",
                         color: "#fff",
-                        border: "1px solid #374151"
+                        border: "1px solid #374151",
                       }}
                       itemStyle={{ color: "#fff" }}
                     />
@@ -535,7 +545,7 @@ const AnalyticsRest = () => {
                       contentStyle={{
                         backgroundColor: "#1f2937",
                         color: "#fff",
-                        border: "1px solid #374151"
+                        border: "1px solid #374151",
                       }}
                       itemStyle={{ color: "#fff" }}
                     />
@@ -587,7 +597,7 @@ const AnalyticsRest = () => {
                       contentStyle={{
                         backgroundColor: "#1f2937",
                         color: "#fff",
-                        border: "1px solid #374151"
+                        border: "1px solid #374151",
                       }}
                       itemStyle={{ color: "#fff" }}
                     />

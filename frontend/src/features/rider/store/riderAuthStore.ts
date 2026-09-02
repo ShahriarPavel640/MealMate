@@ -8,6 +8,7 @@ interface RiderAuthState {
   isSigningUp: boolean;
   isLoggingIn: boolean;
   isCheckingAuth: boolean;
+  isCheckingAuthRider: boolean;
   isLoggingOut?: boolean;
   checkAuthRider: () => Promise<void>;
   login: (data: Record<string, unknown>) => Promise<void>;
@@ -20,6 +21,7 @@ export const useRiderAuthStore = create<RiderAuthState>((set) => ({
   isSigningUp: false,
   isLoggingIn: false,
   isCheckingAuth: true,
+  isCheckingAuthRider: true,
   isLoggingOut: false,
 
   checkAuthRider: async () => {
@@ -34,7 +36,7 @@ export const useRiderAuthStore = create<RiderAuthState>((set) => ({
     } catch (err) {
       console.log("Error in checkAuthRider", err);
     } finally {
-      set({ isCheckingAuth: false });
+      set({ isCheckingAuth: false, isCheckingAuthRider: false });
     }
   },
 
