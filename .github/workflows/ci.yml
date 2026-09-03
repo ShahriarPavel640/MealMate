@@ -126,6 +126,10 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
 
+      - name: Run Type Check
+        working-directory: ./frontend
+        run: npm run type-check
+
       - name: Build Application
         working-directory: ./frontend
         run: npm run build
@@ -227,7 +231,7 @@ jobs:
 
       - name: Run UI E2E Tests
         working-directory: ./frontend
-        run: npx playwright test e2e/customer-flow.spec.js e2e/smoke.spec.js
+        run: npx playwright test
 
   docker-build:
     name: Verify Docker Build

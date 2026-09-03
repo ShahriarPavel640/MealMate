@@ -1,4 +1,5 @@
-import { useToast } from "@/hooks/use-toast"
+import React from "react";
+import { useToast, ToastProps } from "@/hooks/use-toast";
 import {
   Toast,
   ToastClose,
@@ -6,14 +7,16 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from "@/features/restaurant/components/ui/toast"
+} from "./toast";
+import { Button } from "./button";
 
-export function Toaster() {
-  const { toasts } = useToast()
+export function Toaster(): React.JSX.Element {
+  const { toasts } = useToast();
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {toasts.map(function ({ id, title, description, action, ...props }: ToastProps) {
+        const actionObj = typeof action === "object" && action !== null ? (action as { onClick?: () => void; label?: React.ReactNode }) : null;
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
@@ -22,12 +25,27 @@ export function Toaster() {
                 <ToastDescription>{description}</ToastDescription>
               )}
             </div>
-            {action}
+            {action && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  if (actionObj && typeof actionObj.onClick === "function") {
+                    actionObj.onClick();
+                  }
+                  if (typeof props.onOpenChange === "function") {
+                    props.onOpenChange(false);
+                  }
+                }}
+                className="bg-green-500 text-white hover:bg-green-600"
+              >
+                {actionObj?.label || (typeof action === "string" ? action : null)}
+              </Button>
+            )}
             <ToastClose />
           </Toast>
-        )
+        );
       })}
       <ToastViewport />
     </ToastProvider>
-  )
+  );
 }
