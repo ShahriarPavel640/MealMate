@@ -25,7 +25,7 @@ interface RestaurantAuthState {
   delete_menu_item: (id: number | string) => Promise<MenuItem[] | false>;
 }
 
-export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
+export const useRestaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
   authRestaurant: null,
   isSigningUp: false,
   isLoggingIn: false,
@@ -151,3 +151,5 @@ export const restaurantAuthStore = create<RestaurantAuthState>((set, get) => ({
     }
   },
 }));
+
+export const restaurantAuthStore = useRestaurantAuthStore;

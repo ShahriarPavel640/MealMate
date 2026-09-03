@@ -21,7 +21,7 @@ interface UserAuthState {
   token?: string;
 }
 
-export const userAuthStore = create<UserAuthState>((set, get) => ({
+export const useUserAuthStore = create<UserAuthState>((set, get) => ({
   authUser: null,
   isSigningUp: false,
   isLoggingIn: false,
@@ -99,3 +99,5 @@ export const userAuthStore = create<UserAuthState>((set, get) => ({
     }
   },
 }));
+
+export const userAuthStore = useUserAuthStore;

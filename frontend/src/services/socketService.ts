@@ -93,19 +93,21 @@ class SocketService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on(event: string, callback: (...args: any[]) => void) {
+  on<T = unknown>(event: string, callback: (...args: T[]) => void) {
     if (this.socket) {
       console.log(`SocketService: Registering listener for event: ${event}`);
-      this.socket.on(event, callback);
+      this.socket.on(event, callback as (...args: unknown[]) => void);
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  off(event: string, callback?: (...args: any[]) => void) {
+  off<T = unknown>(event: string, callback?: (...args: T[]) => void) {
     if (this.socket) {
       console.log(`SocketService: De-registering listener for event: ${event}`);
-      this.socket.off(event, callback);
+      if (callback) {
+        this.socket.off(event, callback as (...args: unknown[]) => void);
+      } else {
+        this.socket.off(event);
+      }
     }
   }
 }

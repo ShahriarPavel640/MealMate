@@ -8,9 +8,14 @@ export default defineConfig({
   workers: 1,
   reporter: 'html',
   timeout: 60000,
+  expect: {
+    timeout: 10000,
+  },
   use: {
     baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',
+    geolocation: { latitude: 23.8103, longitude: 90.4125 },
+    permissions: ['geolocation'],
   },
   projects: [
     {

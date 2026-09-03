@@ -7,7 +7,6 @@ interface RiderAuthState {
   authrider: (Rider & { role: 'rider' }) | null;
   isSigningUp: boolean;
   isLoggingIn: boolean;
-  isCheckingAuth: boolean;
   isCheckingAuthRider: boolean;
   isLoggingOut?: boolean;
   checkAuthRider: () => Promise<void>;
@@ -20,7 +19,6 @@ export const useRiderAuthStore = create<RiderAuthState>((set) => ({
   authrider: null,
   isSigningUp: false,
   isLoggingIn: false,
-  isCheckingAuth: true,
   isCheckingAuthRider: true,
   isLoggingOut: false,
 
@@ -36,7 +34,7 @@ export const useRiderAuthStore = create<RiderAuthState>((set) => ({
     } catch (err) {
       console.log("Error in checkAuthRider", err);
     } finally {
-      set({ isCheckingAuth: false, isCheckingAuthRider: false });
+      set({ isCheckingAuthRider: false });
     }
   },
 
@@ -81,3 +79,5 @@ export const useRiderAuthStore = create<RiderAuthState>((set) => ({
     }
   },
 }));
+
+export const riderAuthStore = useRiderAuthStore;

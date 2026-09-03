@@ -18,6 +18,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-ui": ["lucide-react", "framer-motion", "recharts"],
+        },
+      },
+    },
+  },
   server: {
     host: "0.0.0.0", // Binds to 0.0.0.0 inside container
     port: 5173,
