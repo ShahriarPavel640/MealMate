@@ -1,7 +1,7 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Customer Flow E2E', () => {
-  const uniqueId = Date.now();
+  const uniqueId = Date.now() + Math.random().toString(36).substring(7);
   const testCustomer = {
     name: 'E2E Customer',
     email: `customer${uniqueId}@example.com`,
@@ -15,18 +15,17 @@ test.describe('Customer Flow E2E', () => {
     await page.getByLabel('Email').fill(testCustomer.email);
     await page.getByLabel('Password').fill(testCustomer.password);
     
-    // Simulate picking location (since we can't easily click map modal in basic E2E without knowing specifics)
-    // We can evaluate setting the state or just click the button and see what happens.
-    // The "Pick Location" button opens the modal.
+    // Simulate picking location (wait for modal and confirm)
     await page.getByRole('button', { name: /Pick Location/i }).click();
-    // Assuming there is a confirm or select button in the modal
-    await page.getByRole('button', { name: /Confirm/i }).click().catch(() => {});
-    // Or we can inject the coordinates via API
+    // Wait for the modal map to appear
+    const confirmBtn = page.getByRole('button', { name: /Confirm Location/i });
+    await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await confirmBtn.click();
     
     await page.getByRole('button', { name: 'Sign up' }).click();
 
     // Wait for redirect to home
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL('/', { timeout: 10000 });
     
     // 2. Profile
     await page.goto('/profile');
@@ -36,8 +35,9 @@ test.describe('Customer Flow E2E', () => {
     await page.goto('/restaurants');
     await page.waitForLoadState('networkidle');
     
-    // We will just hit the backend endpoint directly to ensure it works
-    const response = await page.request.get('/api/customer/getRestaurants');
+    // We will hit the backend endpoint directly to ensure it works
+    const apiUrl = process.env.VITE_API_URL || 'http://127.0.0.1:5000';
+    const response = await page.request.get(`${apiUrl}/api/customer/getRestaurants`);
     expect(response.ok()).toBeTruthy();
   });
 });

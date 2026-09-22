@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../index.js';
 import prisma from '../prismaClient.js';
@@ -61,8 +61,13 @@ describe('Restaurant API E2E - Orders', () => {
   });
 
   afterAll(async () => {
-    if (restaurantId) await pool.query('DELETE FROM users WHERE user_id = $1', [restaurantId]);
-    if (otherRestaurantId) await pool.query('DELETE FROM users WHERE user_id = $1', [otherRestaurantId]);
+    await pool.query("UPDATE orders SET restaurant_id = 1, status = 'pending_restaurant_acceptance' WHERE order_id = 1");
+    if (restaurantId) {
+      await pool.query('DELETE FROM restaurants WHERE restaurant_id = $1', [restaurantId]);
+    }
+    if (otherRestaurantId) {
+      await pool.query('DELETE FROM restaurants WHERE restaurant_id = $1', [otherRestaurantId]);
+    }
   });
 
   it('should fetch orders', async () => {
@@ -123,3 +128,5 @@ describe('Restaurant API E2E - Orders', () => {
     expect(updateRes.statusCode).toBe(200);
   });
 });
+
+

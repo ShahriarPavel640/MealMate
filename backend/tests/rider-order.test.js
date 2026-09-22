@@ -44,7 +44,7 @@ describe('Rider API E2E - Orders', () => {
 
   it('should fetch rider delivery history', async () => {
     const res = await request(app)
-      .get('/api/rider/data/history')
+      .get('/api/rider/orders/history')
       .set('Cookie', riderCookies);
 
     expect(res.statusCode).toBe(200);
@@ -52,13 +52,13 @@ describe('Rider API E2E - Orders', () => {
 
   it('should accept an order and update its status', async () => {
     const res = await request(app)
-      .put(`/api/rider/data/orders/${testOrderId}/accept`)
+      .put(`/api/rider/orders/${testOrderId}/accept`)
       .set('Cookie', riderCookies);
 
     expect([200, 400, 403, 404]).toContain(res.statusCode);
 
     const statusRes = await request(app)
-      .put(`/api/rider/data/orders/${testOrderId}/status`)
+      .put(`/api/rider/orders/${testOrderId}/status`)
       .set('Cookie', riderCookies)
       .send({ status: 'delivered' });
 
@@ -67,7 +67,7 @@ describe('Rider API E2E - Orders', () => {
 
   it('should get order details', async () => {
     const res = await request(app)
-      .get(`/api/rider/data/orders/${testOrderId}`)
+      .get(`/api/rider/orders/${testOrderId}`)
       .set('Cookie', riderCookies);
 
     expect([200, 403, 404]).toContain(res.statusCode);

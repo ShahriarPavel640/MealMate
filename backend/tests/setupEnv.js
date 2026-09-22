@@ -2,6 +2,7 @@ import { vi } from 'vitest';
 
 process.env.DB_NAME = 'test_mealmate';
 process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'test_jwt_secret';
 process.env.DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:5434/test_mealmate?schema=public';
 
 // Set mock values for environment variables checked during initialization

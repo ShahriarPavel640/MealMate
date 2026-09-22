@@ -128,6 +128,10 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
 
+      - name: Run Type Check
+        working-directory: ./frontend
+        run: npm run type-check
+
       - name: Build Application
         working-directory: ./frontend
         run: npm run build
@@ -196,13 +200,15 @@ jobs:
         working-directory: ./backend
         run: |
           npx prisma generate
-          npx prisma db push --force-reset
+          npx prisma db push --force-reset --accept-data-loss
+          npx prisma db execute --file ../triggers.sql --url "$DATABASE_URL"
+          npx prisma db execute --file ../populate.sql --url "$DATABASE_URL"
 
       - name: Start Backend Server
         working-directory: ./backend
         run: |
           npm start &
-          sleep 5
+          npx wait-on tcp:5000 -t 30000
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
@@ -227,7 +233,7 @@ jobs:
 
       - name: Run UI E2E Tests
         working-directory: ./frontend
-        run: npx playwright test e2e/customer-flow.spec.js e2e/smoke.spec.js
+        run: npx playwright test
 
   docker-build:
     name: Verify Docker Build
