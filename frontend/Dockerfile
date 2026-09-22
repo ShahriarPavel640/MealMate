@@ -4,8 +4,8 @@ FROM node:20-slim AS development
 WORKDIR /app
 
 # Install dependencies
-COPY package.json ./
-RUN npm install
+COPY package*.json ./
+RUN npm ci
 
 # Copy source code
 COPY . .

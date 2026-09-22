@@ -1,0 +1,84 @@
+# ==============================================================================
+# PROMETHEUS & GRAFANA (KUBE-PROMETHEUS-STACK) HELM VALUES
+# ==============================================================================
+# This configuration file overrides default settings in the official
+# 'kube-prometheus-stack' Helm chart to create a lightweight, laptop-friendly
+# observability environment that avoids exhausting local machine resources.
+#
+# Usage:
+#   helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+#     -f k8s/helm/prometheus-stack-values.yaml
+# ==============================================================================
+
+# Alertmanager: Routes firing alerts to Slack, PagerDuty, email, or webhooks.
+alertmanager:
+  # Disabled for local development to save ~150MB of RAM since alerting notification channels are not needed.
+  enabled: false
+
+# Grafana: Data visualization dashboard for viewing Prometheus metrics and Loki logs.
+grafana:
+  # Enable Grafana UI service and pods
+  enabled: true
+
+  # Default initial administrator password for login (User: admin / Password: admin)
+  adminPassword: "admin"
+
+  # Ingress configuration: Exposes the Grafana dashboard outside the cluster
+  ingress:
+    # Enable creation of a Kubernetes Ingress resource for Grafana
+    enabled: true
+
+    # Specify the Ingress Controller class managing this ingress route
+    ingressClassName: nginx
+
+    # Virtual host domain used to reach the Grafana web UI in your browser
+    # (Requires adding "127.0.0.1 grafana.mealmate.local" to your Windows hosts file)
+    hosts:
+      - grafana.mealmate.local
+
+    # Root path prefix routed to Grafana
+    paths:
+      - /
+
+  # Hardware resource caps: Constrains Grafana footprint to run smoothly alongside the app
+  resources:
+    limits:
+      cpu: 200m      # 0.2 CPU core maximum limit
+      memory: 256Mi  # 256 Megabytes RAM maximum limit
+    requests:
+      cpu: 50m       # 0.05 CPU core guaranteed baseline
+      memory: 128Mi  # 128 Megabytes RAM guaranteed baseline
+
+# Prometheus: Time-series database engine that scrapes and stores metrics.
+prometheus:
+  # Disable public Ingress exposure for the raw Prometheus UI (Grafana is used as the primary visualization UI)
+  ingress:
+    enabled: false
+
+  # Prometheus Server Operator Specification
+  prometheusSpec:
+    # Time-series retention window: Retains historical metric data for 1 day
+    # (Default is 10 days; 1d dramatically reduces disk storage usage on local drives)
+    retention: 1d
+
+    # Metric polling frequency: Scrapes metrics endpoints every 15 seconds
+    scrapeInterval: 15s
+
+    # Resource constraints for the Prometheus TSDB server engine
+    resources:
+      limits:
+        cpu: 500m      # 0.5 CPU core maximum burst limit
+        memory: 512Mi  # 512 Megabytes RAM maximum limit (prevents TSDB memory balloons)
+      requests:
+        cpu: 100m      # 0.1 CPU core guaranteed baseline
+        memory: 256Mi  # 256 Megabytes RAM guaranteed baseline
+
+# Kube-State-Metrics: Listens to the Kubernetes API server and generates metrics
+# about the health of cluster objects (deployments, pods, nodes, PVCs).
+kubeStateMetrics:
+  enabled: true
+
+# Node Exporter: DaemonSet that gathers Linux OS host metrics (hardware, kernel stats).
+# Disabled on local single-node clusters because it requires elevated host root privileges.
+nodeExporter:
+  enabled: false

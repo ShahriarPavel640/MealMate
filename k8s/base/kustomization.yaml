@@ -1,0 +1,42 @@
+# ==============================================================================
+# BASE KUSTOMIZATION MANIFEST
+# ==============================================================================
+# Kustomize is a native Kubernetes configuration management tool.
+# This 'base' file brings together all common, environment-agnostic resources.
+# Environments like 'local' and 'prod' inherit from this base and apply minimal patches.
+# ==============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# List of all raw Kubernetes YAML resources included in the base application stack
+resources:
+  # 1. Data Layer: Persistence, DB secrets, and deployments
+  - data/postgres-pvc.yaml
+  - data/postgres-secret.yaml
+  - data/postgres-deployment.yaml
+  - data/redis-deployment.yaml
+
+  # 2. Application Layer: Backend & Frontend configs, secrets, and deployments
+  - apps/backend-config.yaml
+  - apps/backend-secret.yaml
+  - apps/backend-deployment.yaml
+  - apps/frontend-deployment.yaml
+
+  # 3. Network Layer: Public Ingress routing rules
+  - network/ingress.yaml
+
+# Generator Options:
+# disableNameSuffixHash prevents Kustomize from appending a random hash (e.g. postgres-init-scripts-h7g2k)
+# to generated ConfigMap names, allowing static reference in deployment volume mounts.
+generatorOptions:
+  disableNameSuffixHash: true
+
+# ConfigMapGenerator:
+# Reads local SQL schema and seed files directly from disk and packages them into
+# a Kubernetes ConfigMap named "postgres-init-scripts" without duplicating SQL code inside YAML.
+configMapGenerator:
+  - name: postgres-init-scripts
+    files:
+      - data/init-scripts/1-schema.sql
+      - data/init-scripts/2-seed.sql

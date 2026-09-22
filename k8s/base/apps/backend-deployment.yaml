@@ -1,0 +1,167 @@
+# ==============================================================================
+# NODE.JS EXPRESS BACKEND DEPLOYMENT & SERVICE
+# ==============================================================================
+# This manifest defines two foundational Kubernetes objects for the backend API:
+# 1. Deployment: Declaratively manages the lifecycle, desired replica count,
+#    rolling update strategies, health check probes, and compute resource limits
+#    for the Express REST API and Socket.IO real-time server.
+# 2. Service (ClusterIP): Creates a stable, internal virtual IP and DNS name
+#    ("backend:5000") that distributes incoming traffic among healthy backend pods.
+# ==============================================================================
+
+# API version for workload controllers (Deployments, StatefulSets, DaemonSets)
+apiVersion: apps/v1
+
+# Resource type: Deployment manages a ReplicaSet to ensure desired pods remain running
+kind: Deployment
+
+# Metadata block: Contains identification details for this Deployment
+metadata:
+  # Unique name of the Deployment within the namespace
+  name: backend
+  # Key-value labels used for categorization, querying, and monitoring
+  labels:
+    app: backend
+
+# Specification block: Defines the desired state that Kubernetes reconciles toward
+spec:
+  # Desired number of pod replicas running concurrently.
+  # Set to 1 for local development, and patched to 2 in k8s/overlays/prod for High Availability (HA).
+  replicas: 1
+
+  # Label selector: Defines how the Deployment controller finds the pods it manages
+  selector:
+    matchLabels:
+      # Any pod with the label "app: backend" will be managed by this Deployment
+      app: backend
+
+  # Pod Template: Blueprint used by the Deployment controller to create identical pod instances
+  template:
+    # Metadata for each created pod
+    metadata:
+      labels:
+        # Mandatory label that MUST match spec.selector.matchLabels above for pod adoption
+        app: backend
+    # Pod Specification: Execution details for the containers inside each pod
+    spec:
+      containers:
+        # Unique name for this container within the pod
+        - name: backend
+
+          # Base container image to execute. Overridden dynamically by Kustomize:
+          # - Local overlay: Replaced with 'mealmate-backend:local'
+          # - Prod overlay: Replaced with 'yourusername/mealmate-backend:<git-sha>'
+          image: mealmate-backend:latest
+
+          # Image pull policy:
+          # - IfNotPresent: Pulls image only if not already cached on the host node
+          # - (Overridden to 'Never' in k8s/overlays/local to use local Docker image cache)
+          imagePullPolicy: IfNotPresent
+
+          # Port configurations exposed by the container
+          ports:
+            # Port where Express listens (process.env.PORT || 5000) inside the container network namespace
+            - containerPort: 5000
+              # Descriptive name for the port, allowing symbolic references in Services and probes
+              name: http
+
+          # Environment variable ingestion: Injects key-value pairs into the container's process.env
+          envFrom:
+            # 1. Non-sensitive application configuration (PORT, DB_HOST, DB_NAME, FRONTEND_URL, REDIS_URL)
+            - configMapRef:
+                name: backend-config
+            # 2. Sensitive cryptographic keys and credentials (JWT_SECRET, DB_PASSWORD, API keys)
+            - secretRef:
+                name: backend-secret
+
+          # ====================================================================
+          # HEALTH CHECK PROBES
+          # ====================================================================
+          # Kubernetes provides three distinct probe mechanisms to guarantee self-healing:
+          # 1. startupProbe: Accommodates slow bootstrap without prematurely failing.
+          # 2. livenessProbe: Detects application deadlocks and restarts the container.
+          # 3. readinessProbe: Controls when the pod should receive live user traffic.
+          # ====================================================================
+
+          # Startup Probe: Grants up to 60s (30 attempts * 2s) for database connections
+          # and runtime initialization to succeed before liveness/readiness probes activate.
+          startupProbe:
+            # Type of probe: Performs an HTTP GET request against the container
+            httpGet:
+              path: /health  # Dedicated lightweight health check endpoint in backend/index.js
+              port: 5000     # Container port to check
+            initialDelaySeconds: 5  # Wait 5 seconds after container creation before first probe
+            periodSeconds: 2        # Frequency: check every 2 seconds during startup
+            failureThreshold: 30    # Maximum failed attempts allowed (30 * 2s = 60s max startup budget)
+
+          # Liveness Probe: Regularly tests if the Node.js event loop is responsive.
+          # If the process hangs, deadlocks, or becomes unresponsive, Kubelet kills and restarts the container.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            periodSeconds: 10       # Probe every 10 seconds during normal operation
+            timeoutSeconds: 3       # Probe must respond with HTTP 200 within 3 seconds, or it is considered a failure
+            failureThreshold: 3     # 3 consecutive failures will trigger an automatic container restart
+
+          # Readiness Probe: Verifies whether the backend is ready to accept user requests.
+          # If database connectivity drops or Redis is reconnecting, the pod is temporarily removed from the Service.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10 # Wait 10 seconds before beginning readiness checks
+            periodSeconds: 5        # Check readiness every 5 seconds
+            timeoutSeconds: 2       # HTTP response timeout limit
+            failureThreshold: 2     # 2 consecutive failures remove pod from Service endpoints without killing it
+
+          # ====================================================================
+          # RESOURCE GOVERNANCE
+          # ====================================================================
+          # Ensures predictable performance and prevents "noisy neighbor" container starvation.
+          # - Requests: Used by kube-scheduler to determine which node has enough capacity for the pod.
+          # - Limits: Enforced by the Linux kernel (cgroups) to terminate or throttle runaway containers.
+          # ====================================================================
+          resources:
+            requests:
+              cpu: 100m      # 100 millicores (0.1 CPU core) guaranteed baseline reservation
+              memory: 128Mi  # 128 Mebibytes (RAM) guaranteed baseline reservation
+            limits:
+              cpu: 500m      # 500 millicores (0.5 CPU core) maximum compute ceiling (CPU throttled if exceeded)
+              memory: 512Mi  # 512 Mebibytes hard memory ceiling (Pod killed with OOMKilled if exceeded)
+
+---
+# ==============================================================================
+# BACKEND SERVICE (ClusterIP)
+# ==============================================================================
+# The Service provides a stable, long-lived internal DNS name and virtual IP for
+# the ephemeral backend pods. Even if backend pods are restarted or replaced during
+# updates, other components (like NGINX Ingress) connect reliably to "backend:5000".
+# ==============================================================================
+# Core v1 API version for networking Service resources
+apiVersion: v1
+
+# Resource type: Service creates an internal network abstraction / load balancer
+kind: Service
+
+# Metadata block for the Service
+metadata:
+  # Internal DNS hostname accessible by other pods in this namespace (e.g. "http://backend:5000")
+  name: backend
+  labels:
+    app: backend
+
+# Specification for the Service
+spec:
+  # Service type: ClusterIP allocates a cluster-internal virtual IP (not directly accessible from public internet)
+  type: ClusterIP
+
+  # Port forwarding configuration
+  ports:
+    - port: 5000        # The internal port that the Service listens on inside the cluster
+      targetPort: 5000  # The port on the target backend container where traffic is forwarded
+      name: http        # Named port descriptor
+
+  # Pod label selector: Directs incoming network traffic to any pod possessing the label "app: backend"
+  selector:
+    app: backend

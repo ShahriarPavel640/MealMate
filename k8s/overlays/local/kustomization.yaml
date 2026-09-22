@@ -1,0 +1,50 @@
+# ==============================================================================
+# LOCAL DEVELOPMENT OVERLAY
+# ==============================================================================
+# Inherits all resources from '../../base' and applies specific patches for
+# local development on Docker Desktop:
+# 1. Image Tags: Replaces image names with local tags (:local).
+# 2. imagePullPolicy: Never: Forces Kubernetes to use the local Docker image cache
+#    instead of attempting to download images from the internet (Docker Hub).
+#
+# Usage:
+#   kubectl apply -k k8s/overlays/local
+# ==============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Inherit all shared configuration from base
+resources:
+  - ../../base
+# Override container image names and tags for local machine testing
+images:
+  # Map backend container to locally built 'mealmate-backend:local'
+  - name: mealmate-backend
+    newName: mealmate-backend
+    newTag: local
+
+  # Map frontend container to locally built 'mealmate-frontend:local'
+  - name: mealmate-frontend
+    newName: mealmate-frontend
+    newTag: local
+
+# Strategic Merge / JSON Patches: Modifies specific attributes of base resources
+patches:
+  # Patch 1: Enforce imagePullPolicy: Never on backend container
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+
+  # Patch 2: Enforce imagePullPolicy: Never on frontend container
+  - target:
+      kind: Deployment
+      name: frontend
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never

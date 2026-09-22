@@ -1,0 +1,64 @@
+# ==============================================================================
+# INGRESS ROUTING RULES (NGINX INGRESS CONTROLLER)
+# ==============================================================================
+# The Ingress resource acts as the single public gateway into the cluster.
+# It receives external HTTP requests on port 80/443 for "mealmate.local"
+# and intelligently routes traffic based on URL path:
+#
+#   Browser -> Ingress Controller (Port 80)
+#                ├── /api/*        -> backend:5000 (Express REST API)
+#                ├── /socket.io/*  -> backend:5000 (WebSocket Real-time events)
+#                └── /*            -> frontend:80  (React SPA NGINX)
+# ==============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: mealmate-ingress
+  annotations:
+    # Specifies that the NGINX Ingress Controller should process this Ingress resource
+    ingress.class: nginx
+
+    # WebSocket configuration:
+    # 1. Enables HTTP/1.1 protocol upgrade required for persistent WebSocket connections
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    # 2. Sets a 1-hour read and send timeout so idle WebSocket connections are not abruptly killed by NGINX
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
+spec:
+  # Ingress controller class that should handle this ingress resource
+  ingressClassName: nginx
+
+  rules:
+    # Virtual host name. Requires mapping "127.0.0.1 mealmate.local" in Windows hosts file
+    - host: mealmate.local
+      http:
+        paths:
+          # Route 1: REST API requests (e.g. /api/customer/login, /api/menu)
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 5000
+
+          # Route 2: Real-time Socket.IO polling and WebSocket upgrade handshakes
+          - path: /socket.io
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 5000
+
+          # Route 3: Catch-all root path forwards HTML, JS, CSS, and images to React Frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

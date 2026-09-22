@@ -1,0 +1,57 @@
+# ==============================================================================
+# PRODUCTION ENVIRONMENT OVERLAY
+# ==============================================================================
+# Inherits all resources from '../../base' and applies production-grade patches:
+# 1. Image Registry: Points to Docker Hub registry with dynamic Git SHA tags.
+# 2. High Availability (HA): Scales replicas to 2 pods each for zero-downtime rolling updates.
+#
+# Usage (CI/CD pipeline):
+#   kubectl apply -k k8s/overlays/prod
+# ==============================================================================
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Inherit all shared configuration from base
+resources:
+  - ../../base
+
+# Override container image names with remote Docker Hub repository URLs
+# In CI/CD, 'newTag' is dynamically updated with the Git commit hash: ${{ github.sha }}
+images:
+  - name: mealmate-backend
+    newName: yourusername/mealmate-backend
+    newTag: latest
+  - name: mealmate-frontend
+    newName: yourusername/mealmate-frontend
+    newTag: latest
+
+# Production Patches: Adjusts operational configuration for high availability
+patches:
+  # Patch 1: Scale backend to 2 replicas so if one pod crashes or restarts, traffic continues uninterrupted
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+
+  # Patch 2: Scale frontend to 2 replicas for load balancing and redundancy
+  - target:
+      kind: Deployment
+      name: frontend
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+
+  # Patch 3: Enforce Secure HTTPOnly cookies over HTTPS in production
+  - target:
+      kind: ConfigMap
+      name: backend-config
+    patch: |-
+      - op: replace
+        path: /data/COOKIE_SECURE
+        value: "true"
+

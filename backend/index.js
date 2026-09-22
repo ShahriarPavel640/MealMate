@@ -81,6 +81,10 @@ app.use(
     swaggerOptions: { withCredentials: true },
   })
 );
+// Health check endpoint for Kubernetes liveness/readiness probes
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
 // Register routes
 

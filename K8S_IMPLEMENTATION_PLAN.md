@@ -1,86 +1,136 @@
 # Kubernetes Migration Plan
 
-This document outlines the architecture and steps for migrating the MealMate Docker Compose infrastructure to Kubernetes.
+This document outlines the architecture and step-by-step execution plan for migrating the MealMate Docker Compose infrastructure to Kubernetes. It uses **Kustomize** for application workloads, **Helm** for infrastructure/observability, and **GitHub Actions** for CI/CD with K8s validation.
 
-## 1. Architecture Overview
+---
 
-The application will be divided into the following logical components within Kubernetes:
+## 1. Architecture Overview (Hybrid Kustomize + Helm)
 
-### 1.1 Data Layer (`k8s/data/`)
-- **PostgreSQL (PostGIS):** 
-  - `postgres-pvc.yaml`: PersistentVolumeClaim to persist database data.
-  - `postgres-config.yaml`: ConfigMap containing the database initialization scripts (`1-schema.sql`, `2-seed.sql`).
-  - `postgres-secret.yaml`: Secret to securely store the `POSTGRES_PASSWORD`.
-  - `postgres-deployment.yaml`: Deployment to manage the Postgres pod and a ClusterIP Service for internal networking.
-- **Redis:**
-  - `redis-deployment.yaml`: Deployment and ClusterIP Service.
-- **pgAdmin:** (Optional developer tool)
-  - `pgadmin-deployment.yaml`: Deployment and Service to access the DB GUI.
+### Core Separation Strategy:
 
-### 1.2 Application Layer (`k8s/apps/`)
-- **Backend:**
-  - `backend-config.yaml`: ConfigMap for non-sensitive environment variables (`PORT`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_NAME`, `REDIS_URL`, `FRONTEND_URL`, `BACKEND_URL`).
-  - `backend-secret.yaml`: Secrets for sensitive data (`DB_PASSWORD`, `SENTRY_DSN`, `JWT_SECRET`, `CLOUDINARY_API_SECRET`, `SSL_COMMERZ_STORE_ID`, `SSL_COMMERZ_STORE_PASSWORD`, `GOOGLE_API_KEY`).
-  - `backend-deployment.yaml`: Deployment to run the backend API and a ClusterIP Service.
-- **Frontend:**
-  - `frontend-config.yaml`: ConfigMap for frontend variables (`VITE_API_URL`, `VITE_SENTRY_DSN`).
-  - `frontend-deployment.yaml`: Deployment to run the Vite frontend and a ClusterIP Service.
+* **Custom Application Code (Backend, Frontend, DB, Ingress rules):** Managed with **Kustomize** (clean, zero-templating, declarative).
+* **Third-Party Infrastructure (Observability & Networking):** Managed with **Helm** (industry-standard, pre-packaged).
 
-### 1.3 Observability Layer (`k8s/observability/`)
-- **Prometheus:** Deployment, Service, ConfigMap for `prometheus.yml`, and a PVC for metric retention.
-- **Loki:** Deployment, Service, ConfigMap for `loki-config.yaml`, and a PVC for log retention.
-- **Promtail:** DaemonSet to automatically collect logs from all nodes/pods in the cluster and forward them to Loki.
-- **Grafana:** Deployment, Service, PVC, and ConfigMaps for automated datasource and dashboard provisioning.
+```text
+k8s/
+├── base/
+│   ├── kustomization.yaml
+│   ├── data/
+│   │   ├── postgres-pvc.yaml
+│   │   ├── postgres-config.yaml
+│   │   ├── postgres-secret.yaml
+│   │   ├── postgres-deployment.yaml      # Deployment & Service
+│   │   └── redis-deployment.yaml         # Deployment & Service
+│   ├── apps/
+│   │   ├── backend-config.yaml
+│   │   ├── backend-secret.yaml
+│   │   ├── backend-deployment.yaml       # Deployment & Service (with health probes)
+│   │   ├── frontend-config.yaml
+│   │   └── frontend-deployment.yaml      # Deployment & Service (with health probes)
+│   └── network/
+│       └── ingress.yaml                  # Routing rules (mealmate.local, api, grafana)
+│
+├── overlays/
+│   ├── local/
+│   │   └── kustomization.yaml            # Local dev patches (imagePullPolicy: Never)
+│   └── prod/
+│       └── kustomization.yaml            # Production patches (Docker Hub images, prod URLs)
+│
+└── helm/                                 # Helm values configurations
+    ├── ingress-nginx-values.yaml         # Ingress controller settings
+    ├── prometheus-stack-values.yaml      # Lightweight Prometheus + Grafana config
+    └── loki-stack-values.yaml            # Loki + Promtail log collection config
+```
 
-### 1.4 Networking (`k8s/network/`)
-- **Ingress Controller (NGINX):**
-  - `ingress.yaml`: Defines routing rules to map a local domain (e.g., `mealmate.local`) to the respective services:
-    - `mealmate.local/api` ➔ Backend Service
-    - `mealmate.local/` ➔ Frontend Service
-    - `grafana.mealmate.local/` ➔ Grafana Service
+---
 
-## 2. Prerequisites
+## 2. CI/CD Deployment Pipeline (GitHub Actions)
 
-1. **Docker Desktop:** Ensure Kubernetes is enabled in Docker Desktop settings.
-2. **NGINX Ingress Controller:** Install the Ingress controller to your local cluster:
+The CI/CD pipeline will be updated to include Kubernetes manifest validation and automated deployment.
+
+### Pipeline Steps (`.github/workflows/ci.yml`):
+
+1. **Test & Build:**
+   - Run unit and E2E tests.
+   - Build Docker images and push to Docker Hub with Git SHA tags: `yourusername/mealmate-backend:${{ github.sha }}`.
+2. **K8s Tier 1 Validation (Dry-Run):**
+   - Run `kubectl apply --dry-run=client -k k8s/overlays/prod` in CI to instantly catch YAML typos, indentation errors, or missing config references before deployment.
+3. **Deploy to VPS (CD):**
+   - Use `sed` or `kustomize edit set image` to dynamically update the image tag in `k8s/overlays/prod/kustomization.yaml`.
+   - Securely connect to the VPS cluster using a `KUBECONFIG` GitHub secret.
+   - Run `kubectl apply -k k8s/overlays/prod` remotely to trigger zero-downtime rolling updates.
+
+---
+
+## 3. Execution Playbook: Local Development
+
+Follow these steps from start to finish to run the Kubernetes cluster locally.
+
+### Step 3.1: Enable Kubernetes in Docker Desktop
+
+1. Open **Docker Desktop**.
+2. Click the **Gear icon (Settings)** at the top right.
+3. Select **Kubernetes** from the left menu.
+4. Check **"Enable Kubernetes"** and click **Apply & restart**.
+5. Wait for the Kubernetes icon to turn **Green**.
+6. Verify via PowerShell: `kubectl get nodes` (Should say `docker-desktop Ready`).
+
+### Step 3.2: Install Infrastructure Tools (Helm & Ingress)
+
+1. Install Helm on your machine (PowerShell):
+   ```powershell
+   winget install Helm.Helm
+   ```
+2. Install the NGINX Ingress Controller (essential for routing traffic to `mealmate.local`):
    ```bash
    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
    ```
-3. **Local Domain Mapping:** Update your local hosts file (e.g., `C:\Windows\System32\drivers\etc\hosts`) to map the local domains to localhost:
-   ```text
-   127.0.0.1 mealmate.local
-   127.0.0.1 grafana.mealmate.local
+3. Add Helm Repositories for Observability:
+   ```bash
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo add grafana https://grafana.github.io/helm-charts
+   helm repo update
    ```
 
-## 3. Deployment Steps
+### Step 3.3: Deploy Local Application
 
-### Step 1: Build Local Images
-Kubernetes needs images to run. Since we are using Docker Desktop, images built locally are available to the cluster immediately.
-```bash
-docker build -t mealmate-backend:latest ./backend
-docker build -t mealmate-frontend:latest ./frontend
-```
+1. **Build Local Images (tagged as 'local'):**
+   ```bash
+   docker build -t mealmate-backend:local ./backend
+   docker build -t mealmate-frontend:local ./frontend
+   ```
+2. **Apply App Workloads (Kustomize):**
+   ```bash
+   kubectl apply -k k8s/overlays/local
+   ```
+3. **Deploy Observability Stack (Helm):**
+   *Uses custom `values.yaml` files to cap memory usage on your laptop.*
+   ```bash
+   helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f k8s/helm/prometheus-stack-values.yaml
+   helm upgrade --install loki grafana/loki-stack -f k8s/helm/loki-stack-values.yaml
+   ```
 
-### Step 2: Apply Manifests
-Apply the manifests in the following order to respect dependencies:
-```bash
-kubectl apply -f k8s/data/
-kubectl apply -f k8s/apps/
-kubectl apply -f k8s/observability/
-kubectl apply -f k8s/network/
-```
+---
 
-### Step 3: Verify Deployment
-Check the status of all pods to ensure they are `Running`:
-```bash
-kubectl get pods -A
-```
+## 4. Execution Playbook: Production Setup
 
-## 4. Teardown
-To spin down the cluster and clean up resources:
-```bash
-kubectl delete -f k8s/network/
-kubectl delete -f k8s/observability/
-kubectl delete -f k8s/apps/
-kubectl delete -f k8s/data/
-```
+When you are ready to deploy this to your real VPS:
+
+### Step 4.1: VPS Preparation
+
+1. Install a lightweight Kubernetes distribution on your VPS (e.g., **K3s** or **MicroK8s**).
+2. Install Cert-Manager via Helm on the VPS to handle automated Let's Encrypt SSL certificates.
+
+### Step 4.2: CI/CD Secret Configuration
+
+1. Grab the Kubeconfig file from your VPS (`/etc/rancher/k3s/k3s.yaml` or `~/.kube/config`).
+2. Go to your GitHub Repository -> Settings -> Secrets and Variables -> Actions.
+3. Add the following secrets:
+   - `KUBECONFIG` (Paste the contents of your VPS config, replacing `127.0.0.1` with the VPS public IP).
+   - `DOCKER_USERNAME` (Your Docker Hub username).
+   - `DOCKER_PASSWORD` (Your Docker Hub access token).
+
+### Step 4.3: Deploy
+
+1. Push your code to the `main` branch.
+2. The GitHub Actions pipeline will validate the YAML, build the images, push them to Docker Hub, and remotely instruct your VPS to pull and run them.

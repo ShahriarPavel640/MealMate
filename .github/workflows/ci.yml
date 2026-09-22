@@ -34,6 +34,8 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
+            k8s:
+              - 'k8s/**'
 
   backend-checks:
     name: Backend Tests
@@ -237,9 +239,31 @@ jobs:
       - name: Build Docker Images
         run: docker compose build
 
+  k8s-validate:
+    name: Validate Kubernetes Manifests
+    needs: changes
+    if: ${{ always() && (needs.changes.outputs.k8s == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true') && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Validate Kustomize Build (Local)
+        run: |
+          kubectl kustomize k8s/overlays/local
+          kubectl apply --dry-run=client -k k8s/overlays/local
+
+      - name: Validate Kustomize Build (Prod)
+        run: |
+          kubectl kustomize k8s/overlays/prod
+          kubectl apply --dry-run=client -k k8s/overlays/prod
+
   cd-deploy:
     name: Continuous Deployment (Coming Soon)
-    needs: [backend-checks, frontend-checks, e2e-ui-tests, docker-build]
+    needs: [backend-checks, frontend-checks, e2e-ui-tests, docker-build, k8s-validate]
     if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     steps:
@@ -248,6 +272,7 @@ jobs:
         
       - name: CD Placeholder
         run: echo "CD Pipeline triggered because this is a Push to main or master! Real deployment steps are currently commented out."
+
 
 
 

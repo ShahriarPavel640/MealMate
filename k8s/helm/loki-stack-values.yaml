@@ -1,0 +1,73 @@
+# ==============================================================================
+# GRAFANA LOKI & PROMTAIL (LOKI-STACK) HELM VALUES
+# ==============================================================================
+# This configuration file overrides default settings in the official 'loki-stack'
+# Helm chart to provide a centralized log aggregation pipeline tailored for
+# local Kubernetes development.
+#
+# Architecture:
+#   Application Pods (stdout/stderr)
+#         │
+#         ▼
+#   Promtail DaemonSet (Scrapes container logs from /var/log/pods)
+#         │
+#         ▼
+#   Loki Server (Indexes metadata labels and stores log streams)
+#         │
+#         ▼
+#   Grafana Dashboard (Explores and visualizes logs via LogQL)
+#
+# Usage:
+#   helm upgrade --install loki grafana/loki-stack -f k8s/helm/loki-stack-values.yaml
+# ==============================================================================
+
+# Loki: Horizontally-scalable, multi-tenant log aggregation engine inspired by Prometheus.
+loki:
+  # Enable Loki core server service and deployment
+  enabled: true
+
+  # Mark Loki as non-default so Prometheus remains the primary default metrics datasource
+  isDefault: false
+
+
+  # Persistence: Controls whether logs are written to a persistent disk (PVC) or kept in memory.
+  persistence:
+    # Disabled for local development to prevent filling up disk space with historical log files.
+    # Logs are ephemeral and discarded when the cluster restarts.
+    enabled: false
+
+  # Hardware resource caps: Ensures the log aggregator does not starve application pods of RAM
+  resources:
+    limits:
+      cpu: 200m      # 0.2 CPU core maximum ceiling
+      memory: 256Mi  # 256 Megabytes RAM maximum ceiling
+    requests:
+      cpu: 50m       # 0.05 CPU core guaranteed baseline
+      memory: 128Mi  # 128 Megabytes RAM guaranteed baseline
+
+# Promtail: Lightweight log collector agent deployed as a DaemonSet to ship container logs to Loki.
+promtail:
+  # Enable Promtail agent on cluster nodes
+  enabled: true
+
+  # Resource allocations for the lightweight log shipper
+  resources:
+    limits:
+      cpu: 100m      # 0.1 CPU core burst limit
+      memory: 128Mi  # 128 Megabytes RAM maximum limit
+    requests:
+      cpu: 20m       # 0.02 CPU core minimal baseline
+      memory: 64Mi   # 64 Megabytes RAM minimal baseline
+
+# Fluent-bit: Alternative log collector. Disabled because Promtail is used natively with Loki.
+fluent-bit:
+  enabled: false
+
+# Grafana: Disabled in this chart because Grafana is already installed and managed
+# by the 'kube-prometheus-stack' chart (avoiding duplicate running instances).
+grafana:
+  enabled: false
+
+# Prometheus: Disabled here because Prometheus is already provided by 'kube-prometheus-stack'.
+prometheus:
+  enabled: false

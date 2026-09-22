@@ -1,0 +1,25 @@
+# ==============================================================================
+# POSTGRESQL PERSISTENT VOLUME CLAIM (PVC)
+# ==============================================================================
+# In Kubernetes, Pod storage is ephemeral (deleted when the pod is deleted).
+# A PersistentVolumeClaim requests durable disk storage from the cluster's default
+# storage class (e.g. hostpath on Docker Desktop, or cloud block storage on a VPS).
+# When attached to a pod, data written to /var/lib/postgresql/data persists forever.
+# ==============================================================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: postgres-pvc # Referenced in postgres-deployment.yaml under spec.volumes
+
+spec:
+  # ReadWriteOnce (RWO): The volume can be mounted as read-write by a single node at a time.
+  # Standard and safe for relational databases like PostgreSQL.
+  accessModes:
+    - ReadWriteOnce
+
+  # Storage capacity requested from the cluster storage provisioner
+  resources:
+    requests:
+      storage: 1Gi # 1 Gigabyte allocated for local database records

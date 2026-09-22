@@ -19,20 +19,28 @@ export const generateToken = async (id, role, res) => {
     EX: 7 * 24 * 60 * 60,
   });
 
+  // Determine cookie security:
+  // - If COOKIE_SECURE is explicitly set ("true" / "false"), honor that setting.
+  // - Otherwise, default to true only in production (HTTPS).
+  // - In local environments (Docker Compose / Local K8s on HTTP), this ensures the browser accepts the cookie.
+  const isSecure = process.env.COOKIE_SECURE !== undefined
+    ? process.env.COOKIE_SECURE === "true"
+    : process.env.NODE_ENV === "production";
+
   // 4. Set Access Token Cookie
   res.cookie("accessToken", accessToken, {
     maxAge: 15 * 60 * 1000, // 15 minutes
-    httpOnly: true,
-    sameSite: "strict",
-    secure: process.env.NODE_ENV !== "development",
+    httpOnly: true,          // Blocks client-side JS access to mitigate XSS attacks
+    sameSite: "lax",         // Defends against CSRF while allowing seamless top-level navigation
+    secure: isSecure,        // Only requires HTTPS if COOKIE_SECURE=true or in production
   });
 
   // 5. Set Refresh Token Cookie
   res.cookie("refreshToken", refreshToken, {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    httpOnly: true,
-    sameSite: "strict",
-    secure: process.env.NODE_ENV !== "development",
+    httpOnly: true,                   // Blocks client-side JS access to mitigate XSS attacks
+    sameSite: "lax",                  // Defends against CSRF while allowing seamless top-level navigation
+    secure: isSecure,                 // Only requires HTTPS if COOKIE_SECURE=true or in production
   });
 
   return { accessToken, refreshToken };

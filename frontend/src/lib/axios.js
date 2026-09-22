@@ -3,8 +3,10 @@ import { userAuthStore } from "@/features/customer/store/userAuthStore";
 import { restaurantAuthStore } from "@/features/restaurant/store/restaurantAuthStore";
 import { useRiderAuthStore } from "@/features/rider/store/riderAuthStore";
 
+const apiBase = import.meta.env.VITE_API_URL || "";
+
 export const axiosInstance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`,
+  baseURL: apiBase ? `${apiBase}/api` : "/api",
   withCredentials: true,
 });
 

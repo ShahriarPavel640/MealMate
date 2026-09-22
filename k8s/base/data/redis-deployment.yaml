@@ -1,0 +1,103 @@
+# ==============================================================================
+# REDIS IN-MEMORY CACHE DEPLOYMENT & SERVICE
+# ==============================================================================
+# Redis is utilized by MealMate for fast session caching and real-time Socket.IO
+# message broadcasting across backend pods.
+# Highlights:
+# 1. Deployment: Runs the lightweight official redis:alpine image with minimal footprint.
+# 2. Service (ClusterIP): Creates a stable cluster-internal DNS entry ("redis:6379")
+#    allowing the backend API to connect via "redis://redis:6379".
+# ==============================================================================
+
+# API version for workload controllers (Deployments, StatefulSets, DaemonSets)
+apiVersion: apps/v1
+
+# Resource type: Deployment ensures 1 replica of the Redis caching pod is always running
+kind: Deployment
+
+# Metadata block: Identifies the resource in the cluster
+metadata:
+  # Unique name of the Deployment within the namespace
+  name: redis
+  # Key-value labels used for grouping, monitoring, and service selection
+  labels:
+    app: redis
+
+# Specification block: Defines the desired state of the Deployment
+spec:
+  # Maintain exactly 1 replica for local in-memory caching
+  replicas: 1
+
+  # Label selector: Deployment manages pods matching this label
+  selector:
+    matchLabels:
+      app: redis
+
+  # Pod Template: Blueprint used to stamp out the Redis pod
+  template:
+    metadata:
+      labels:
+        # Mandatory label that MUST match spec.selector.matchLabels above
+        app: redis
+    spec:
+      containers:
+        # Container identifier
+        - name: redis
+
+          # Lightweight Alpine Linux based official Redis distribution (~35MB)
+          image: redis:alpine
+
+          # Default Redis TCP listening port
+          ports:
+            - containerPort: 6379 # Standard Redis in-memory database port
+              name: redis        # Named port descriptor
+
+          # ====================================================================
+          # RESOURCE GOVERNANCE
+          # ====================================================================
+          # Caching servers can expand memory usage quickly; hard ceilings prevent
+          # runaway caches from starving node kernel memory.
+          # ====================================================================
+          resources:
+            requests:
+              cpu: 50m      # 50 millicores (0.05 CPU core) guaranteed reservation
+              memory: 64Mi  # 64 Megabytes RAM guaranteed reservation
+            limits:
+              cpu: 250m     # 250 millicores (0.25 CPU core) maximum burst limit
+              memory: 256Mi # 256 Megabytes hard ceiling (Pod killed if exceeded to protect node)
+
+---
+# ==============================================================================
+# REDIS INTERNAL SERVICE (ClusterIP)
+# ==============================================================================
+# Provides a static cluster-internal virtual IP and DNS name ("redis:6379").
+# Backend pods can connect directly using the URI "redis://redis:6379".
+# ==============================================================================
+
+# Core v1 API version for networking Service resources
+apiVersion: v1
+
+# Resource type: Service creates an internal network abstraction / load balancer
+kind: Service
+
+# Metadata block for the Service
+metadata:
+  # Internal DNS hostname accessible by other pods in this namespace (e.g. "redis:6379")
+  name: redis
+  labels:
+    app: redis
+
+# Specification for the Service
+spec:
+  # Service type: ClusterIP allocates a cluster-internal virtual IP (not publicly accessible from internet)
+  type: ClusterIP
+
+  # Port forwarding configuration
+  ports:
+    - port: 6379        # Port exposed by the Service internally
+      targetPort: 6379  # Port on the Redis container receiving traffic
+      name: redis       # Named port descriptor
+
+  # Pod label selector: Routes traffic to any pod labeled "app: redis"
+  selector:
+    app: redis

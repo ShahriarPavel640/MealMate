@@ -1,8 +1,10 @@
 import axios from "axios";
 import { userAuthStore } from "../src/store/userAuthStore";
 
+const apiBase = import.meta.env.VITE_API_URL || "";
+
 export const axiosInstance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api`,
+  baseURL: apiBase ? `${apiBase}/api` : "/api",
   withCredentials: true,
 });
 

@@ -1,0 +1,42 @@
+# ==============================================================================
+# BACKEND CONFIGMAP
+# ==============================================================================
+# Stores plain-text, non-sensitive configuration parameters for the Node.js API.
+# Unlike Secrets, ConfigMaps are safe to commit to version control.
+# Environment-specific values (like production URLs) can be overridden in overlays.
+# ==============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: backend-config
+
+data:
+  # Port Express server binds to
+  PORT: "5000"
+
+  # Internal DNS name of the database service in the cluster (db:5432)
+  DB_HOST: "db"
+  DB_PORT: "5432"
+  DB_USER: "postgres"
+  DB_NAME: "mealmate"
+
+  # Internal Redis connection URI
+  REDIS_URL: "redis://redis:6379"
+
+  # URL origins for CORS validation and payment callbacks
+  FRONTEND_URL: "http://mealmate.local"
+  BACKEND_URL: "http://mealmate.local/api"
+
+  # Comma-separated list of allowed origins for CORS headers
+  CORS_ORIGINS: "http://mealmate.local,http://localhost:5173,http://127.0.0.1:5173"
+
+  # SSLCommerz sandbox mode (false = sandbox / testing, true = live production payment gateway)
+  SSL_COMMERZ_IS_LIVE: "false"
+
+  # Cookie Security flag:
+  # - "false" for local HTTP clusters (e.g. http://mealmate.local, Docker Compose) to prevent browser rejection.
+  # - Overridden to "true" in production overlays where TLS/HTTPS encryption is active.
+  COOKIE_SECURE: "false"
+

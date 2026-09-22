@@ -1,0 +1,140 @@
+# ==============================================================================
+# REACT FRONTEND DEPLOYMENT & SERVICE
+# ==============================================================================
+# Serves the compiled production React/Vite Single Page Application (SPA).
+# Highlights:
+# 1. Deployment: Runs an optimized Alpine NGINX container hosting the static
+#    HTML/JS/CSS assets with SPA fallback routing (try_files $uri $uri/ /index.html).
+# 2. Service (ClusterIP): Creates a stable cluster-internal DNS entry ("frontend:80")
+#    used by the Ingress Controller to route root web traffic (/*).
+# ==============================================================================
+
+# API version for workload controllers (Deployments, StatefulSets, DaemonSets)
+apiVersion: apps/v1
+
+# Resource type: Deployment manages a ReplicaSet to ensure desired frontend pods remain running
+kind: Deployment
+
+# Metadata block: Identifies the resource in the cluster
+metadata:
+  # Unique name of the Deployment
+  name: frontend
+  # Key-value labels used for categorization, querying, and service selection
+  labels:
+    app: frontend
+
+# Specification block: Defines the desired state that Kubernetes reconciles toward
+spec:
+  # Desired number of pod replicas running concurrently.
+  # Set to 1 for local development, and patched to 2 in k8s/overlays/prod for High Availability (HA).
+  replicas: 1
+
+  # Label selector: Defines how the Deployment controller finds the pods it manages
+  selector:
+    matchLabels:
+      # Any pod with the label "app: frontend" will be managed by this Deployment
+      app: frontend
+
+  # Pod Template: Blueprint used by the Deployment controller to create identical pod instances
+  template:
+    # Metadata for each created pod
+    metadata:
+      labels:
+        # Mandatory label that MUST match spec.selector.matchLabels above for pod adoption
+        app: frontend
+    # Pod Specification: Execution details for the containers inside each pod
+    spec:
+      containers:
+        # Unique name for this container within the pod
+        - name: frontend
+
+          # Container image containing compiled React dist/ folder served via NGINX.
+          # Dynamically patched by Kustomize overlays:
+          # - Local overlay: Replaced with 'mealmate-frontend:local'
+          # - Prod overlay: Replaced with 'yourusername/mealmate-frontend:<git-sha>'
+          image: mealmate-frontend:latest
+
+          # Image pull policy:
+          # - IfNotPresent: Pulls image only if not already cached on the host node
+          # - (Overridden to 'Never' in k8s/overlays/local to use local Docker image cache)
+          imagePullPolicy: IfNotPresent
+
+          # Web port served by the internal NGINX container
+          ports:
+            - containerPort: 80 # HTTP web port inside container
+              name: http        # Named port descriptor
+
+          # ====================================================================
+          # HEALTH CHECK PROBES
+          # ====================================================================
+          # Liveness Probe: Checks if the NGINX web server process is actively responding.
+          # If NGINX crashes or freezes, Kubelet kills and recreates the container.
+          livenessProbe:
+            httpGet:
+              path: /  # Probes the root index.html page
+              port: 80 # Container port
+            initialDelaySeconds: 10 # Wait 10s after container startup before first check
+            periodSeconds: 10       # Probe every 10 seconds thereafter
+            timeoutSeconds: 2       # Probe fails if no response within 2 seconds
+            failureThreshold: 3     # 3 consecutive failures trigger a container restart
+
+          # Readiness Probe: Ensures HTML and bundle assets can be delivered before receiving traffic.
+          # Prevents the Ingress controller from sending traffic to a container that is still booting.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5  # Wait 5s before starting readiness checks
+            periodSeconds: 5        # Check readiness every 5 seconds
+            timeoutSeconds: 2       # Response timeout limit
+            failureThreshold: 2     # 2 failures remove pod from Service routing endpoints
+
+          # ====================================================================
+          # RESOURCE GOVERNANCE
+          # ====================================================================
+          # Serving static files via NGINX requires minimal CPU and RAM:
+          # - Requests: Guaranteed baseline hardware reservations on the node.
+          # - Limits: Hard ceiling to prevent unexpected resource spikes.
+          resources:
+            requests:
+              cpu: 50m       # 50 millicores (0.05 CPU core) baseline reservation
+              memory: 64Mi   # 64 Megabytes RAM baseline reservation
+            limits:
+              cpu: 250m      # 250 millicores (0.25 CPU core) burst cap
+              memory: 256Mi  # 256 Megabytes hard RAM ceiling (OOMKilled if exceeded)
+
+---
+# ==============================================================================
+# FRONTEND SERVICE (ClusterIP)
+# ==============================================================================
+# Exposes the frontend NGINX web server to the Ingress Controller internally.
+# Accessible via internal DNS: "http://frontend:80"
+# ==============================================================================
+
+# Core v1 API version for networking Service resources
+apiVersion: v1
+
+# Resource type: Service creates an internal network abstraction / load balancer
+kind: Service
+
+# Metadata block for the Service
+metadata:
+  # Internal DNS hostname accessible by other pods in this namespace
+  name: frontend
+  labels:
+    app: frontend
+
+# Specification for the Service
+spec:
+  # Service type: ClusterIP allocates a cluster-internal virtual IP (not publicly accessible from internet)
+  type: ClusterIP
+
+  # Port forwarding configuration
+  ports:
+    - port: 80          # The internal port that the Service listens on inside the cluster
+      targetPort: 80    # The port on the frontend container where traffic is forwarded
+      name: http        # Named port descriptor
+
+  # Pod label selector: Routes incoming traffic to any pod possessing the label "app: frontend"
+  selector:
+    app: frontend
