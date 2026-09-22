@@ -14,8 +14,11 @@ COPY . .
 # Pre-generate Prisma client during build time so container boots in 1 second
 RUN npx prisma generate
 
+# Build TypeScript to dist/
+RUN npm run build
+
 # Expose port (default 5000)
 EXPOSE 5000
 
-# Start command: Launch node directly for proper PID 1 signal forwarding
-CMD ["node", "--import", "./instrument.js", "index.js"]
+# Start command: Launch compiled Node.js backend directly
+CMD ["node", "--import", "./dist/instrument.js", "dist/index.js"]
