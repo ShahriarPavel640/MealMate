@@ -35,7 +35,7 @@ export async function loginRider(page, email, password) {
 }
 
 export async function apiRegisterCustomer(request, { name, email, password, latitude = 23.8103, longitude = 90.4125 }) {
-  const apiUrl = process.env.VITE_API_URL || 'http://127.0.0.1:5000';
+  const apiUrl = process.env.VITE_API_URL || process.env.BASE_URL || 'http://mealmate.local';
   const response = await request.post(`${apiUrl}/api/customer/register`, {
     data: { name, email, password, latitude, longitude }
   });

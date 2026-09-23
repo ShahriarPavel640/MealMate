@@ -60,8 +60,8 @@ test.describe('Restaurant Flow E2E', () => {
       await confirmBtn.click({ force: true });
 
       await page.getByRole('button', { name: 'Create Account' }).click();
-      await expect(page).toHaveURL(/.*(?:partner|restaurant)/, { timeout: 10000 });
-      await expect(page.getByText('Recent Orders')).toBeVisible({ timeout: 10000 });
+      await expect(page).toHaveURL(/.*(?:partner|restaurant)/, { timeout: 30000 });
+      await expect(page.getByText('Recent Orders')).toBeVisible({ timeout: 30000 });
     });
 
     test('Dashboard tabs render correctly', async ({ page }) => {

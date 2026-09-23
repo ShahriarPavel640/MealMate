@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseURL = process.env.BASE_URL || 'http://mealmate.local';
+const isLocalCluster = baseURL.includes('mealmate.local');
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -12,7 +15,7 @@ export default defineConfig({
     timeout: 10000,
   },
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: baseURL,
     trace: 'on-first-retry',
     geolocation: { latitude: 23.8103, longitude: 90.4125 },
     permissions: ['geolocation'],
@@ -23,9 +26,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
-  },
+  ...(isLocalCluster ? {} : {
+    webServer: {
+      command: 'npm run dev',
+      url: 'http://127.0.0.1:5173',
+      reuseExistingServer: !process.env.CI,
+    },
+  }),
 });
